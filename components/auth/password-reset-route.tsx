@@ -5,39 +5,43 @@ import { useRouter } from "next/navigation"
 
 import { PasswordResetScreen } from "@/components/auth/password-reset-screen"
 import { Skeleton } from "@/components/ui/skeleton"
-import { readSession } from "@/features/auth/session"
-import type { AppUser } from "@/features/finance/types"
+import { createSupabaseBrowser } from "@/lib/supabase/client"
 
 export function PasswordResetRoute() {
   const router = useRouter()
+  const [email, setEmail] = useState("")
   const [isReady, setIsReady] = useState(false)
-  const [user, setUser] = useState<AppUser | null>(null)
 
   useEffect(() => {
     let isCancelled = false
 
-    queueMicrotask(() => {
+    async function checkSession() {
+      const supabase = createSupabaseBrowser()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
       if (isCancelled) {
         return
       }
 
-      const session = readSession()
-
-      if (!session) {
+      if (!user?.email) {
         router.replace("/login")
         return
       }
 
-      setUser(session)
+      setEmail(user.email)
       setIsReady(true)
-    })
+    }
+
+    void checkSession()
 
     return () => {
       isCancelled = true
     }
   }, [router])
 
-  if (!isReady || !user) {
+  if (!isReady) {
     return (
       <main className="min-h-dvh bg-background p-4 text-foreground sm:p-6">
         <div className="mx-auto flex min-h-[70dvh] max-w-5xl items-center justify-center">
@@ -50,5 +54,5 @@ export function PasswordResetRoute() {
     )
   }
 
-  return <PasswordResetScreen email={user.email} onBack={() => router.push("/dashboard")} />
+  return <PasswordResetScreen email={email} onBack={() => router.push("/dashboard")} />
 }

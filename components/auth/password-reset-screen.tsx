@@ -2,13 +2,14 @@
 
 import { ArrowLeftIcon, KeyRoundIcon, MailIcon, ShieldCheckIcon } from "lucide-react"
 import { toast } from "sonner"
-import { type FormEvent } from "react"
+import { type FormEvent, useMemo, useState } from "react"
 
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { createSupabaseBrowser } from "@/lib/supabase/client"
 
 type PasswordResetScreenProps = {
   email: string
@@ -16,12 +17,39 @@ type PasswordResetScreenProps = {
 }
 
 export function PasswordResetScreen({ email, onBack }: PasswordResetScreenProps) {
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  const supabase = useMemo(() => createSupabaseBrowser(), [])
+  const [password, setPassword] = useState("")
+  const [confirmation, setConfirmation] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
-    toast.success("Link de redefinição solicitado", {
-      description: `As instruções serão enviadas para ${email}.`,
+    if (password.length < 6) {
+      toast.error("A senha deve ter pelo menos 6 caracteres.")
+      return
+    }
+
+    if (password !== confirmation) {
+      toast.error("As senhas não conferem.")
+      return
+    }
+
+    setIsSubmitting(true)
+    const { error } = await supabase.auth.updateUser({ password })
+    setIsSubmitting(false)
+
+    if (error) {
+      toast.error("Não foi possível atualizar a senha", {
+        description: error.message,
+      })
+      return
+    }
+
+    toast.success("Senha atualizada", {
+      description: "Use a nova senha no próximo acesso.",
     })
+    onBack()
   }
 
   return (
@@ -66,8 +94,28 @@ export function PasswordResetScreen({ email, onBack }: PasswordResetScreenProps)
                       className="bg-muted/50 text-muted-foreground"
                     />
                     <FieldDescription>
-                      Usaremos este endereço para enviar o link de redefinição.
+                      A nova senha será aplicada para esta conta.
                     </FieldDescription>
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="new-password">Nova senha</FieldLabel>
+                    <Input
+                      autoComplete="new-password"
+                      id="new-password"
+                      onChange={(event) => setPassword(event.target.value)}
+                      type="password"
+                      value={password}
+                    />
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="confirm-password">Confirmar nova senha</FieldLabel>
+                    <Input
+                      autoComplete="new-password"
+                      id="confirm-password"
+                      onChange={(event) => setConfirmation(event.target.value)}
+                      type="password"
+                      value={confirmation}
+                    />
                   </Field>
                 </FieldGroup>
 
@@ -76,9 +124,9 @@ export function PasswordResetScreen({ email, onBack }: PasswordResetScreenProps)
                     <ArrowLeftIcon data-icon="inline-start" />
                     Voltar
                   </Button>
-                  <Button type="submit">
+                  <Button disabled={isSubmitting} type="submit">
                     <MailIcon data-icon="inline-start" />
-                    Enviar link
+                    {isSubmitting ? "Salvando..." : "Atualizar senha"}
                   </Button>
                 </div>
               </form>

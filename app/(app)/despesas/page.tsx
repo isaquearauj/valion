@@ -1,5 +1,13 @@
 import { FinanceRouteShell } from "@/components/finance/finance-route-shell"
+import { getCurrentAppUser } from "@/features/auth/server"
+import { redirect } from "next/navigation"
 
-export default function DespesasPage() {
-  return <FinanceRouteShell section="expenses" />
+export default async function DespesasPage() {
+  const user = await getCurrentAppUser()
+
+  if (!user) {
+    redirect("/login")
+  }
+
+  return <FinanceRouteShell initialUser={user} section="expenses" />
 }

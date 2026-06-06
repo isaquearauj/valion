@@ -1,5 +1,9 @@
-import { RootRedirect } from "@/components/navigation/root-redirect";
+import { redirect } from "next/navigation"
 
-export default function Home() {
-  return <RootRedirect />;
+import { getCurrentSupabaseUser } from "@/features/auth/server"
+
+export default async function Home() {
+  const user = await getCurrentSupabaseUser()
+
+  redirect(user ? "/dashboard" : "/login")
 }

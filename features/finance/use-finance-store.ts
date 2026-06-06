@@ -1,24 +1,37 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 
-import { createInitialFinanceState } from "@/features/finance/initial-data"
 import type {
   ChargeReminder,
-  Goal,
-  GoalContribution,
   FinanceState,
   FixedExpense,
+  Goal,
+  GoalContribution,
   Income,
   InvestmentEntry,
   ReminderFrequency,
 } from "@/features/finance/types"
-
-export const FINANCE_STORAGE_KEY = "controle-financeiro:workspace:v1"
-
-function createId(prefix: string) {
-  return `${prefix}-${crypto.randomUUID()}`
-}
+import {
+  createEmptyFinanceState,
+  getWorkspaceUpdatedAt,
+  mapChargeReminder,
+  mapFixedExpense,
+  mapGoal,
+  mapGoalContribution,
+  mapIncome,
+  mapInvestmentEntry,
+  mapMonthlySnapshot,
+  monthKeyToDate,
+  type ChargeReminderRow,
+  type FixedExpenseRow,
+  type GoalContributionRow,
+  type GoalRow,
+  type IncomeRow,
+  type InvestmentEntryRow,
+  type MonthlySnapshotRow,
+} from "@/features/finance/supabase-mappers"
+import { createSupabaseBrowser } from "@/lib/supabase/client"
 
 function formatDateKey(date: Date) {
   const year = date.getFullYear()
@@ -60,329 +73,332 @@ function advanceReminderDate(dateKey: string, frequency: ReminderFrequency) {
   return formatDateKey(date)
 }
 
-function normalizeFinanceState(state: Partial<FinanceState>): FinanceState {
-  const initialState = createInitialFinanceState()
-
-  return {
-    expenses: Array.isArray(state.expenses) ? state.expenses : [],
-    goalContributions: Array.isArray(state.goalContributions)
-      ? state.goalContributions
-      : [],
-    goals: Array.isArray(state.goals) ? state.goals : [],
-    incomes: Array.isArray(state.incomes) ? state.incomes : [],
-    investments: Array.isArray(state.investments) ? state.investments : [],
-    reminders: Array.isArray(state.reminders) ? state.reminders : initialState.reminders,
-    snapshots: Array.isArray(state.snapshots) ? state.snapshots : [],
-    updatedAt: state.updatedAt ?? new Date().toISOString(),
+function assertSupabaseSuccess(error: { message: string } | null) {
+  if (error) {
+    throw new Error(error.message)
   }
 }
 
-function readStoredState() {
-  if (typeof window === "undefined") {
-    return createInitialFinanceState()
-  }
-
-  const stored = window.localStorage.getItem(FINANCE_STORAGE_KEY)
-
-  if (!stored) {
-    return createInitialFinanceState()
-  }
-
-  try {
-    return normalizeFinanceState(JSON.parse(stored) as Partial<FinanceState>)
-  } catch {
-    return createInitialFinanceState()
-  }
-}
-
-function touch(state: FinanceState): FinanceState {
-  return {
-    ...state,
-    updatedAt: new Date().toISOString(),
-  }
-}
-
-export function useFinanceStore() {
-  const [state, setState] = useState<FinanceState>(() => createInitialFinanceState())
+export function useFinanceStore(userId: string | null = null) {
+  const supabase = useMemo(() => createSupabaseBrowser(), [])
+  const [state, setState] = useState<FinanceState>(() => createEmptyFinanceState())
   const [isReady, setIsReady] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const loadWorkspace = useCallback(async () => {
+    if (!userId) {
+      setState(createEmptyFinanceState())
+      setIsReady(true)
+      return
+    }
+
+    setError(null)
+
+    const [
+      incomesResult,
+      expensesResult,
+      remindersResult,
+      investmentsResult,
+      goalsResult,
+      goalContributionsResult,
+      snapshotsResult,
+    ] = await Promise.all([
+      supabase.from("incomes").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
+      supabase.from("fixed_expenses").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
+      supabase.from("charge_reminders").select("*").eq("user_id", userId).order("next_due_date", { ascending: true }),
+      supabase.from("investment_entries").select("*").eq("user_id", userId).order("month", { ascending: false }),
+      supabase.from("financial_goals").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
+      supabase.from("goal_contributions").select("*").eq("user_id", userId).order("date", { ascending: false }),
+      supabase.from("monthly_snapshots").select("*").eq("user_id", userId).order("month", { ascending: true }),
+    ])
+
+    const results = [
+      incomesResult,
+      expensesResult,
+      remindersResult,
+      investmentsResult,
+      goalsResult,
+      goalContributionsResult,
+      snapshotsResult,
+    ]
+    const failedResult = results.find((result) => result.error)
+
+    if (failedResult?.error) {
+      throw new Error(failedResult.error.message)
+    }
+
+    const incomeRows = (incomesResult.data ?? []) as IncomeRow[]
+    const expenseRows = (expensesResult.data ?? []) as FixedExpenseRow[]
+    const reminderRows = (remindersResult.data ?? []) as ChargeReminderRow[]
+    const investmentRows = (investmentsResult.data ?? []) as InvestmentEntryRow[]
+    const goalRows = (goalsResult.data ?? []) as GoalRow[]
+    const goalContributionRows = (goalContributionsResult.data ?? []) as GoalContributionRow[]
+    const snapshotRows = (snapshotsResult.data ?? []) as MonthlySnapshotRow[]
+
+    setState({
+      expenses: expenseRows.map(mapFixedExpense),
+      goalContributions: goalContributionRows.map(mapGoalContribution),
+      goals: goalRows.map(mapGoal),
+      incomes: incomeRows.map(mapIncome),
+      investments: investmentRows.map(mapInvestmentEntry),
+      reminders: reminderRows.map(mapChargeReminder),
+      snapshots: snapshotRows.map(mapMonthlySnapshot),
+      updatedAt: getWorkspaceUpdatedAt([
+        incomeRows,
+        expenseRows,
+        reminderRows,
+        investmentRows,
+        goalRows,
+        goalContributionRows,
+        snapshotRows,
+      ]),
+    })
+    setIsReady(true)
+  }, [supabase, userId])
 
   useEffect(() => {
     let isCancelled = false
 
     queueMicrotask(() => {
-      if (isCancelled) {
-        return
-      }
+      loadWorkspace().catch((loadError: unknown) => {
+        if (isCancelled) {
+          return
+        }
 
-      setState(readStoredState())
-      setIsReady(true)
+        const message = loadError instanceof Error ? loadError.message : "Não foi possível carregar seus dados."
+        setError(message)
+        setIsReady(true)
+      })
     })
 
     return () => {
       isCancelled = true
     }
-  }, [])
+  }, [loadWorkspace])
 
-  useEffect(() => {
-    if (!isReady) {
+  async function runMutation(mutation: () => Promise<void>) {
+    if (!userId) {
+      throw new Error("Sessão expirada. Entre novamente para continuar.")
+    }
+
+    setIsSaving(true)
+    setError(null)
+
+    try {
+      await mutation()
+      await loadWorkspace()
+    } catch (mutationError) {
+      const message = mutationError instanceof Error ? mutationError.message : "Não foi possível salvar os dados."
+      setError(message)
+      throw mutationError
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  async function clearWorkspace() {
+    await runMutation(async () => {
+      const tables = [
+        "goal_contributions",
+        "monthly_snapshots",
+        "investment_entries",
+        "financial_goals",
+        "fixed_expenses",
+        "charge_reminders",
+        "incomes",
+      ]
+
+      for (const table of tables) {
+        const { error: deleteError } = await supabase.from(table).delete().eq("user_id", userId)
+        assertSupabaseSuccess(deleteError)
+      }
+    })
+  }
+
+  async function resetWorkspace() {
+    await clearWorkspace()
+  }
+
+  async function upsertIncome(values: Omit<Income, "createdAt" | "id">, id?: string) {
+    await runMutation(async () => {
+      const payload = {
+        amount: values.amount,
+        frequency: values.frequency,
+        name: values.name,
+        notes: values.notes,
+        type: values.type,
+        user_id: userId,
+      }
+      const result = id
+        ? await supabase.from("incomes").update(payload).eq("id", id).eq("user_id", userId)
+        : await supabase.from("incomes").insert(payload)
+
+      assertSupabaseSuccess(result.error)
+    })
+  }
+
+  async function deleteIncome(id: string) {
+    await runMutation(async () => {
+      const { error: deleteError } = await supabase.from("incomes").delete().eq("id", id).eq("user_id", userId)
+      assertSupabaseSuccess(deleteError)
+    })
+  }
+
+  async function upsertReminder(values: Omit<ChargeReminder, "createdAt" | "id">, id?: string) {
+    await runMutation(async () => {
+      const payload = {
+        amount: values.amount,
+        frequency: values.frequency,
+        name: values.name,
+        next_due_date: values.nextDueDate,
+        notes: values.notes,
+        person: values.person,
+        remaining_installments: values.remainingInstallments,
+        status: values.status,
+        total_installments: values.totalInstallments,
+        type: values.type,
+        user_id: userId,
+      }
+      const result = id
+        ? await supabase.from("charge_reminders").update(payload).eq("id", id).eq("user_id", userId)
+        : await supabase.from("charge_reminders").insert(payload)
+
+      assertSupabaseSuccess(result.error)
+    })
+  }
+
+  async function deleteReminder(id: string) {
+    await runMutation(async () => {
+      const { error: deleteError } = await supabase.from("charge_reminders").delete().eq("id", id).eq("user_id", userId)
+      assertSupabaseSuccess(deleteError)
+    })
+  }
+
+  async function markReminderReceived(id: string) {
+    const reminder = state.reminders.find((item) => item.id === id)
+
+    if (!reminder || reminder.status !== "Ativo") {
       return
     }
 
-    window.localStorage.setItem(FINANCE_STORAGE_KEY, JSON.stringify(state))
-  }, [isReady, state])
+    await runMutation(async () => {
+      const remainingInstallments =
+        reminder.type === "Parcelado" ? Math.max(reminder.remainingInstallments - 1, 0) : reminder.remainingInstallments
+      const isCompleted = reminder.type === "Parcelado" && remainingInstallments === 0
+      const { error: updateError } = await supabase
+        .from("charge_reminders")
+        .update({
+          next_due_date: isCompleted ? reminder.nextDueDate : advanceReminderDate(reminder.nextDueDate, reminder.frequency),
+          remaining_installments: remainingInstallments,
+          status: isCompleted ? "Concluído" : reminder.status,
+        })
+        .eq("id", id)
+        .eq("user_id", userId)
 
-  function resetWorkspace() {
-    const nextState = createInitialFinanceState()
-    setState(nextState)
-    window.localStorage.setItem(FINANCE_STORAGE_KEY, JSON.stringify(nextState))
-  }
-
-  function clearWorkspace() {
-    const nextState: FinanceState = {
-      expenses: [],
-      goalContributions: [],
-      goals: [],
-      incomes: [],
-      investments: [],
-      reminders: [],
-      snapshots: [],
-      updatedAt: new Date().toISOString(),
-    }
-    setState(nextState)
-    window.localStorage.removeItem(FINANCE_STORAGE_KEY)
-  }
-
-  function upsertIncome(values: Omit<Income, "createdAt" | "id">, id?: string) {
-    setState((current) => {
-      const now = new Date().toISOString()
-      const exists = current.incomes.some((income) => income.id === id)
-      const incomes = exists
-        ? current.incomes.map((income) =>
-            income.id === id ? { ...income, ...values } : income
-          )
-        : [
-            {
-              ...values,
-              createdAt: now,
-              id: createId("inc"),
-            },
-            ...current.incomes,
-          ]
-
-      return touch({ ...current, incomes })
+      assertSupabaseSuccess(updateError)
     })
   }
 
-  function deleteIncome(id: string) {
-    setState((current) =>
-      touch({
-        ...current,
-        incomes: current.incomes.filter((income) => income.id !== id),
-      })
-    )
-  }
+  async function upsertExpense(values: Omit<FixedExpense, "createdAt" | "id">, id?: string) {
+    await runMutation(async () => {
+      const payload = {
+        category: values.category,
+        due_day: values.dueDay,
+        monthly_amount: values.monthlyAmount,
+        name: values.name,
+        notes: values.notes,
+        remaining_installments: values.remainingInstallments,
+        status: values.status,
+        total_installments: values.totalInstallments,
+        user_id: userId,
+      }
+      const result = id
+        ? await supabase.from("fixed_expenses").update(payload).eq("id", id).eq("user_id", userId)
+        : await supabase.from("fixed_expenses").insert(payload)
 
-  function upsertReminder(values: Omit<ChargeReminder, "createdAt" | "id">, id?: string) {
-    setState((current) => {
-      const now = new Date().toISOString()
-      const exists = current.reminders.some((reminder) => reminder.id === id)
-      const reminders = exists
-        ? current.reminders.map((reminder) =>
-            reminder.id === id ? { ...reminder, ...values } : reminder
-          )
-        : [
-            {
-              ...values,
-              createdAt: now,
-              id: createId("rem"),
-            },
-            ...current.reminders,
-          ]
-
-      return touch({ ...current, reminders })
+      assertSupabaseSuccess(result.error)
     })
   }
 
-  function deleteReminder(id: string) {
-    setState((current) =>
-      touch({
-        ...current,
-        reminders: current.reminders.filter((reminder) => reminder.id !== id),
-      })
-    )
-  }
-
-  function markReminderReceived(id: string) {
-    setState((current) => {
-      let wasUpdated = false
-      const reminders = current.reminders.map((reminder) => {
-        if (reminder.id !== id || reminder.status !== "Ativo") {
-          return reminder
-        }
-
-        wasUpdated = true
-
-        if (reminder.type === "Parcelado") {
-          const remainingInstallments = Math.max(reminder.remainingInstallments - 1, 0)
-          const isCompleted = remainingInstallments === 0
-          const status: ChargeReminder["status"] = isCompleted ? "Concluído" : reminder.status
-
-          return {
-            ...reminder,
-            nextDueDate: isCompleted
-              ? reminder.nextDueDate
-              : advanceReminderDate(reminder.nextDueDate, reminder.frequency),
-            remainingInstallments,
-            status,
-          }
-        }
-
-        return {
-          ...reminder,
-          nextDueDate: advanceReminderDate(reminder.nextDueDate, reminder.frequency),
-        }
-      })
-
-      return wasUpdated ? touch({ ...current, reminders }) : current
+  async function deleteExpense(id: string) {
+    await runMutation(async () => {
+      const { error: deleteError } = await supabase.from("fixed_expenses").delete().eq("id", id).eq("user_id", userId)
+      assertSupabaseSuccess(deleteError)
     })
   }
 
-  function upsertExpense(
-    values: Omit<FixedExpense, "createdAt" | "id">,
-    id?: string
-  ) {
-    setState((current) => {
-      const now = new Date().toISOString()
-      const exists = current.expenses.some((expense) => expense.id === id)
-      const expenses = exists
-        ? current.expenses.map((expense) =>
-            expense.id === id ? { ...expense, ...values } : expense
-          )
-        : [
-            {
-              ...values,
-              createdAt: now,
-              id: createId("exp"),
-            },
-            ...current.expenses,
-          ]
+  async function upsertInvestment(values: Omit<InvestmentEntry, "createdAt" | "id">, id?: string) {
+    await runMutation(async () => {
+      const payload = {
+        invested_amount: values.investedAmount,
+        month: monthKeyToDate(values.month),
+        notes: values.notes,
+        planned_amount: values.plannedAmount,
+        user_id: userId,
+      }
+      const result = id
+        ? await supabase.from("investment_entries").update(payload).eq("id", id).eq("user_id", userId)
+        : await supabase.from("investment_entries").upsert(payload, { onConflict: "user_id,month" })
 
-      return touch({ ...current, expenses })
+      assertSupabaseSuccess(result.error)
     })
   }
 
-  function deleteExpense(id: string) {
-    setState((current) =>
-      touch({
-        ...current,
-        expenses: current.expenses.filter((expense) => expense.id !== id),
-      })
-    )
-  }
-
-  function upsertInvestment(
-    values: Omit<InvestmentEntry, "createdAt" | "id">,
-    id?: string
-  ) {
-    setState((current) => {
-      const now = new Date().toISOString()
-      const existingId =
-        id ?? current.investments.find((investment) => investment.month === values.month)?.id
-      const exists = current.investments.some(
-        (investment) => investment.id === existingId
-      )
-      const investments = exists
-        ? current.investments.map((investment) =>
-            investment.id === existingId ? { ...investment, ...values } : investment
-          )
-        : [
-            {
-              ...values,
-              createdAt: now,
-              id: createId("inv"),
-            },
-            ...current.investments,
-          ]
-
-      return touch({ ...current, investments })
+  async function deleteInvestment(id: string) {
+    await runMutation(async () => {
+      const { error: deleteError } = await supabase.from("investment_entries").delete().eq("id", id).eq("user_id", userId)
+      assertSupabaseSuccess(deleteError)
     })
   }
 
-  function upsertGoal(values: Omit<Goal, "createdAt" | "id">, id?: string) {
-    setState((current) => {
-      const now = new Date().toISOString()
-      const exists = current.goals.some((goal) => goal.id === id)
-      const goals = exists
-        ? current.goals.map((goal) => (goal.id === id ? { ...goal, ...values } : goal))
-        : [
-            {
-              ...values,
-              createdAt: now,
-              id: createId("goal"),
-            },
-            ...current.goals,
-          ]
+  async function upsertGoal(values: Omit<Goal, "createdAt" | "id">, id?: string) {
+    await runMutation(async () => {
+      const payload = {
+        name: values.name,
+        notes: values.notes,
+        status: values.status,
+        target_amount: values.targetAmount,
+        target_date: values.targetDate,
+        user_id: userId,
+      }
+      const result = id
+        ? await supabase.from("financial_goals").update(payload).eq("id", id).eq("user_id", userId)
+        : await supabase.from("financial_goals").insert(payload)
 
-      return touch({ ...current, goals })
+      assertSupabaseSuccess(result.error)
     })
   }
 
-  function deleteGoal(id: string) {
-    setState((current) =>
-      touch({
-        ...current,
-        goalContributions: current.goalContributions.filter(
-          (contribution) => contribution.goalId !== id
-        ),
-        goals: current.goals.filter((goal) => goal.id !== id),
-      })
-    )
-  }
-
-  function upsertGoalContribution(
-    values: Omit<GoalContribution, "createdAt" | "id">,
-    id?: string
-  ) {
-    setState((current) => {
-      const now = new Date().toISOString()
-      const exists = current.goalContributions.some((contribution) => contribution.id === id)
-      const goalContributions = exists
-        ? current.goalContributions.map((contribution) =>
-            contribution.id === id ? { ...contribution, ...values } : contribution
-          )
-        : [
-            {
-              ...values,
-              createdAt: now,
-              id: createId("gcontrib"),
-            },
-            ...current.goalContributions,
-          ]
-
-      return touch({ ...current, goalContributions })
+  async function deleteGoal(id: string) {
+    await runMutation(async () => {
+      const { error: deleteError } = await supabase.from("financial_goals").delete().eq("id", id).eq("user_id", userId)
+      assertSupabaseSuccess(deleteError)
     })
   }
 
-  function deleteGoalContribution(id: string) {
-    setState((current) =>
-      touch({
-        ...current,
-        goalContributions: current.goalContributions.filter(
-          (contribution) => contribution.id !== id
-        ),
-      })
-    )
+  async function upsertGoalContribution(values: Omit<GoalContribution, "createdAt" | "id">, id?: string) {
+    await runMutation(async () => {
+      const payload = {
+        amount: values.amount,
+        date: values.date,
+        goal_id: values.goalId,
+        notes: values.notes,
+        user_id: userId,
+      }
+      const result = id
+        ? await supabase.from("goal_contributions").update(payload).eq("id", id).eq("user_id", userId)
+        : await supabase.from("goal_contributions").insert(payload)
+
+      assertSupabaseSuccess(result.error)
+    })
   }
 
-  function deleteInvestment(id: string) {
-    setState((current) =>
-      touch({
-        ...current,
-        investments: current.investments.filter(
-          (investment) => investment.id !== id
-        ),
-      })
-    )
+  async function deleteGoalContribution(id: string) {
+    await runMutation(async () => {
+      const { error: deleteError } = await supabase.from("goal_contributions").delete().eq("id", id).eq("user_id", userId)
+      assertSupabaseSuccess(deleteError)
+    })
   }
 
   return {
@@ -393,8 +409,11 @@ export function useFinanceStore() {
     deleteIncome,
     deleteInvestment,
     deleteReminder,
+    error,
     isReady,
+    isSaving,
     markReminderReceived,
+    reload: loadWorkspace,
     resetWorkspace,
     state,
     upsertExpense,

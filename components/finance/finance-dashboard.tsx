@@ -193,11 +193,11 @@ import { cn } from "@/lib/utils"
 type FinanceDashboardProps = {
   activeSection?: AppSection
   finance: ReturnType<typeof useFinanceStore>
-  onDeleteAccount: () => void
-  onLogout: () => void
+  onDeleteAccount: () => Promise<void> | void
+  onLogout: () => Promise<void> | void
   onNavigateSection?: (section: AppSection) => void
   onRequestPasswordReset: () => void
-  onUpdateUser: (user: AppUser) => void
+  onUpdateUser: (user: AppUser) => Promise<void> | void
   user: AppUser
 }
 
@@ -301,6 +301,10 @@ const reminderActionClassName =
 
 const newActionButtonClassName = "min-w-[9.5rem]"
 
+function getActionErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : "Não foi possível concluir a ação."
+}
+
 export function FinanceDashboard({
   activeSection,
   finance,
@@ -340,6 +344,18 @@ export function FinanceDashboard({
     })
   }
 
+  async function runFinanceAction(action: () => Promise<void>, successMessage: string) {
+    try {
+      await action()
+      toast.success(successMessage)
+    } catch (error) {
+      toast.error("Não foi possível salvar", {
+        description: getActionErrorMessage(error),
+      })
+      throw error
+    }
+  }
+
   function openIncomeDialog(income?: Income) {
     setEditingIncome(income ?? null)
     setIsIncomeDialogOpen(true)
@@ -360,45 +376,41 @@ export function FinanceDashboard({
     setIsReminderDialogOpen(true)
   }
 
-  function handleDeleteIncome(income: Income) {
+  async function handleDeleteIncome(income: Income) {
     if (!window.confirm(`Excluir a receita "${income.name}"?`)) {
       return
     }
 
-    finance.deleteIncome(income.id)
-    toast.success("Receita excluída")
+    await runFinanceAction(() => finance.deleteIncome(income.id), "Receita excluída")
   }
 
-  function handleDeleteExpense(expense: FixedExpense) {
+  async function handleDeleteExpense(expense: FixedExpense) {
     if (!window.confirm(`Excluir a despesa "${expense.name}"?`)) {
       return
     }
 
-    finance.deleteExpense(expense.id)
-    toast.success("Despesa excluída")
+    await runFinanceAction(() => finance.deleteExpense(expense.id), "Despesa excluída")
   }
 
-  function handleDeleteInvestment(investment: InvestmentEntry) {
+  async function handleDeleteInvestment(investment: InvestmentEntry) {
     if (!window.confirm(`Excluir o registro de ${formatMonth(investment.month)}?`)) {
       return
     }
 
-    finance.deleteInvestment(investment.id)
-    toast.success("Investimento excluído")
+    await runFinanceAction(() => finance.deleteInvestment(investment.id), "Investimento excluído")
   }
 
-  function handleDeleteReminder(reminder: ChargeReminder) {
+  async function handleDeleteReminder(reminder: ChargeReminder) {
     if (!window.confirm(`Excluir o lembrete "${reminder.name}"?`)) {
       return
     }
 
-    finance.deleteReminder(reminder.id)
-    toast.success("Lembrete excluído")
+    await runFinanceAction(() => finance.deleteReminder(reminder.id), "Lembrete excluído")
   }
 
-  function handleMarkReminderReceived(reminder: ChargeReminder) {
-    finance.markReminderReceived(reminder.id)
-    toast.success(
+  async function handleMarkReminderReceived(reminder: ChargeReminder) {
+    await runFinanceAction(
+      () => finance.markReminderReceived(reminder.id),
       reminder.type === "Parcelado" && reminder.remainingInstallments <= 1
         ? "Lembrete concluído"
         : "Cobrança marcada como recebida"
@@ -478,9 +490,11 @@ export function FinanceDashboard({
       <IncomeDialog
         income={editingIncome}
         onOpenChange={setIsIncomeDialogOpen}
-        onSubmit={(values) => {
-          finance.upsertIncome(values, editingIncome?.id)
-          toast.success(editingIncome ? "Receita atualizada" : "Receita adicionada")
+        onSubmit={async (values) => {
+          await runFinanceAction(
+            () => finance.upsertIncome(values, editingIncome?.id),
+            editingIncome ? "Receita atualizada" : "Receita adicionada"
+          )
         }}
         open={isIncomeDialogOpen}
       />
@@ -488,9 +502,11 @@ export function FinanceDashboard({
       <ExpenseDialog
         expense={editingExpense}
         onOpenChange={setIsExpenseDialogOpen}
-        onSubmit={(values) => {
-          finance.upsertExpense(values, editingExpense?.id)
-          toast.success(editingExpense ? "Despesa atualizada" : "Despesa adicionada")
+        onSubmit={async (values) => {
+          await runFinanceAction(
+            () => finance.upsertExpense(values, editingExpense?.id),
+            editingExpense ? "Despesa atualizada" : "Despesa adicionada"
+          )
         }}
         open={isExpenseDialogOpen}
       />
@@ -498,9 +514,9 @@ export function FinanceDashboard({
       <InvestmentDialog
         investment={editingInvestment}
         onOpenChange={setIsInvestmentDialogOpen}
-        onSubmit={(values) => {
-          finance.upsertInvestment(values, editingInvestment?.id)
-          toast.success(
+        onSubmit={async (values) => {
+          await runFinanceAction(
+            () => finance.upsertInvestment(values, editingInvestment?.id),
             editingInvestment ? "Investimento atualizado" : "Investimento registrado"
           )
         }}
@@ -509,9 +525,11 @@ export function FinanceDashboard({
 
       <ReminderDialog
         onOpenChange={setIsReminderDialogOpen}
-        onSubmit={(values) => {
-          finance.upsertReminder(normalizeReminderFormValues(values), editingReminder?.id)
-          toast.success(editingReminder ? "Lembrete atualizado" : "Lembrete adicionado")
+        onSubmit={async (values) => {
+          await runFinanceAction(
+            () => finance.upsertReminder(normalizeReminderFormValues(values), editingReminder?.id),
+            editingReminder ? "Lembrete atualizado" : "Lembrete adicionado"
+          )
         }}
         open={isReminderDialogOpen}
         reminder={editingReminder}
@@ -605,7 +623,7 @@ function TopBar({
   user,
 }: {
   activeSection: SectionId
-  onLogout: () => void
+  onLogout: () => Promise<void> | void
   onOpenAccount: () => void
   onSelectSection: (section: SectionId) => void
   user: AppUser
@@ -1130,11 +1148,11 @@ function IncomesSection({
   incomes: Income[]
   onAdd: () => void
   onAddReminder: () => void
-  onDelete: (income: Income) => void
+  onDelete: (income: Income) => Promise<void> | void
   onDeleteReminder: (reminder: ChargeReminder) => void
   onEdit: (income: Income) => void
   onEditReminder: (reminder: ChargeReminder) => void
-  onMarkReminderReceived: (reminder: ChargeReminder) => void
+  onMarkReminderReceived: (reminder: ChargeReminder) => Promise<void> | void
   reminders: ChargeReminder[]
   summary: ReturnType<typeof calculateFinanceSummary>
 }) {
@@ -1235,9 +1253,9 @@ function RemindersCard({
   reminders,
 }: {
   onAdd: () => void
-  onDelete: (reminder: ChargeReminder) => void
+  onDelete: (reminder: ChargeReminder) => Promise<void> | void
   onEdit: (reminder: ChargeReminder) => void
-  onMarkReceived: (reminder: ChargeReminder) => void
+  onMarkReceived: (reminder: ChargeReminder) => Promise<void> | void
   reminders: ChargeReminder[]
 }) {
   const [page, setPage] = useState(1)
@@ -1392,7 +1410,7 @@ function ExpensesSection({
 }: {
   expenses: FixedExpense[]
   onAdd: () => void
-  onDelete: (expense: FixedExpense) => void
+  onDelete: (expense: FixedExpense) => Promise<void> | void
   onEdit: (expense: FixedExpense) => void
   summary: ReturnType<typeof calculateFinanceSummary>
 }) {
@@ -1503,7 +1521,7 @@ function InvestmentsSection({
 }: {
   investments: InvestmentEntry[]
   onAdd: () => void
-  onDelete: (investment: InvestmentEntry) => void
+  onDelete: (investment: InvestmentEntry) => Promise<void> | void
   onEdit: (investment: InvestmentEntry) => void
   summary: ReturnType<typeof calculateFinanceSummary>
 }) {
@@ -1672,22 +1690,46 @@ function GoalsSection({ finance }: { finance: FinanceDashboardProps["finance"] }
     setIsContributionDialogOpen(true)
   }
 
-  function handleDeleteGoal(goal: Goal) {
+  async function runGoalAction(action: () => Promise<void>, successMessage: string) {
+    try {
+      await action()
+      toast.success(successMessage)
+    } catch (error) {
+      toast.error("Não foi possível salvar", {
+        description: getActionErrorMessage(error),
+      })
+      throw error
+    }
+  }
+
+  async function handleDeleteGoal(goal: Goal) {
     if (!window.confirm(`Excluir a meta ${goal.name}? Os aportes vinculados também serão removidos.`)) {
       return
     }
 
-    finance.deleteGoal(goal.id)
-    toast.success("Meta excluída")
+    try {
+      await finance.deleteGoal(goal.id)
+      toast.success("Meta excluída")
+    } catch (error) {
+      toast.error("Não foi possível excluir a meta", {
+        description: getActionErrorMessage(error),
+      })
+    }
   }
 
-  function handleDeleteContribution(contribution: GoalContribution) {
+  async function handleDeleteContribution(contribution: GoalContribution) {
     if (!window.confirm("Excluir este aporte?")) {
       return
     }
 
-    finance.deleteGoalContribution(contribution.id)
-    toast.success("Aporte removido")
+    try {
+      await finance.deleteGoalContribution(contribution.id)
+      toast.success("Aporte removido")
+    } catch (error) {
+      toast.error("Não foi possível excluir o aporte", {
+        description: getActionErrorMessage(error),
+      })
+    }
   }
 
   return (
@@ -2074,7 +2116,7 @@ function GoalsSection({ finance }: { finance: FinanceDashboardProps["finance"] }
             : editingGoal
         }
         onOpenChange={setIsGoalDialogOpen}
-      onSubmit={(values) => {
+      onSubmit={async (values) => {
           const currentAmount = editingGoal
             ? getGoalProgress(
                 editingGoal,
@@ -2082,11 +2124,13 @@ function GoalsSection({ finance }: { finance: FinanceDashboardProps["finance"] }
               ).currentAmount
             : 0
 
-          finance.upsertGoal(
-            normalizeGoalFormValues(values, currentAmount),
-            editingGoal?.id
+          await runGoalAction(
+            () => finance.upsertGoal(
+              normalizeGoalFormValues(values, currentAmount),
+              editingGoal?.id
+            ),
+            editingGoal ? "Meta atualizada" : "Meta criada"
           )
-          toast.success(editingGoal ? "Meta atualizada" : "Meta criada")
         }}
         open={isGoalDialogOpen}
       />
@@ -2101,9 +2145,11 @@ function GoalsSection({ finance }: { finance: FinanceDashboardProps["finance"] }
             setEditingContribution(null)
           }
         }}
-        onSubmit={(values, id) => {
-          finance.upsertGoalContribution(values, id)
-          toast.success(editingContribution ? "Aporte atualizado" : "Aporte registrado")
+        onSubmit={async (values, id) => {
+          await runGoalAction(
+            () => finance.upsertGoalContribution(values, id),
+            editingContribution ? "Aporte atualizado" : "Aporte registrado"
+          )
         }}
         open={isContributionDialogOpen}
       />
@@ -2429,11 +2475,11 @@ function AccountDialog({
   open,
   user,
 }: {
-  onDeleteAccount: () => void
-  onLogout: () => void
+  onDeleteAccount: () => Promise<void> | void
+  onLogout: () => Promise<void> | void
   onOpenChange: (open: boolean) => void
   onRequestPasswordReset: () => void
-  onUpdateUser: (user: AppUser) => void
+  onUpdateUser: (user: AppUser) => Promise<void> | void
   open: boolean
   user: AppUser
 }) {
@@ -2483,7 +2529,7 @@ function AccountDialog({
     reader.readAsDataURL(file)
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
     const nextName = draftName.trim()
@@ -2493,13 +2539,19 @@ function AccountDialog({
       return
     }
 
-    onUpdateUser({
-      ...user,
-      avatarUrl: draftAvatarUrl || undefined,
-      name: nextName,
-    })
-    toast.success("Perfil atualizado")
-    onOpenChange(false)
+    try {
+      await onUpdateUser({
+        ...user,
+        avatarUrl: draftAvatarUrl || undefined,
+        name: nextName,
+      })
+      toast.success("Perfil atualizado")
+      onOpenChange(false)
+    } catch (error) {
+      toast.error("Não foi possível atualizar o perfil", {
+        description: getActionErrorMessage(error),
+      })
+    }
   }
 
   return (
@@ -2586,7 +2638,7 @@ function AccountDialog({
                       variant="outline"
                     >
                       <KeyRoundIcon data-icon="inline-start" />
-                      Redefinir senha por e-mail
+                      Alterar senha
                     </Button>
                     <Button
                       className="flex-1 justify-center"
@@ -2633,7 +2685,7 @@ function AccountDialog({
           <DialogHeader>
             <DialogTitle>Excluir conta?</DialogTitle>
             <DialogDescription>
-              Essa ação remove sua sessão e todos os dados salvos neste navegador.
+              Essa ação remove permanentemente sua conta e todos os dados salvos no Valion.
             </DialogDescription>
           </DialogHeader>
 
@@ -2645,7 +2697,7 @@ function AccountDialog({
               onClick={() => {
                 setIsDeleteConfirmOpen(false)
                 onOpenChange(false)
-                onDeleteAccount()
+                void onDeleteAccount()
               }}
               type="button"
               variant="destructive"
@@ -2667,7 +2719,7 @@ function IncomeDialog({
 }: {
   income: Income | null
   onOpenChange: (open: boolean) => void
-  onSubmit: (values: IncomeFormValues) => void
+  onSubmit: (values: IncomeFormValues) => Promise<void> | void
   open: boolean
 }) {
   const form = useForm<IncomeFormInput, unknown, IncomeFormValues>({
@@ -2679,8 +2731,8 @@ function IncomeDialog({
     form.reset(getIncomeDefaults(income))
   }, [form, income, open])
 
-  function submit(values: IncomeFormValues) {
-    onSubmit(values)
+  async function submit(values: IncomeFormValues) {
+    await onSubmit(values)
     onOpenChange(false)
   }
 
@@ -2748,7 +2800,7 @@ function ReminderDialog({
   reminder,
 }: {
   onOpenChange: (open: boolean) => void
-  onSubmit: (values: ReminderFormValues) => void
+  onSubmit: (values: ReminderFormValues) => Promise<void> | void
   open: boolean
   reminder: ChargeReminder | null
 }) {
@@ -2770,8 +2822,8 @@ function ReminderDialog({
     }
   }, [form, reminderType])
 
-  function submit(values: ReminderFormValues) {
-    onSubmit(values)
+  async function submit(values: ReminderFormValues) {
+    await onSubmit(values)
     onOpenChange(false)
   }
 
@@ -2884,7 +2936,7 @@ function ExpenseDialog({
 }: {
   expense: FixedExpense | null
   onOpenChange: (open: boolean) => void
-  onSubmit: (values: ExpenseFormValues) => void
+  onSubmit: (values: ExpenseFormValues) => Promise<void> | void
   open: boolean
 }) {
   const form = useForm<ExpenseFormInput, unknown, ExpenseFormValues>({
@@ -2896,7 +2948,7 @@ function ExpenseDialog({
     form.reset(getExpenseDefaults(expense))
   }, [expense, form, open])
 
-  function submit(values: ExpenseFormValues) {
+  async function submit(values: ExpenseFormValues) {
     if (values.totalInstallments > 0 && values.remainingInstallments > values.totalInstallments) {
       form.setError("remainingInstallments", {
         message: "Parcelas restantes não podem exceder o total.",
@@ -2905,7 +2957,7 @@ function ExpenseDialog({
       return
     }
 
-    onSubmit(values)
+    await onSubmit(values)
     onOpenChange(false)
   }
 
@@ -2997,7 +3049,7 @@ function InvestmentDialog({
 }: {
   investment: InvestmentEntry | null
   onOpenChange: (open: boolean) => void
-  onSubmit: (values: InvestmentFormValues) => void
+  onSubmit: (values: InvestmentFormValues) => Promise<void> | void
   open: boolean
 }) {
   const form = useForm<InvestmentFormInput, unknown, InvestmentFormValues>({
@@ -3011,8 +3063,8 @@ function InvestmentDialog({
     form.reset(getInvestmentDefaults(investment))
   }, [form, investment, open])
 
-  function submit(values: InvestmentFormValues) {
-    onSubmit(values)
+  async function submit(values: InvestmentFormValues) {
+    await onSubmit(values)
     onOpenChange(false)
   }
 
@@ -3118,7 +3170,7 @@ function GoalDialog({
 }: {
   goal: Goal | null
   onOpenChange: (open: boolean) => void
-  onSubmit: (values: GoalFormValues) => void
+  onSubmit: (values: GoalFormValues) => Promise<void> | void
   open: boolean
 }) {
   const form = useForm<GoalFormInput, unknown, GoalFormValues>({
@@ -3140,8 +3192,8 @@ function GoalDialog({
 
   }, [deadlineEnabled, form])
 
-  function submit(values: GoalFormValues) {
-    onSubmit(values)
+  async function submit(values: GoalFormValues) {
+    await onSubmit(values)
     onOpenChange(false)
   }
 
@@ -3239,7 +3291,7 @@ function GoalContributionDialog({
   defaultGoalId: string
   goals: Goal[]
   onOpenChange: (open: boolean) => void
-  onSubmit: (values: GoalContributionFormValues, id?: string) => void
+  onSubmit: (values: GoalContributionFormValues, id?: string) => Promise<void> | void
   open: boolean
 }) {
   const form = useForm<GoalContributionFormInput, unknown, GoalContributionFormValues>({
@@ -3252,8 +3304,8 @@ function GoalContributionDialog({
     form.reset(getGoalContributionDefaults(defaultGoalId, goals, contribution))
   }, [contribution, defaultGoalId, form, goals, open])
 
-  function submit(values: GoalContributionFormValues) {
-    onSubmit(values, contribution?.id)
+  async function submit(values: GoalContributionFormValues) {
+    await onSubmit(values, contribution?.id)
     onOpenChange(false)
   }
 
@@ -3413,7 +3465,7 @@ function PaginationControls({
   )
 }
 
-function TableActions({ onDelete, onEdit }: { onDelete: () => void; onEdit: () => void }) {
+function TableActions({ onDelete, onEdit }: { onDelete: () => Promise<void> | void; onEdit: () => void }) {
   return (
     <div className="flex justify-end gap-1">
       <Button aria-label="Editar" onClick={onEdit} size="icon-sm" variant="ghost">

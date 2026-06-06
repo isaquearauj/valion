@@ -1,6 +1,6 @@
 "use client"
 
-import { FormEvent, useState } from "react"
+import { FormEvent, useMemo, useState } from "react"
 import {
   ArrowRightIcon,
   ChartNoAxesCombinedIcon,
@@ -28,11 +28,13 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
+import { getAppUserFromSupabaseUser } from "@/features/auth/supabase-user"
 import type { AppUser } from "@/features/finance/types"
 import type { AuthMode } from "@/features/navigation/routes"
+import { createSupabaseBrowser } from "@/lib/supabase/client"
 
 type AuthScreenProps = {
-  onAuthenticate: (user: AppUser) => void
+  onAuthenticate: (user: AppUser) => Promise<void> | void
   onModeChange?: (mode: AuthMode) => void
   mode?: AuthMode
 }
@@ -74,15 +76,17 @@ const authCopy = {
 } satisfies Record<AuthMode, { action: string; description: string; title: string }>
 
 export function AuthScreen({ mode, onAuthenticate, onModeChange }: AuthScreenProps) {
+  const supabase = useMemo(() => createSupabaseBrowser(), [])
   const [internalMode, setInternalMode] = useState<AuthMode>("login")
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const activeMode = mode ?? internalMode
   const setActiveMode = onModeChange ?? setInternalMode
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError("")
 
@@ -92,6 +96,19 @@ export function AuthScreen({ mode, onAuthenticate, onModeChange }: AuthScreenPro
     }
 
     if (activeMode === "recover") {
+      setIsSubmitting(true)
+
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/callback?next=/alterar-senha`,
+      })
+
+      setIsSubmitting(false)
+
+      if (resetError) {
+        setError(resetError.message)
+        return
+      }
+
       toast.success("Instruções enviadas", {
         description: "Se o e-mail estiver cadastrado, você receberá as instruções de recuperação.",
       })
@@ -104,18 +121,62 @@ export function AuthScreen({ mode, onAuthenticate, onModeChange }: AuthScreenPro
       return
     }
 
-    const fallbackName = email.split("@")[0]?.replace(/[._-]/g, " ") || "Usuário"
-    const user: AppUser = {
-      createdAt: new Date().toISOString(),
-      email,
-      id: `user-${email.toLowerCase()}`,
-      name: activeMode === "register" ? name || fallbackName : fallbackName,
+    setIsSubmitting(true)
+
+    if (activeMode === "register") {
+      const fallbackName = email.split("@")[0]?.replace(/[._-]/g, " ") || "Usuário"
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        options: {
+          data: {
+            full_name: name.trim() || fallbackName,
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
+        },
+        password,
+      })
+
+      setIsSubmitting(false)
+
+      if (signUpError) {
+        setError(signUpError.message)
+        return
+      }
+
+      if (!data.user || !data.session) {
+        toast.success("Conta criada", {
+          description: "Confira seu e-mail para confirmar a conta antes de entrar.",
+        })
+        setActiveMode("login")
+        return
+      }
+
+      const appUser = await getAppUserFromSupabaseUser(supabase, data.user)
+      toast.success("Conta criada", {
+        description: "Bem-vindo ao Valion.",
+      })
+      await onAuthenticate(appUser)
+      return
     }
 
-    toast.success(activeMode === "register" ? "Conta criada" : "Sessão iniciada", {
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    setIsSubmitting(false)
+
+    if (signInError || !data.user) {
+      setError("E-mail ou senha inválidos.")
+      return
+    }
+
+    const appUser = await getAppUserFromSupabaseUser(supabase, data.user)
+
+    toast.success("Sessão iniciada", {
       description: "Bem-vindo ao Valion.",
     })
-    onAuthenticate(user)
+    await onAuthenticate(appUser)
   }
 
   return (
@@ -219,8 +280,8 @@ export function AuthScreen({ mode, onAuthenticate, onModeChange }: AuthScreenPro
                   <FieldError>{error}</FieldError>
                 </FieldGroup>
 
-                <Button className="h-10" type="submit">
-                  {authCopy[activeMode].action}
+                <Button className="h-10" disabled={isSubmitting} type="submit">
+                  {isSubmitting ? "Aguarde..." : authCopy[activeMode].action}
                   <ArrowRightIcon data-icon="inline-end" />
                 </Button>
               </form>

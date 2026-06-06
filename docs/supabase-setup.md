@@ -1,6 +1,6 @@
 # Configuração do Supabase
 
-Este projeto já possui base de interface, autenticação e dados preparada para receber persistência real no Supabase.
+Este projeto usa Supabase em produção para autenticação, perfis e persistência financeira com RLS por usuário.
 
 ## 1. Criar o projeto
 
@@ -21,35 +21,84 @@ Este projeto já possui base de interface, autenticação e dados preparada para
 
 1. Vá em `Authentication > Providers`.
 2. Habilite `Email`.
-3. Em desenvolvimento, configure a URL do site como `http://localhost:3000`.
-4. Para produção na Vercel, adicione a URL final em `Site URL` e `Redirect URLs`.
+3. Configure `Site URL` como `https://valionapp.com`.
+4. Configure `Redirect URLs` com:
+
+```txt
+https://valionapp.com/**
+https://www.valionapp.com/**
+http://localhost:3000/**
+```
 
 ## 4. Criar `.env.local`
 
-Copie `.env.example` para `.env.local` e preencha:
+Para produção/preview na Vercel, preencha as variáveis com o projeto Supabase Cloud:
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://seu-projeto.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=sua-chave-anon
+SUPABASE_SERVICE_ROLE_KEY=sua-chave-service-role
 ```
 
-As chaves ficam em `Project Settings > API`.
+As chaves ficam em `Project Settings > API`. A `SUPABASE_SERVICE_ROLE_KEY` deve existir apenas em ambiente server-side e nunca deve ser exposta com prefixo `NEXT_PUBLIC`.
 
-## 5. Próxima etapa de implementação
+Para desenvolvimento local, use Supabase CLI + Docker:
 
-O app já possui clientes em `lib/supabase/client.ts` e `lib/supabase/server.ts`.
+```bash
+pnpm supabase:start
+pnpm supabase:status
+```
 
-Para conectar a aplicação ao banco real:
+Configure `.env.local` com os valores locais exibidos pelo CLI:
 
-1. Substituir `useFinanceStore` por queries no Supabase.
-2. Conectar `AuthScreen` a `supabase.auth.signInWithPassword`, `signUp`, `resetPasswordForEmail` e `signOut`.
-3. Criar rotas protegidas usando sessão do Supabase no servidor.
-4. Mapear campos camelCase do frontend para snake_case do banco.
-5. Gerar tipos com `supabase gen types typescript --project-id <id> > lib/supabase/database.types.ts`.
+```env
+NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<publishable-local>
+SUPABASE_SERVICE_ROLE_KEY=<secret-local>
+```
+
+E-mails de autenticação enviados localmente ficam disponíveis no Mailpit:
+
+```txt
+http://127.0.0.1:54324
+```
+
+Isso permite testar `/recover` sem consumir o rate limit do Supabase Cloud.
+
+Para recriar o banco local:
+
+```bash
+pnpm supabase:reset
+```
+
+## 5. Exclusão real de conta
+
+A rota `DELETE /api/account` usa `SUPABASE_SERVICE_ROLE_KEY` para remover o usuário do Supabase Auth. As tabelas financeiras usam `on delete cascade`, então os dados vinculados são removidos junto com a conta.
 
 ## 6. Deploy na Vercel
 
-1. Suba o projeto para um repositório Git.
+1. Suba o projeto para o GitHub.
 2. Importe o projeto na Vercel.
-3. Adicione `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY` em `Settings > Environment Variables`.
+3. Adicione `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_KEY` em `Settings > Environment Variables`.
 4. Faça o deploy.
+5. Configure `valionapp.com` como domínio principal e `www.valionapp.com` como redirect para o domínio raiz.
+
+## 7. Manutenção
+
+A migration baseline local está em `supabase/migrations/20260606000000_baseline.sql`. Como o schema já foi aplicado manualmente no Supabase Cloud antes da introdução das migrations, antes de usar `supabase db push` em produção marque essa baseline como aplicada no projeto remoto:
+
+```bash
+pnpm exec supabase migration repair 20260606000000 --status applied
+```
+
+Depois disso, novas migrations podem ser enviadas com:
+
+```bash
+pnpm exec supabase db push
+```
+
+Para gerar tipos oficiais do Supabase no futuro:
+
+```bash
+supabase gen types typescript --project-id <project-id> > lib/supabase/database.types.ts
+```

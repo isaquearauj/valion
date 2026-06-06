@@ -5,10 +5,9 @@ import { useRouter } from "next/navigation"
 
 import { AuthScreen } from "@/components/auth/auth-screen"
 import { Skeleton } from "@/components/ui/skeleton"
-import { readSession, writeSession } from "@/features/auth/session"
-import type { AppUser } from "@/features/finance/types"
 import type { AuthMode } from "@/features/navigation/routes"
 import { authPaths } from "@/features/navigation/routes"
+import { createSupabaseBrowser } from "@/lib/supabase/client"
 
 export function AuthRouteScreen({ mode }: { mode: AuthMode }) {
   const router = useRouter()
@@ -17,26 +16,32 @@ export function AuthRouteScreen({ mode }: { mode: AuthMode }) {
   useEffect(() => {
     let isCancelled = false
 
-    queueMicrotask(() => {
+    async function checkSession() {
       if (isCancelled) {
         return
       }
 
-      if (readSession()) {
+      const supabase = createSupabaseBrowser()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (user) {
         router.replace("/dashboard")
         return
       }
 
       setIsReady(true)
-    })
+    }
+
+    void checkSession()
 
     return () => {
       isCancelled = true
     }
   }, [router])
 
-  function handleAuthenticate(user: AppUser) {
-    writeSession(user)
+  function handleAuthenticate() {
     router.replace("/dashboard")
   }
 
