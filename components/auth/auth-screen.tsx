@@ -28,12 +28,13 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
-import type { DemoUser } from "@/features/finance/types"
-
-type AuthMode = "login" | "register" | "recover"
+import type { AppUser } from "@/features/finance/types"
+import type { AuthMode } from "@/features/navigation/routes"
 
 type AuthScreenProps = {
-  onAuthenticate: (user: DemoUser) => void
+  onAuthenticate: (user: AppUser) => void
+  onModeChange?: (mode: AuthMode) => void
+  mode?: AuthMode
 }
 
 const benefits = [
@@ -43,7 +44,7 @@ const benefits = [
     title: "Visão financeira única",
   },
   {
-    description: "RLS, autenticação e variáveis de ambiente preparados para Supabase.",
+    description: "Arquitetura preparada para autenticação, RLS e variáveis de ambiente.",
     icon: ShieldCheckIcon,
     title: "Pronto para produção",
   },
@@ -57,27 +58,29 @@ const benefits = [
 const authCopy = {
   login: {
     action: "Entrar no painel",
-    description: "Use qualquer e-mail e senha para acessar a versão demo local.",
+    description: "Acesse sua central financeira com e-mail e senha.",
     title: "Acesse sua central financeira",
   },
   recover: {
     action: "Enviar instruções",
-    description: "Simularemos o fluxo de recuperação. No Supabase, este envio será real.",
+    description: "Receba as instruções para redefinir sua senha.",
     title: "Recuperar senha",
   },
   register: {
-    action: "Criar conta demo",
-    description: "Crie um perfil local para testar todas as funcionalidades agora.",
+    action: "Criar conta",
+    description: "Crie sua conta para organizar sua vida financeira.",
     title: "Crie sua conta",
   },
 } satisfies Record<AuthMode, { action: string; description: string; title: string }>
 
-export function AuthScreen({ onAuthenticate }: AuthScreenProps) {
-  const [mode, setMode] = useState<AuthMode>("login")
-  const [name, setName] = useState("Izaque")
-  const [email, setEmail] = useState("izaque@demo.com")
-  const [password, setPassword] = useState("123456")
+export function AuthScreen({ mode, onAuthenticate, onModeChange }: AuthScreenProps) {
+  const [internalMode, setInternalMode] = useState<AuthMode>("login")
+  const [name, setName] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
   const [error, setError] = useState("")
+  const activeMode = mode ?? internalMode
+  const setActiveMode = onModeChange ?? setInternalMode
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -88,11 +91,11 @@ export function AuthScreen({ onAuthenticate }: AuthScreenProps) {
       return
     }
 
-    if (mode === "recover") {
-      toast.success("Fluxo de recuperação simulado", {
-        description: "Com Supabase configurado, o e-mail de recuperação será enviado.",
+    if (activeMode === "recover") {
+      toast.success("Instruções enviadas", {
+        description: "Se o e-mail estiver cadastrado, você receberá as instruções de recuperação.",
       })
-      setMode("login")
+      setActiveMode("login")
       return
     }
 
@@ -102,15 +105,15 @@ export function AuthScreen({ onAuthenticate }: AuthScreenProps) {
     }
 
     const fallbackName = email.split("@")[0]?.replace(/[._-]/g, " ") || "Usuário"
-    const user: DemoUser = {
+    const user: AppUser = {
       createdAt: new Date().toISOString(),
       email,
-      id: `demo-${email.toLowerCase()}`,
-      name: mode === "register" ? name || fallbackName : fallbackName,
+      id: `user-${email.toLowerCase()}`,
+      name: activeMode === "register" ? name || fallbackName : fallbackName,
     }
 
-    toast.success(mode === "register" ? "Conta demo criada" : "Sessão iniciada", {
-      description: "Os dados ficam persistidos localmente neste navegador.",
+    toast.success(activeMode === "register" ? "Conta criada" : "Sessão iniciada", {
+      description: "Bem-vindo ao Valion.",
     })
     onAuthenticate(user)
   }
@@ -137,13 +140,13 @@ export function AuthScreen({ onAuthenticate }: AuthScreenProps) {
             <div className="max-w-3xl">
               <div className="mb-5 inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1 text-sm text-muted-foreground shadow-sm">
                 <LockKeyholeIcon />
-                Demo local agora, Supabase no próximo passo
+                Plataforma financeira pronta para evoluir
               </div>
               <h1 className="max-w-3xl text-balance font-heading text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">
                 Controle financeiro pessoal com clareza de produto SaaS.
               </h1>
               <p className="mt-5 max-w-2xl text-pretty text-base leading-7 text-muted-foreground sm:text-lg">
-                Organize receitas, despesas fixas, parcelamentos e investimentos em uma plataforma moderna, responsiva e pronta para evoluir para Supabase e Vercel.
+                Organize receitas, despesas fixas, parcelamentos e investimentos em uma plataforma moderna, responsiva e preparada para produção.
               </p>
             </div>
 
@@ -168,13 +171,13 @@ export function AuthScreen({ onAuthenticate }: AuthScreenProps) {
 
           <Card className="mx-auto w-full max-w-md border-foreground/10 bg-card/95 shadow-2xl shadow-primary/10 backdrop-blur">
             <CardHeader>
-              <CardTitle className="text-2xl">{authCopy[mode].title}</CardTitle>
-              <CardDescription>{authCopy[mode].description}</CardDescription>
+              <CardTitle className="text-2xl">{authCopy[activeMode].title}</CardTitle>
+              <CardDescription>{authCopy[activeMode].description}</CardDescription>
             </CardHeader>
             <CardContent>
               <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
                 <FieldGroup>
-                  {mode === "register" ? (
+                  {activeMode === "register" ? (
                     <Field>
                       <FieldLabel htmlFor="name">Nome</FieldLabel>
                       <Input
@@ -195,18 +198,16 @@ export function AuthScreen({ onAuthenticate }: AuthScreenProps) {
                       onChange={(event) => setEmail(event.target.value)}
                       value={email}
                     />
-                    {mode === "login" ? (
-                      <FieldDescription>
-                        Dica: use o e-mail demo já preenchido para entrar rápido.
-                      </FieldDescription>
+                    {activeMode === "login" ? (
+                      <FieldDescription>Use seu e-mail para acessar o painel.</FieldDescription>
                     ) : null}
                   </Field>
 
-                  {mode !== "recover" ? (
+                  {activeMode !== "recover" ? (
                     <Field data-invalid={Boolean(error)}>
                       <FieldLabel htmlFor="password">Senha</FieldLabel>
                       <Input
-                        autoComplete={mode === "register" ? "new-password" : "current-password"}
+                        autoComplete={activeMode === "register" ? "new-password" : "current-password"}
                         id="password"
                         onChange={(event) => setPassword(event.target.value)}
                         type="password"
@@ -219,7 +220,7 @@ export function AuthScreen({ onAuthenticate }: AuthScreenProps) {
                 </FieldGroup>
 
                 <Button className="h-10" type="submit">
-                  {authCopy[mode].action}
+                  {authCopy[activeMode].action}
                   <ArrowRightIcon data-icon="inline-end" />
                 </Button>
               </form>
@@ -227,16 +228,16 @@ export function AuthScreen({ onAuthenticate }: AuthScreenProps) {
               <Separator className="my-5" />
 
               <div className="flex flex-col gap-2 text-sm text-muted-foreground">
-                {mode !== "login" ? (
-                  <Button onClick={() => setMode("login")} type="button" variant="link">
+                {activeMode !== "login" ? (
+                  <Button onClick={() => setActiveMode("login")} type="button" variant="link">
                     Já tenho conta
                   </Button>
                 ) : (
                   <>
-                    <Button onClick={() => setMode("register")} type="button" variant="link">
-                      Criar uma conta demo
+                    <Button onClick={() => setActiveMode("register")} type="button" variant="link">
+                      Criar uma conta
                     </Button>
-                    <Button onClick={() => setMode("recover")} type="button" variant="link">
+                    <Button onClick={() => setActiveMode("recover")} type="button" variant="link">
                       Esqueci minha senha
                     </Button>
                   </>

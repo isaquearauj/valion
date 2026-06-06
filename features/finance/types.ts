@@ -25,10 +25,22 @@ export const INCOME_FREQUENCIES = [
   "Única",
 ] as const
 
+export const REMINDER_TYPES = ["Recorrente", "Parcelado"] as const
+
+export const REMINDER_FREQUENCIES = ["Mensal", "Quinzenal", "Semanal"] as const
+
+export const REMINDER_STATUSES = ["Ativo", "Pausado", "Concluído"] as const
+
+export const GOAL_STATUSES = ["Ativa", "Pausada", "Concluída"] as const
+
 export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number]
 export type ExpenseStatus = (typeof EXPENSE_STATUSES)[number]
 export type IncomeType = (typeof INCOME_TYPES)[number]
 export type IncomeFrequency = (typeof INCOME_FREQUENCIES)[number]
+export type ReminderType = (typeof REMINDER_TYPES)[number]
+export type ReminderFrequency = (typeof REMINDER_FREQUENCIES)[number]
+export type ReminderStatus = (typeof REMINDER_STATUSES)[number]
+export type GoalStatus = (typeof GOAL_STATUSES)[number]
 
 export type FixedExpense = {
   id: string
@@ -53,6 +65,21 @@ export type Income = {
   createdAt: string
 }
 
+export type ChargeReminder = {
+  id: string
+  name: string
+  person: string
+  type: ReminderType
+  amount: number
+  frequency: ReminderFrequency
+  nextDueDate: string
+  totalInstallments: number
+  remainingInstallments: number
+  status: ReminderStatus
+  notes: string
+  createdAt: string
+}
+
 export type InvestmentEntry = {
   id: string
   month: string
@@ -60,6 +87,25 @@ export type InvestmentEntry = {
   investedAmount: number
   notes: string
   createdAt: string
+}
+
+export type Goal = {
+  id: string
+  name: string
+  notes: string
+  status: GoalStatus
+  targetAmount: number
+  targetDate: string | null
+  createdAt: string
+}
+
+export type GoalContribution = {
+  id: string
+  amount: number
+  createdAt: string
+  date: string
+  goalId: string
+  notes: string
 }
 
 export type MonthlySnapshot = {
@@ -74,6 +120,9 @@ export type MonthlySnapshot = {
 export type FinanceState = {
   incomes: Income[]
   expenses: FixedExpense[]
+  goals: Goal[]
+  goalContributions: GoalContribution[]
+  reminders: ChargeReminder[]
   investments: InvestmentEntry[]
   snapshots: MonthlySnapshot[]
   updatedAt: string
@@ -82,10 +131,10 @@ export type FinanceState = {
 export type FinanceSummary = {
   monthlyIncome: number
   fixedExpenses: number
-  freeBalance: number
+  budgetAvailable: number
   plannedInvestment: number
   investedAmount: number
-  realAvailableBalance: number
+  budgetRemainingAfterInvestment: number
   committedPercent: number
   investmentDelta: number
   investmentInsight: "above" | "below" | "on-track"
@@ -93,9 +142,10 @@ export type FinanceSummary = {
   debtInstallmentsRemaining: number
 }
 
-export type DemoUser = {
+export type AppUser = {
   id: string
   name: string
   email: string
   createdAt: string
+  avatarUrl?: string
 }

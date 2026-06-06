@@ -1,6 +1,6 @@
 # Configuração do Supabase
 
-Este projeto está funcional em modo demo local. Use este passo a passo quando quiser trocar a persistência local por Supabase real.
+Este projeto já possui base de interface, autenticação e dados preparada para receber persistência real no Supabase.
 
 ## 1. Criar o projeto
 
@@ -39,10 +39,10 @@ As chaves ficam em `Project Settings > API`.
 
 O app já possui clientes em `lib/supabase/client.ts` e `lib/supabase/server.ts`.
 
-Para migrar do demo local para banco real:
+Para conectar a aplicação ao banco real:
 
 1. Substituir `useFinanceStore` por queries no Supabase.
-2. Trocar `AuthScreen` demo por `supabase.auth.signInWithPassword`, `signUp`, `resetPasswordForEmail` e `signOut`.
+2. Conectar `AuthScreen` a `supabase.auth.signInWithPassword`, `signUp`, `resetPasswordForEmail` e `signOut`.
 3. Criar rotas protegidas usando sessão do Supabase no servidor.
 4. Mapear campos camelCase do frontend para snake_case do banco.
 5. Gerar tipos com `supabase gen types typescript --project-id <id> > lib/supabase/database.types.ts`.

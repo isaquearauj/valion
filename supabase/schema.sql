@@ -20,6 +20,35 @@ create table if not exists public.incomes (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.charge_reminders (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  name text not null,
+  person text not null,
+  type text not null check (type in ('Recorrente', 'Parcelado')),
+  amount numeric(12,2) not null check (amount >= 0),
+  frequency text not null check (frequency in ('Mensal', 'Quinzenal', 'Semanal')),
+  next_due_date date not null,
+  total_installments integer not null default 0 check (total_installments >= 0),
+  remaining_installments integer not null default 0 check (remaining_installments >= 0),
+  status text not null check (status in ('Ativo', 'Pausado', 'Concluído')),
+  notes text not null default '',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint charge_reminders_installments_check check (
+    (
+      type = 'Recorrente'
+      and total_installments = 0
+      and remaining_installments = 0
+    )
+    or (
+      type = 'Parcelado'
+      and total_installments > 0
+      and remaining_installments <= total_installments
+    )
+  )
+);
+
 create table if not exists public.fixed_expenses (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -36,6 +65,29 @@ create table if not exists public.fixed_expenses (
   constraint fixed_expenses_installments_check check (
     total_installments = 0 or remaining_installments <= total_installments
   )
+);
+
+create table if not exists public.financial_goals (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  name text not null,
+  target_amount numeric(12,2) not null check (target_amount > 0),
+  target_date date,
+  status text not null check (status in ('Ativa', 'Pausada', 'Concluída')),
+  notes text not null default '',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.goal_contributions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  goal_id uuid not null references public.financial_goals(id) on delete cascade,
+  amount numeric(12,2) not null check (amount > 0),
+  date date not null,
+  notes text not null default '',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
 
 create table if not exists public.investment_entries (
@@ -83,9 +135,24 @@ create trigger incomes_set_updated_at
 before update on public.incomes
 for each row execute function public.set_updated_at();
 
+drop trigger if exists charge_reminders_set_updated_at on public.charge_reminders;
+create trigger charge_reminders_set_updated_at
+before update on public.charge_reminders
+for each row execute function public.set_updated_at();
+
 drop trigger if exists fixed_expenses_set_updated_at on public.fixed_expenses;
 create trigger fixed_expenses_set_updated_at
 before update on public.fixed_expenses
+for each row execute function public.set_updated_at();
+
+drop trigger if exists financial_goals_set_updated_at on public.financial_goals;
+create trigger financial_goals_set_updated_at
+before update on public.financial_goals
+for each row execute function public.set_updated_at();
+
+drop trigger if exists goal_contributions_set_updated_at on public.goal_contributions;
+create trigger goal_contributions_set_updated_at
+before update on public.goal_contributions
 for each row execute function public.set_updated_at();
 
 drop trigger if exists investment_entries_set_updated_at on public.investment_entries;
@@ -100,7 +167,10 @@ for each row execute function public.set_updated_at();
 
 alter table public.profiles enable row level security;
 alter table public.incomes enable row level security;
+alter table public.charge_reminders enable row level security;
 alter table public.fixed_expenses enable row level security;
+alter table public.financial_goals enable row level security;
+alter table public.goal_contributions enable row level security;
 alter table public.investment_entries enable row level security;
 alter table public.monthly_snapshots enable row level security;
 
@@ -128,6 +198,18 @@ for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "incomes_delete_own" on public.incomes
 for delete using (auth.uid() = user_id);
 
+create policy "charge_reminders_select_own" on public.charge_reminders
+for select using (auth.uid() = user_id);
+
+create policy "charge_reminders_insert_own" on public.charge_reminders
+for insert with check (auth.uid() = user_id);
+
+create policy "charge_reminders_update_own" on public.charge_reminders
+for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create policy "charge_reminders_delete_own" on public.charge_reminders
+for delete using (auth.uid() = user_id);
+
 create policy "fixed_expenses_select_own" on public.fixed_expenses
 for select using (auth.uid() = user_id);
 
@@ -138,6 +220,30 @@ create policy "fixed_expenses_update_own" on public.fixed_expenses
 for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 create policy "fixed_expenses_delete_own" on public.fixed_expenses
+for delete using (auth.uid() = user_id);
+
+create policy "financial_goals_select_own" on public.financial_goals
+for select using (auth.uid() = user_id);
+
+create policy "financial_goals_insert_own" on public.financial_goals
+for insert with check (auth.uid() = user_id);
+
+create policy "financial_goals_update_own" on public.financial_goals
+for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create policy "financial_goals_delete_own" on public.financial_goals
+for delete using (auth.uid() = user_id);
+
+create policy "goal_contributions_select_own" on public.goal_contributions
+for select using (auth.uid() = user_id);
+
+create policy "goal_contributions_insert_own" on public.goal_contributions
+for insert with check (auth.uid() = user_id);
+
+create policy "goal_contributions_update_own" on public.goal_contributions
+for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create policy "goal_contributions_delete_own" on public.goal_contributions
 for delete using (auth.uid() = user_id);
 
 create policy "investment_entries_select_own" on public.investment_entries

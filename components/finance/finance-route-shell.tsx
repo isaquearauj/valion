@@ -1,39 +1,22 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
-import { AuthScreen } from "@/components/auth/auth-screen"
 import { FinanceDashboard } from "@/components/finance/finance-dashboard"
 import { Skeleton } from "@/components/ui/skeleton"
+import { clearSession, readSession, updateSession } from "@/features/auth/session"
 import type { AppUser } from "@/features/finance/types"
 import { useFinanceStore } from "@/features/finance/use-finance-store"
-import { FINANCE_STORAGE_KEY } from "@/features/finance/use-finance-store"
+import type { AppSection } from "@/features/navigation/routes"
+import { getAppSectionPath } from "@/features/navigation/routes"
 
-const SESSION_STORAGE_KEY = "controle-financeiro:session:v1"
-
-function readSession() {
-  if (typeof window === "undefined") {
-    return null
-  }
-
-  const stored = window.localStorage.getItem(SESSION_STORAGE_KEY)
-
-  if (!stored) {
-    return null
-  }
-
-  try {
-    return JSON.parse(stored) as AppUser
-  } catch {
-    return null
-  }
-}
-
-export function PersonalFinanceApp() {
+export function FinanceRouteShell({ section }: { section: AppSection }) {
+  const router = useRouter()
   const finance = useFinanceStore()
-  const [user, setUser] = useState<AppUser | null>(null)
   const [isSessionReady, setIsSessionReady] = useState(false)
+  const [user, setUser] = useState(readSession())
 
   useEffect(() => {
     let isCancelled = false
@@ -43,46 +26,49 @@ export function PersonalFinanceApp() {
         return
       }
 
-      setUser(readSession())
+      const session = readSession()
+
+      if (!session) {
+        router.replace("/login")
+        return
+      }
+
+      setUser(session)
       setIsSessionReady(true)
     })
 
     return () => {
       isCancelled = true
     }
-  }, [])
+  }, [router])
 
-  function handleAuthenticate(nextUser: AppUser) {
-    window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(nextUser))
-    setUser(nextUser)
+  function handleLogout() {
+    clearSession()
+    setUser(null)
+    router.replace("/login")
+    toast.success("Sessão encerrada")
   }
 
   function handleUpdateUser(nextUser: AppUser) {
-    window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(nextUser))
+    updateSession(nextUser)
     setUser(nextUser)
   }
 
   function handleRequestPasswordReset() {
-    window.location.assign("/alterar-senha")
+    router.push("/alterar-senha")
   }
 
   function handleDeleteAccount() {
-    window.localStorage.removeItem(SESSION_STORAGE_KEY)
-    window.localStorage.removeItem(FINANCE_STORAGE_KEY)
+    clearSession()
     finance.clearWorkspace()
     setUser(null)
+    router.replace("/login")
     toast.success("Conta excluída", {
       description: "A sessão e os dados da conta foram removidos.",
     })
   }
 
-  function handleLogout() {
-    window.localStorage.removeItem(SESSION_STORAGE_KEY)
-    setUser(null)
-    toast.success("Sessão encerrada")
-  }
-
-  if (!isSessionReady || !finance.isReady) {
+  if (!isSessionReady || !finance.isReady || !user) {
     return (
       <main className="min-h-dvh bg-background p-4 text-foreground sm:p-6">
         <div className="mx-auto flex max-w-7xl flex-col gap-4">
@@ -99,17 +85,17 @@ export function PersonalFinanceApp() {
     )
   }
 
-  if (!user) {
-    return <AuthScreen onAuthenticate={handleAuthenticate} />
-  }
-
   return (
     <FinanceDashboard
+      activeSection={section}
       finance={finance}
       onDeleteAccount={handleDeleteAccount}
       onLogout={handleLogout}
       onRequestPasswordReset={handleRequestPasswordReset}
       onUpdateUser={handleUpdateUser}
+      onNavigateSection={(nextSection) => {
+        router.push(getAppSectionPath(nextSection))
+      }}
       user={user}
     />
   )

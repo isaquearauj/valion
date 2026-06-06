@@ -2,12 +2,16 @@
 
 import { useEffect, useState } from "react"
 
-import { createDemoFinanceState } from "@/features/finance/demo-data"
+import { createInitialFinanceState } from "@/features/finance/initial-data"
 import type {
+  ChargeReminder,
+  Goal,
+  GoalContribution,
   FinanceState,
   FixedExpense,
   Income,
   InvestmentEntry,
+  ReminderFrequency,
 } from "@/features/finance/types"
 
 export const FINANCE_STORAGE_KEY = "controle-financeiro:workspace:v1"
@@ -16,21 +20,78 @@ function createId(prefix: string) {
   return `${prefix}-${crypto.randomUUID()}`
 }
 
+function formatDateKey(date: Date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, "0")
+  const day = String(date.getDate()).padStart(2, "0")
+
+  return `${year}-${month}-${day}`
+}
+
+function parseDateKey(dateKey: string) {
+  const [year, month, day] = dateKey.split("-").map(Number)
+
+  if (!year || !month || !day) {
+    return null
+  }
+
+  return new Date(year, month - 1, day)
+}
+
+function advanceReminderDate(dateKey: string, frequency: ReminderFrequency) {
+  const date = parseDateKey(dateKey)
+
+  if (!date) {
+    return dateKey
+  }
+
+  if (frequency === "Semanal") {
+    date.setDate(date.getDate() + 7)
+  }
+
+  if (frequency === "Quinzenal") {
+    date.setDate(date.getDate() + 15)
+  }
+
+  if (frequency === "Mensal") {
+    date.setMonth(date.getMonth() + 1)
+  }
+
+  return formatDateKey(date)
+}
+
+function normalizeFinanceState(state: Partial<FinanceState>): FinanceState {
+  const initialState = createInitialFinanceState()
+
+  return {
+    expenses: Array.isArray(state.expenses) ? state.expenses : [],
+    goalContributions: Array.isArray(state.goalContributions)
+      ? state.goalContributions
+      : [],
+    goals: Array.isArray(state.goals) ? state.goals : [],
+    incomes: Array.isArray(state.incomes) ? state.incomes : [],
+    investments: Array.isArray(state.investments) ? state.investments : [],
+    reminders: Array.isArray(state.reminders) ? state.reminders : initialState.reminders,
+    snapshots: Array.isArray(state.snapshots) ? state.snapshots : [],
+    updatedAt: state.updatedAt ?? new Date().toISOString(),
+  }
+}
+
 function readStoredState() {
   if (typeof window === "undefined") {
-    return createDemoFinanceState()
+    return createInitialFinanceState()
   }
 
   const stored = window.localStorage.getItem(FINANCE_STORAGE_KEY)
 
   if (!stored) {
-    return createDemoFinanceState()
+    return createInitialFinanceState()
   }
 
   try {
-    return JSON.parse(stored) as FinanceState
+    return normalizeFinanceState(JSON.parse(stored) as Partial<FinanceState>)
   } catch {
-    return createDemoFinanceState()
+    return createInitialFinanceState()
   }
 }
 
@@ -42,7 +103,7 @@ function touch(state: FinanceState): FinanceState {
 }
 
 export function useFinanceStore() {
-  const [state, setState] = useState<FinanceState>(() => createDemoFinanceState())
+  const [state, setState] = useState<FinanceState>(() => createInitialFinanceState())
   const [isReady, setIsReady] = useState(false)
 
   useEffect(() => {
@@ -71,7 +132,7 @@ export function useFinanceStore() {
   }, [isReady, state])
 
   function resetWorkspace() {
-    const nextState = createDemoFinanceState()
+    const nextState = createInitialFinanceState()
     setState(nextState)
     window.localStorage.setItem(FINANCE_STORAGE_KEY, JSON.stringify(nextState))
   }
@@ -79,8 +140,11 @@ export function useFinanceStore() {
   function clearWorkspace() {
     const nextState: FinanceState = {
       expenses: [],
+      goalContributions: [],
+      goals: [],
       incomes: [],
       investments: [],
+      reminders: [],
       snapshots: [],
       updatedAt: new Date().toISOString(),
     }
@@ -116,6 +180,71 @@ export function useFinanceStore() {
         incomes: current.incomes.filter((income) => income.id !== id),
       })
     )
+  }
+
+  function upsertReminder(values: Omit<ChargeReminder, "createdAt" | "id">, id?: string) {
+    setState((current) => {
+      const now = new Date().toISOString()
+      const exists = current.reminders.some((reminder) => reminder.id === id)
+      const reminders = exists
+        ? current.reminders.map((reminder) =>
+            reminder.id === id ? { ...reminder, ...values } : reminder
+          )
+        : [
+            {
+              ...values,
+              createdAt: now,
+              id: createId("rem"),
+            },
+            ...current.reminders,
+          ]
+
+      return touch({ ...current, reminders })
+    })
+  }
+
+  function deleteReminder(id: string) {
+    setState((current) =>
+      touch({
+        ...current,
+        reminders: current.reminders.filter((reminder) => reminder.id !== id),
+      })
+    )
+  }
+
+  function markReminderReceived(id: string) {
+    setState((current) => {
+      let wasUpdated = false
+      const reminders = current.reminders.map((reminder) => {
+        if (reminder.id !== id || reminder.status !== "Ativo") {
+          return reminder
+        }
+
+        wasUpdated = true
+
+        if (reminder.type === "Parcelado") {
+          const remainingInstallments = Math.max(reminder.remainingInstallments - 1, 0)
+          const isCompleted = remainingInstallments === 0
+          const status: ChargeReminder["status"] = isCompleted ? "Concluído" : reminder.status
+
+          return {
+            ...reminder,
+            nextDueDate: isCompleted
+              ? reminder.nextDueDate
+              : advanceReminderDate(reminder.nextDueDate, reminder.frequency),
+            remainingInstallments,
+            status,
+          }
+        }
+
+        return {
+          ...reminder,
+          nextDueDate: advanceReminderDate(reminder.nextDueDate, reminder.frequency),
+        }
+      })
+
+      return wasUpdated ? touch({ ...current, reminders }) : current
+    })
   }
 
   function upsertExpense(
@@ -179,6 +308,72 @@ export function useFinanceStore() {
     })
   }
 
+  function upsertGoal(values: Omit<Goal, "createdAt" | "id">, id?: string) {
+    setState((current) => {
+      const now = new Date().toISOString()
+      const exists = current.goals.some((goal) => goal.id === id)
+      const goals = exists
+        ? current.goals.map((goal) => (goal.id === id ? { ...goal, ...values } : goal))
+        : [
+            {
+              ...values,
+              createdAt: now,
+              id: createId("goal"),
+            },
+            ...current.goals,
+          ]
+
+      return touch({ ...current, goals })
+    })
+  }
+
+  function deleteGoal(id: string) {
+    setState((current) =>
+      touch({
+        ...current,
+        goalContributions: current.goalContributions.filter(
+          (contribution) => contribution.goalId !== id
+        ),
+        goals: current.goals.filter((goal) => goal.id !== id),
+      })
+    )
+  }
+
+  function upsertGoalContribution(
+    values: Omit<GoalContribution, "createdAt" | "id">,
+    id?: string
+  ) {
+    setState((current) => {
+      const now = new Date().toISOString()
+      const exists = current.goalContributions.some((contribution) => contribution.id === id)
+      const goalContributions = exists
+        ? current.goalContributions.map((contribution) =>
+            contribution.id === id ? { ...contribution, ...values } : contribution
+          )
+        : [
+            {
+              ...values,
+              createdAt: now,
+              id: createId("gcontrib"),
+            },
+            ...current.goalContributions,
+          ]
+
+      return touch({ ...current, goalContributions })
+    })
+  }
+
+  function deleteGoalContribution(id: string) {
+    setState((current) =>
+      touch({
+        ...current,
+        goalContributions: current.goalContributions.filter(
+          (contribution) => contribution.id !== id
+        ),
+      })
+    )
+  }
+
   function deleteInvestment(id: string) {
     setState((current) =>
       touch({
@@ -193,13 +388,20 @@ export function useFinanceStore() {
   return {
     clearWorkspace,
     deleteExpense,
+    deleteGoal,
+    deleteGoalContribution,
     deleteIncome,
     deleteInvestment,
+    deleteReminder,
     isReady,
+    markReminderReceived,
     resetWorkspace,
     state,
     upsertExpense,
+    upsertGoal,
+    upsertGoalContribution,
     upsertIncome,
     upsertInvestment,
+    upsertReminder,
   }
 }

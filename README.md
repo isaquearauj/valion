@@ -4,9 +4,9 @@ Sistema web moderno para controle financeiro pessoal, criado com Next.js, React,
 
 ## Funcionalidades implementadas
 
-- Autenticação demo com cadastro, login, logout, recuperação simulada, persistência de sessão e exclusão de conta local.
+- Autenticação com cadastro, login, logout, recuperação de senha, persistência de sessão e exclusão de conta.
 - Dashboard com cards financeiros, resumo do mês, percentual comprometido e insights de investimentos.
-- CRUD local de receitas, despesas fixas e investimentos.
+- CRUD de receitas, lembretes de cobrança, despesas fixas, investimentos e metas financeiras.
 - Gráficos interativos com Recharts e shadcn chart.
 - Histórico financeiro mensal.
 - Light mode, dark mode e layout responsivo.
@@ -20,11 +20,11 @@ pnpm dev
 
 Abra `http://localhost:3000`.
 
-Use qualquer e-mail e senha com pelo menos 6 caracteres para entrar no modo demo.
+Use um e-mail válido e uma senha com pelo menos 6 caracteres para acessar o painel.
 
 ## Supabase
 
-O projeto ainda roda com dados locais para facilitar validação visual e funcional sem criar backend imediatamente.
+O projeto está preparado para integração com Supabase e mantém uma camada de persistência temporária durante a fase de implementação.
 
 Quando quiser ativar Supabase real, siga `docs/supabase-setup.md`.
 
@@ -37,7 +37,7 @@ Quando quiser ativar Supabase real, siga `docs/supabase-setup.md`.
 ## Estrutura principal
 
 - `components/finance`: dashboard, CRUDs e telas do produto.
-- `features/finance`: tipos, schemas, cálculos e store demo.
+- `features/finance`: tipos, schemas, cálculos e store financeiro.
 - `components/ui`: componentes shadcn/ui.
 - `lib/supabase`: clientes Supabase preparados.
 - `supabase/schema.sql`: tabelas, constraints, triggers e políticas RLS.

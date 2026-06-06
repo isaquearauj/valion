@@ -1,4 +1,4 @@
-import { getCurrentMonthKey } from "@/features/finance/demo-data"
+import { getCurrentMonthKey } from "@/features/finance/initial-data"
 import type {
   FinanceState,
   FinanceSummary,
@@ -36,8 +36,8 @@ export function calculateFinanceSummary(state: FinanceState): FinanceSummary {
   const currentInvestment = getCurrentInvestment(state)
   const plannedInvestment = currentInvestment?.plannedAmount ?? 0
   const investedAmount = currentInvestment?.investedAmount ?? 0
-  const freeBalance = monthlyIncome - fixedExpenses
-  const realAvailableBalance = freeBalance - plannedInvestment
+  const budgetAvailable = monthlyIncome - fixedExpenses
+  const budgetRemainingAfterInvestment = budgetAvailable - plannedInvestment
   const committedPercent = monthlyIncome > 0 ? (fixedExpenses / monthlyIncome) * 100 : 0
   const investmentDelta = investedAmount - plannedInvestment
   const investmentInsight =
@@ -51,14 +51,14 @@ export function calculateFinanceSummary(state: FinanceState): FinanceSummary {
     activeExpensesCount: activeExpenses.length,
     committedPercent,
     debtInstallmentsRemaining,
+    budgetAvailable,
     fixedExpenses,
-    freeBalance,
     investedAmount,
     investmentDelta,
     investmentInsight,
     monthlyIncome,
     plannedInvestment,
-    realAvailableBalance,
+    budgetRemainingAfterInvestment,
   }
 }
 

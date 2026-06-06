@@ -6,7 +6,11 @@ import { useTheme } from "next-themes"
 
 import { Button } from "@/components/ui/button"
 
-export function ThemeToggle() {
+export function ThemeToggle({
+  size = "default",
+}: {
+  size?: "default" | "small"
+}) {
   const [mounted, setMounted] = useState(false)
   const { resolvedTheme, setTheme } = useTheme()
 
@@ -26,7 +30,12 @@ export function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <Button aria-label="Alternar tema" disabled size="icon" variant="outline" />
+      <Button
+        aria-label="Alternar tema"
+        disabled
+        size={size === "small" ? "icon-sm" : "icon"}
+        variant="outline"
+      />
     )
   }
 
@@ -36,7 +45,7 @@ export function ThemeToggle() {
     <Button
       aria-label={isDark ? "Ativar modo claro" : "Ativar modo escuro"}
       onClick={() => setTheme(isDark ? "light" : "dark")}
-      size="icon"
+      size={size === "small" ? "icon-sm" : "icon"}
       variant="outline"
     >
       {isDark ? <SunIcon /> : <MoonIcon />}

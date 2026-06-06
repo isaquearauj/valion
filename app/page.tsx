@@ -1,5 +1,5 @@
-import { PersonalFinanceApp } from "@/components/finance/personal-finance-app";
+import { RootRedirect } from "@/components/navigation/root-redirect";
 
 export default function Home() {
-  return <PersonalFinanceApp />;
+  return <RootRedirect />;
 }
