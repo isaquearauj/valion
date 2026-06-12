@@ -1,7 +1,7 @@
 "use client"
 
-import { useMemo, useState } from "react"
-import { useRouter } from "next/navigation"
+import { type ReactNode, useEffect, useMemo, useState } from "react"
+import { usePathname, useRouter } from "next/navigation"
 import { toast } from "sonner"
 
 import { FinanceDashboard } from "@/components/finance/finance-dashboard"
@@ -9,14 +9,56 @@ import { Skeleton } from "@/components/ui/skeleton"
 import type { AppUser } from "@/features/finance/types"
 import { useFinanceStore } from "@/features/finance/use-finance-store"
 import type { AppSection } from "@/features/navigation/routes"
-import { getAppSectionPath } from "@/features/navigation/routes"
+import { getAppSectionFromPath, getAppSectionPath } from "@/features/navigation/routes"
 import { createSupabaseBrowser } from "@/lib/supabase/client"
 
 function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Não foi possível concluir a ação."
 }
 
-export function FinanceRouteShell({ initialUser, section }: { initialUser: AppUser; section: AppSection }) {
+export function FinanceRouteShell({ children, initialUser }: { children?: ReactNode; initialUser: AppUser }) {
+  const pathname = usePathname()
+  const routeSection = getAppSectionFromPath(pathname)
+  const [activeSection, setActiveSection] = useState<AppSection>(routeSection ?? "dashboard")
+
+  useEffect(() => {
+    function handlePopState() {
+      const nextSection = getAppSectionFromPath(window.location.pathname)
+
+      if (nextSection) {
+        setActiveSection(nextSection)
+      }
+    }
+
+    window.addEventListener("popstate", handlePopState)
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState)
+    }
+  }, [])
+
+  if (!routeSection) {
+    return <>{children}</>
+  }
+
+  return (
+    <FinanceWorkspaceShell
+      activeSection={activeSection}
+      initialUser={initialUser}
+      onActiveSectionChange={setActiveSection}
+    />
+  )
+}
+
+function FinanceWorkspaceShell({
+  activeSection,
+  initialUser,
+  onActiveSectionChange,
+}: {
+  activeSection: AppSection
+  initialUser: AppUser
+  onActiveSectionChange: (section: AppSection) => void
+}) {
   const router = useRouter()
   const supabase = useMemo(() => createSupabaseBrowser(), [])
   const [user, setUser] = useState(initialUser)
@@ -81,6 +123,16 @@ export function FinanceRouteShell({ initialUser, section }: { initialUser: AppUs
     }
   }
 
+  function handleNavigateSection(nextSection: AppSection) {
+    const path = getAppSectionPath(nextSection)
+
+    onActiveSectionChange(nextSection)
+
+    if (window.location.pathname !== path) {
+      window.history.pushState(null, "", path)
+    }
+  }
+
   if (!finance.isReady) {
     return (
       <main className="min-h-dvh bg-background p-4 text-foreground sm:p-6">
@@ -100,15 +152,13 @@ export function FinanceRouteShell({ initialUser, section }: { initialUser: AppUs
 
   return (
     <FinanceDashboard
-      activeSection={section}
+      activeSection={activeSection}
       finance={finance}
       onDeleteAccount={handleDeleteAccount}
       onLogout={handleLogout}
       onRequestPasswordReset={handleRequestPasswordReset}
       onUpdateUser={handleUpdateUser}
-      onNavigateSection={(nextSection) => {
-        router.push(getAppSectionPath(nextSection))
-      }}
+      onNavigateSection={handleNavigateSection}
       user={user}
     />
   )

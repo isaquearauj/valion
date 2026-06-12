@@ -487,63 +487,73 @@ export function FinanceDashboard({
         </section>
       </div>
 
-      <IncomeDialog
-        income={editingIncome}
-        onOpenChange={setIsIncomeDialogOpen}
-        onSubmit={async (values) => {
-          await runFinanceAction(
-            () => finance.upsertIncome(values, editingIncome?.id),
-            editingIncome ? "Receita atualizada" : "Receita adicionada"
-          )
-        }}
-        open={isIncomeDialogOpen}
-      />
+      {isIncomeDialogOpen ? (
+        <IncomeDialog
+          income={editingIncome}
+          onOpenChange={setIsIncomeDialogOpen}
+          onSubmit={async (values) => {
+            await runFinanceAction(
+              () => finance.upsertIncome(values, editingIncome?.id),
+              editingIncome ? "Receita atualizada" : "Receita adicionada"
+            )
+          }}
+          open={isIncomeDialogOpen}
+        />
+      ) : null}
 
-      <ExpenseDialog
-        expense={editingExpense}
-        onOpenChange={setIsExpenseDialogOpen}
-        onSubmit={async (values) => {
-          await runFinanceAction(
-            () => finance.upsertExpense(values, editingExpense?.id),
-            editingExpense ? "Despesa atualizada" : "Despesa adicionada"
-          )
-        }}
-        open={isExpenseDialogOpen}
-      />
+      {isExpenseDialogOpen ? (
+        <ExpenseDialog
+          expense={editingExpense}
+          onOpenChange={setIsExpenseDialogOpen}
+          onSubmit={async (values) => {
+            await runFinanceAction(
+              () => finance.upsertExpense(values, editingExpense?.id),
+              editingExpense ? "Despesa atualizada" : "Despesa adicionada"
+            )
+          }}
+          open={isExpenseDialogOpen}
+        />
+      ) : null}
 
-      <InvestmentDialog
-        investment={editingInvestment}
-        onOpenChange={setIsInvestmentDialogOpen}
-        onSubmit={async (values) => {
-          await runFinanceAction(
-            () => finance.upsertInvestment(values, editingInvestment?.id),
-            editingInvestment ? "Investimento atualizado" : "Investimento registrado"
-          )
-        }}
-        open={isInvestmentDialogOpen}
-      />
+      {isInvestmentDialogOpen ? (
+        <InvestmentDialog
+          investment={editingInvestment}
+          onOpenChange={setIsInvestmentDialogOpen}
+          onSubmit={async (values) => {
+            await runFinanceAction(
+              () => finance.upsertInvestment(values, editingInvestment?.id),
+              editingInvestment ? "Investimento atualizado" : "Investimento registrado"
+            )
+          }}
+          open={isInvestmentDialogOpen}
+        />
+      ) : null}
 
-      <ReminderDialog
-        onOpenChange={setIsReminderDialogOpen}
-        onSubmit={async (values) => {
-          await runFinanceAction(
-            () => finance.upsertReminder(normalizeReminderFormValues(values), editingReminder?.id),
-            editingReminder ? "Lembrete atualizado" : "Lembrete adicionado"
-          )
-        }}
-        open={isReminderDialogOpen}
-        reminder={editingReminder}
-      />
+      {isReminderDialogOpen ? (
+        <ReminderDialog
+          onOpenChange={setIsReminderDialogOpen}
+          onSubmit={async (values) => {
+            await runFinanceAction(
+              () => finance.upsertReminder(normalizeReminderFormValues(values), editingReminder?.id),
+              editingReminder ? "Lembrete atualizado" : "Lembrete adicionado"
+            )
+          }}
+          open={isReminderDialogOpen}
+          reminder={editingReminder}
+        />
+      ) : null}
 
-      <AccountDialog
-        onDeleteAccount={onDeleteAccount}
-        onLogout={onLogout}
-        onOpenChange={setIsAccountDialogOpen}
-        onRequestPasswordReset={onRequestPasswordReset}
-        onUpdateUser={onUpdateUser}
-        open={isAccountDialogOpen}
-        user={user}
-      />
+      {isAccountDialogOpen ? (
+        <AccountDialog
+          onDeleteAccount={onDeleteAccount}
+          onLogout={onLogout}
+          onOpenChange={setIsAccountDialogOpen}
+          onRequestPasswordReset={onRequestPasswordReset}
+          onUpdateUser={onUpdateUser}
+          open={isAccountDialogOpen}
+          user={user}
+        />
+      ) : null}
     </main>
   )
 }
@@ -2109,50 +2119,54 @@ function GoalsSection({ finance }: { finance: FinanceDashboardProps["finance"] }
         </>
       )}
 
-      <GoalDialog
-        goal={
-          editingGoal && isGoalCompleted(editingGoal, contributions.filter((item) => item.goalId === editingGoal.id))
-            ? { ...editingGoal, status: "Concluída" }
-            : editingGoal
-        }
-        onOpenChange={setIsGoalDialogOpen}
-      onSubmit={async (values) => {
-          const currentAmount = editingGoal
-            ? getGoalProgress(
-                editingGoal,
-                contributions.filter((item) => item.goalId === editingGoal.id)
-              ).currentAmount
-            : 0
-
-          await runGoalAction(
-            () => finance.upsertGoal(
-              normalizeGoalFormValues(values, currentAmount),
-              editingGoal?.id
-            ),
-            editingGoal ? "Meta atualizada" : "Meta criada"
-          )
-        }}
-        open={isGoalDialogOpen}
-      />
-
-      <GoalContributionDialog
-        defaultGoalId={selectedGoal?.id ?? goals[0]?.id ?? ""}
-        goals={goals}
-        contribution={editingContribution}
-        onOpenChange={(open) => {
-          setIsContributionDialogOpen(open)
-          if (!open) {
-            setEditingContribution(null)
+      {isGoalDialogOpen ? (
+        <GoalDialog
+          goal={
+            editingGoal && isGoalCompleted(editingGoal, contributions.filter((item) => item.goalId === editingGoal.id))
+              ? { ...editingGoal, status: "Concluída" }
+              : editingGoal
           }
-        }}
-        onSubmit={async (values, id) => {
-          await runGoalAction(
-            () => finance.upsertGoalContribution(values, id),
-            editingContribution ? "Aporte atualizado" : "Aporte registrado"
-          )
-        }}
-        open={isContributionDialogOpen}
-      />
+          onOpenChange={setIsGoalDialogOpen}
+          onSubmit={async (values) => {
+            const currentAmount = editingGoal
+              ? getGoalProgress(
+                  editingGoal,
+                  contributions.filter((item) => item.goalId === editingGoal.id)
+                ).currentAmount
+              : 0
+
+            await runGoalAction(
+              () => finance.upsertGoal(
+                normalizeGoalFormValues(values, currentAmount),
+                editingGoal?.id
+              ),
+              editingGoal ? "Meta atualizada" : "Meta criada"
+            )
+          }}
+          open={isGoalDialogOpen}
+        />
+      ) : null}
+
+      {isContributionDialogOpen ? (
+        <GoalContributionDialog
+          defaultGoalId={selectedGoal?.id ?? goals[0]?.id ?? ""}
+          goals={goals}
+          contribution={editingContribution}
+          onOpenChange={(open) => {
+            setIsContributionDialogOpen(open)
+            if (!open) {
+              setEditingContribution(null)
+            }
+          }}
+          onSubmit={async (values, id) => {
+            await runGoalAction(
+              () => finance.upsertGoalContribution(values, id),
+              editingContribution ? "Aporte atualizado" : "Aporte registrado"
+            )
+          }}
+          open={isContributionDialogOpen}
+        />
+      ) : null}
     </div>
   )
 }

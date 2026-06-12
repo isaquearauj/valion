@@ -17,6 +17,10 @@ export const appSectionPaths: Record<AppSection, string> = {
   investments: "/investimentos",
 }
 
+const appSectionsByPath = Object.fromEntries(
+  Object.entries(appSectionPaths).map(([section, path]) => [path, section])
+) as Record<string, AppSection>
+
 export const authPaths: Record<AuthMode, string> = {
   login: "/login",
   recover: "/recover",
@@ -25,4 +29,10 @@ export const authPaths: Record<AuthMode, string> = {
 
 export function getAppSectionPath(section: AppSection) {
   return appSectionPaths[section]
+}
+
+export function getAppSectionFromPath(pathname: string) {
+  const normalizedPath = pathname.replace(/\/$/, "") || "/"
+
+  return appSectionsByPath[normalizedPath] ?? null
 }

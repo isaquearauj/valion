@@ -79,6 +79,14 @@ function assertSupabaseSuccess(error: { message: string } | null) {
   }
 }
 
+const INCOME_COLUMNS = "id,name,type,amount,frequency,notes,created_at,updated_at"
+const EXPENSE_COLUMNS = "id,name,category,monthly_amount,due_day,total_installments,remaining_installments,status,notes,created_at,updated_at"
+const REMINDER_COLUMNS = "id,name,person,type,amount,frequency,next_due_date,total_installments,remaining_installments,status,notes,created_at,updated_at"
+const INVESTMENT_COLUMNS = "id,month,planned_amount,invested_amount,notes,created_at,updated_at"
+const GOAL_COLUMNS = "id,name,target_amount,target_date,status,notes,created_at,updated_at"
+const GOAL_CONTRIBUTION_COLUMNS = "id,goal_id,amount,date,notes,created_at,updated_at"
+const SNAPSHOT_COLUMNS = "id,month,income,expenses,planned_investment,invested_amount,updated_at"
+
 export function useFinanceStore(userId: string | null = null) {
   const supabase = useMemo(() => createSupabaseBrowser(), [])
   const [state, setState] = useState<FinanceState>(() => createEmptyFinanceState())
@@ -104,13 +112,13 @@ export function useFinanceStore(userId: string | null = null) {
       goalContributionsResult,
       snapshotsResult,
     ] = await Promise.all([
-      supabase.from("incomes").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
-      supabase.from("fixed_expenses").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
-      supabase.from("charge_reminders").select("*").eq("user_id", userId).order("next_due_date", { ascending: true }),
-      supabase.from("investment_entries").select("*").eq("user_id", userId).order("month", { ascending: false }),
-      supabase.from("financial_goals").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
-      supabase.from("goal_contributions").select("*").eq("user_id", userId).order("date", { ascending: false }),
-      supabase.from("monthly_snapshots").select("*").eq("user_id", userId).order("month", { ascending: true }),
+      supabase.from("incomes").select(INCOME_COLUMNS).eq("user_id", userId).order("created_at", { ascending: false }),
+      supabase.from("fixed_expenses").select(EXPENSE_COLUMNS).eq("user_id", userId).order("created_at", { ascending: false }),
+      supabase.from("charge_reminders").select(REMINDER_COLUMNS).eq("user_id", userId).order("next_due_date", { ascending: true }),
+      supabase.from("investment_entries").select(INVESTMENT_COLUMNS).eq("user_id", userId).order("month", { ascending: false }),
+      supabase.from("financial_goals").select(GOAL_COLUMNS).eq("user_id", userId).order("created_at", { ascending: false }),
+      supabase.from("goal_contributions").select(GOAL_CONTRIBUTION_COLUMNS).eq("user_id", userId).order("date", { ascending: false }),
+      supabase.from("monthly_snapshots").select(SNAPSHOT_COLUMNS).eq("user_id", userId).order("month", { ascending: true }),
     ])
 
     const results = [
