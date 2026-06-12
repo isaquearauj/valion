@@ -579,7 +579,7 @@ function AppSidebar({
           </h1>
         </div>
 
-      <nav className="mt-5 flex flex-col gap-1" aria-label="Navegação principal">
+      <nav className="mt-7 flex flex-col gap-1" aria-label="Navegação principal">
         {sections.map((section) => (
           <button
             aria-current={activeSection === section.id ? "page" : undefined}
