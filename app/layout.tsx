@@ -4,7 +4,10 @@ import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Valion | Controle financeiro pessoal",
+  title: "Valion",
+  icons: {
+    icon: "/brand/valion-favicon.png",
+  },
   description:
     "Sistema web moderno para receitas, despesas fixas, investimentos e histórico financeiro.",
 };
