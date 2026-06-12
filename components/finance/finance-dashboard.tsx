@@ -42,7 +42,6 @@ import {
   useState,
   useTransition,
 } from "react"
-import Image from "next/image"
 import {
   Area,
   AreaChart,
@@ -574,24 +573,13 @@ function AppSidebar({
 }) {
   return (
       <aside className="sticky top-0 hidden h-dvh border-r bg-sidebar/95 px-3 py-4 text-sidebar-foreground backdrop-blur lg:flex lg:flex-col">
-        <div className="flex items-center gap-3 px-2">
-          <div className="flex size-10 items-center justify-center overflow-hidden rounded-2xl bg-sidebar-primary shadow-sm">
-            <Image
-              alt="Valion"
-              className="h-full w-full object-cover"
-              height={40}
-              priority
-              src="/brand/valion-icon.png"
-              width={40}
-            />
-          </div>
-        <div>
-          <p className="font-heading text-base font-semibold">Valion</p>
-          <p className="text-xs text-muted-foreground">Controle pessoal</p>
+        <div className="px-2 pb-2 pt-1 text-center">
+          <h1 className="font-heading text-[0.78rem] font-semibold uppercase tracking-[0.48em] text-sidebar-foreground/90">
+            VALION
+          </h1>
         </div>
-      </div>
 
-      <nav className="mt-8 flex flex-col gap-1" aria-label="Navegação principal">
+      <nav className="mt-5 flex flex-col gap-1" aria-label="Navegação principal">
         {sections.map((section) => (
           <button
             aria-current={activeSection === section.id ? "page" : undefined}
