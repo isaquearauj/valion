@@ -42,6 +42,7 @@ import {
   useState,
   useTransition,
 } from "react"
+import Image from "next/image"
 import {
   Area,
   AreaChart,
@@ -572,11 +573,18 @@ function AppSidebar({
   user: AppUser
 }) {
   return (
-    <aside className="sticky top-0 hidden h-dvh border-r bg-sidebar/95 px-3 py-4 text-sidebar-foreground backdrop-blur lg:flex lg:flex-col">
-      <div className="flex items-center gap-3 px-2">
-        <div className="flex size-10 items-center justify-center rounded-2xl bg-sidebar-primary text-sidebar-primary-foreground shadow-sm">
-          <WalletCardsIcon />
-        </div>
+      <aside className="sticky top-0 hidden h-dvh border-r bg-sidebar/95 px-3 py-4 text-sidebar-foreground backdrop-blur lg:flex lg:flex-col">
+        <div className="flex items-center gap-3 px-2">
+          <div className="flex size-10 items-center justify-center overflow-hidden rounded-2xl bg-sidebar-primary shadow-sm">
+            <Image
+              alt="Valion"
+              className="h-full w-full object-cover"
+              height={40}
+              priority
+              src="/brand/valion-icon.png"
+              width={40}
+            />
+          </div>
         <div>
           <p className="font-heading text-base font-semibold">Valion</p>
           <p className="text-xs text-muted-foreground">Controle pessoal</p>
