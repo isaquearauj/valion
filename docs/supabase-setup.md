@@ -21,8 +21,9 @@ Este projeto usa Supabase em produção para autenticação, perfis e persistên
 
 1. Vá em `Authentication > Providers`.
 2. Habilite `Email`.
-3. Configure `Site URL` como `https://valionapp.com`.
-4. Configure `Redirect URLs` com:
+3. Habilite a confirmação de e-mail.
+4. Configure `Site URL` como `https://valionapp.com`.
+5. Configure `Redirect URLs` com:
 
 ```txt
 https://valionapp.com/**
@@ -64,6 +65,8 @@ http://127.0.0.1:54324
 ```
 
 Isso permite testar `/recover` sem consumir o rate limit do Supabase Cloud.
+
+Com confirmação de e-mail ativa, o cadastro cria o usuário no Auth, mas o acesso ao painel só acontece depois da confirmação pelo link recebido.
 
 Para recriar o banco local:
 

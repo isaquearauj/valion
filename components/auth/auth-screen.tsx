@@ -167,7 +167,8 @@ export function AuthScreen({ mode, onAuthenticate, onModeChange }: AuthScreenPro
     setIsSubmitting(false)
 
     if (signInError || !data.user) {
-      setError("E-mail ou senha inválidos.")
+      const message = signInError?.message.toLowerCase() ?? ""
+      setError(message.includes("confirm") ? "Confirme seu e-mail antes de entrar." : "E-mail ou senha inválidos.")
       return
     }
 

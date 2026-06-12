@@ -130,6 +130,12 @@ on public.financial_goals (user_id, created_at desc);
 create index if not exists goal_contributions_user_date_idx
 on public.goal_contributions (user_id, date desc);
 
+alter table public.financial_goals
+  drop constraint if exists financial_goals_id_user_id_key;
+
+alter table public.financial_goals
+  add constraint financial_goals_id_user_id_key unique (id, user_id);
+
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
@@ -169,6 +175,30 @@ drop trigger if exists goal_contributions_set_updated_at on public.goal_contribu
 create trigger goal_contributions_set_updated_at
 before update on public.goal_contributions
 for each row execute function public.set_updated_at();
+
+alter table public.goal_contributions
+  drop constraint if exists goal_contributions_goal_id_fkey;
+
+alter table public.goal_contributions
+  add constraint goal_contributions_goal_id_fkey
+  foreign key (goal_id, user_id)
+  references public.financial_goals (id, user_id)
+  on delete cascade;
+
+alter table public.fixed_expenses
+  drop constraint if exists fixed_expenses_installments_check;
+
+alter table public.fixed_expenses
+  add constraint fixed_expenses_installments_check check (
+    (
+      total_installments = 0
+      and remaining_installments = 0
+    )
+    or (
+      total_installments > 0
+      and remaining_installments <= total_installments
+    )
+  );
 
 drop trigger if exists investment_entries_set_updated_at on public.investment_entries;
 create trigger investment_entries_set_updated_at

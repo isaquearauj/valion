@@ -59,6 +59,7 @@ Configuração de Auth em produção:
 
 - Site URL: `https://valionapp.com`
 - Redirect URLs: `https://valionapp.com/**`, `https://www.valionapp.com/**`, `http://localhost:3000/**`
+- Confirmação de e-mail: habilitada
 
 ## Scripts
 
