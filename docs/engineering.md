@@ -22,8 +22,10 @@ comandos adicionais. Seeds são somente locais e nunca fazem parte do deploy.
 
 Produção só recebe migrations pelo workflow manual
 `.github/workflows/supabase-migrations.yml`, disparado em `workflow_dispatch`,
-com o GitHub Environment `production` e seus required reviewers. Não execute
-`supabase db push` diretamente contra produção.
+com o GitHub Environment `production`. Um agente autorizado pode disparar a
+Action com `gh workflow run "Supabase migrations" --ref main`; não é necessário
+que o desenvolvedor clique no GitHub. Não execute `supabase db push`
+diretamente contra produção.
 
 Para inspeção autorizada do remoto, use `supabase login`,
 `supabase link --project-ref <project-ref>` e `supabase db diff --linked`. A

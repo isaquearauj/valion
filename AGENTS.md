@@ -27,7 +27,7 @@
 - Supabase local depende da Supabase CLI e Docker. URLs locais do README/config: API `http://127.0.0.1:55321`, DB `55322`, Studio `http://127.0.0.1:55323`, Mailpit/Inbucket `http://127.0.0.1:55324`.
 - Recriar banco local: `supabase db reset --local` ou `pnpm supabase:reset`, que aplica somente migrations em `supabase/migrations/`.
 - `.env.supabase` não é necessário e não deve ser documentado como requisito.
-- Migrations de produção são aplicadas exclusivamente pelo workflow manual `.github/workflows/supabase-migrations.yml`, com `workflow_dispatch`, GitHub Environment `production` e required reviewers; é proibido executar `supabase db push` diretamente contra produção.
+- Migrations de produção são aplicadas exclusivamente pelo workflow manual `.github/workflows/supabase-migrations.yml`, com `workflow_dispatch` e GitHub Environment `production`; um agente autorizado pode disparar a Action via `gh workflow run "Supabase migrations" --ref main`, sem pedir clique manual ao usuário. É proibido executar `supabase db push` diretamente contra produção.
 - O workflow usa apenas os secrets `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD` e `SUPABASE_PROJECT_REF` do Environment `production`; nunca enviar ou registrar esses valores.
 - Produção não executa seed, `supabase db reset --linked` ou SQL arbitrário. Migrations já aplicadas não são editadas; crie migrations corretivas e valide alterações destrutivas com backup localmente.
 - Para inspeção remota autorizada, use `supabase login`, `supabase link --project-ref <project-ref>` e `supabase db diff --linked`; a senha é interativa. Use `supabase logout` quando terminar.

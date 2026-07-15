@@ -139,13 +139,13 @@ não for mais necessário.
 
 ### Migrations de produção
 
-O deploy é feito pelo workflow manual `.github/workflows/supabase-migrations.yml`:
+O deploy é feito pelo workflow manual `.github/workflows/supabase-migrations.yml`.
+Um agente autorizado pode dispará-lo via CLI, sem exigir clique manual:
 
-1. Abra `Actions > Supabase migrations` no GitHub.
-2. Clique em `Run workflow` usando a branch `main`.
-3. Revise o commit que será aplicado.
-4. Em `Review deployments`, aprove o environment `production`.
-5. Confirme o resultado do job antes de considerar a migration publicada.
+```bash
+gh workflow run "Supabase migrations" --ref main
+gh run list --workflow "Supabase migrations" --branch main --limit 1
+```
 
 O workflow usa exclusivamente os secrets do GitHub Environment `production`:
 
@@ -165,9 +165,9 @@ supabase migration list
 ```
 
 O workflow só aplica migrations versionadas em `supabase/migrations/`. Ele não
-executa seed, `supabase db reset --linked` nem SQL arbitrário. A configuração
-do GitHub deve manter o environment `production` com required reviewers para
-que a aprovação continue manual.
+executa seed, `supabase db reset --linked` nem SQL arbitrário. Os secrets
+devem permanecer no environment `production`; required reviewers não devem ser
+obrigatórios quando a execução pelo agente estiver habilitada.
 
 Migrations de dados devem ser idempotentes quando possível. Depois que uma
 migration for aplicada, não a edite: crie uma nova migration corretiva. Para
