@@ -12,9 +12,17 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "quality": "pnpm lint && pnpm typecheck && pnpm test",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:supabase": "vitest run --config vitest.supabase.config.ts",
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",
     "supabase:reset": "supabase db reset",
+    "supabase:seed": "node scripts/seed-local.mjs",
+    "supabase:reset:seed": "pnpm supabase:reset && pnpm supabase:seed",
     "supabase:status": "supabase status"
   },
   "dependencies": {
@@ -24,6 +32,7 @@
     "@supabase/supabase-js": "^2.106.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "concurrently": "^9.2.1",
     "date-fns": "^4.2.1",
     "lucide-react": "^1.16.0",
     "next": "16.2.6",
@@ -32,7 +41,6 @@
     "react-dom": "19.2.4",
     "react-hook-form": "^7.76.0",
     "recharts": "^3.8.0",
-    "concurrently": "^9.2.1",
     "shadcn": "^4.7.0",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.6.0",
@@ -41,13 +49,20 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitest/coverage-v8": "^4.1.10",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
+    "jsdom": "^29.1.1",
     "supabase": "^2.105.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vite-tsconfig-paths": "^6.1.1",
+    "vitest": "^4.1.10"
   }
 }

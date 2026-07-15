@@ -53,7 +53,7 @@ pnpm supabase:status
 Configure `.env.local` com os valores locais exibidos pelo CLI:
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:55321
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<publishable-local>
 SUPABASE_SERVICE_ROLE_KEY=<secret-local>
 ```
@@ -61,7 +61,7 @@ SUPABASE_SERVICE_ROLE_KEY=<secret-local>
 E-mails de autenticação enviados localmente ficam disponíveis no Mailpit:
 
 ```txt
-http://127.0.0.1:54324
+http://127.0.0.1:55324
 ```
 
 Isso permite testar `/recover` sem consumir o rate limit do Supabase Cloud.
@@ -73,6 +73,22 @@ Para recriar o banco local:
 ```bash
 pnpm supabase:reset
 ```
+
+Para validar RLS e constraints no banco local:
+
+```bash
+pnpm test:supabase
+```
+
+Essa suite exige Supabase local ativo, Docker disponível e as variáveis locais carregadas.
+
+Para carregar dados demonstrativos no usuário local:
+
+```bash
+pnpm supabase:seed
+```
+
+O seed só aceita URLs `localhost` ou `127.0.0.1`, cria o usuário `valion-demo@example.test` e usa UUIDs fixos para ser idempotente. Para recriar o banco e carregar os dados em sequência, use `pnpm supabase:reset:seed`.
 
 ## 5. Exclusão real de conta
 

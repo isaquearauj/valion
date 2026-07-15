@@ -29,7 +29,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { getAppUserFromSupabaseUser } from "@/features/auth/supabase-user"
-import type { AppUser } from "@/features/finance/types"
+import type { AppUser } from "@/features/auth/types"
 import type { AuthMode } from "@/features/navigation/routes"
 import { createSupabaseBrowser } from "@/lib/supabase/client"
 

@@ -11,7 +11,7 @@ import type {
   Income,
   InvestmentEntry,
   ReminderFrequency,
-} from "@/features/finance/types"
+} from "@/features/finance/domain/types"
 import {
   createEmptyFinanceState,
   getWorkspaceUpdatedAt,
@@ -30,7 +30,7 @@ import {
   type IncomeRow,
   type InvestmentEntryRow,
   type MonthlySnapshotRow,
-} from "@/features/finance/supabase-mappers"
+} from "@/features/finance/data/supabase-mappers"
 import { createSupabaseBrowser } from "@/lib/supabase/client"
 
 function formatDateKey(date: Date) {

@@ -1,6 +1,6 @@
 import type { SupabaseClient, User } from "@supabase/supabase-js"
 
-import type { AppUser } from "@/features/finance/types"
+import type { AppUser } from "@/features/auth/types"
 
 type ProfileRow = {
   avatar_url: string | null

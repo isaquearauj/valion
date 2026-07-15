@@ -7,7 +7,7 @@ import type {
   Income,
   InvestmentEntry,
   MonthlySnapshot,
-} from "@/features/finance/types"
+} from "@/features/finance/domain/types"
 
 type DbValue = string | number | null
 

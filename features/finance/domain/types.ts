@@ -141,11 +141,3 @@ export type FinanceSummary = {
   activeExpensesCount: number
   debtInstallmentsRemaining: number
 }
-
-export type AppUser = {
-  id: string
-  name: string
-  email: string
-  createdAt: string
-  avatarUrl?: string
-}

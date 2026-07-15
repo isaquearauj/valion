@@ -27,11 +27,21 @@ Abra `http://localhost:3000`.
 
 O ambiente local usa Supabase CLI + Docker:
 
-- API: `http://127.0.0.1:54321`
-- Studio: `http://127.0.0.1:54323`
-- Mailpit: `http://127.0.0.1:54324`
+- API: `http://127.0.0.1:55321`
+- Studio: `http://127.0.0.1:55323`
+- Mailpit: `http://127.0.0.1:55324`
 
 E-mails de recuperação em desenvolvimento aparecem no Mailpit, sem consumir rate limit do Supabase Cloud.
+
+## Verificação E Testes
+
+- `pnpm lint`: análise estática.
+- `pnpm exec tsc --noEmit`: typecheck.
+- `pnpm typecheck`: verificação TypeScript.
+- `pnpm test`: suíte Vitest padrão.
+- `pnpm test:coverage`: gera coverage sem threshold global bloqueante.
+- `pnpm test:supabase`: suíte opt-in de integração RLS/constraints contra Supabase local.
+- `pnpm quality`: lint, typecheck e testes unitários.
 
 ## Variáveis de ambiente
 
@@ -65,16 +75,28 @@ Configuração de Auth em produção:
 
 - `pnpm dev`: ambiente de desenvolvimento.
 - `pnpm lint`: análise estática.
+- `pnpm test`: suíte padrão.
+- `pnpm test:coverage`: coverage da suíte padrão.
+- `pnpm test:supabase`: integração Supabase local.
+- `pnpm typecheck`: verificação TypeScript.
+- `pnpm quality`: lint, typecheck e testes unitários.
 - `pnpm build`: build de produção.
 - `pnpm supabase:start`: sobe Supabase local.
 - `pnpm supabase:stop`: para Supabase local.
 - `pnpm supabase:reset`: recria banco local com migrations.
+- `pnpm supabase:seed`: carrega dados demonstrativos no Supabase local.
+- `pnpm supabase:reset:seed`: recria banco e carrega dados demonstrativos.
 - `pnpm supabase:status`: mostra URLs e chaves locais.
 
 ## Estrutura principal
 
-- `components/finance`: dashboard, CRUDs e telas do produto.
-- `features/finance`: tipos, schemas, cálculos, mapeadores e store Supabase.
+- `features/auth/ui`: telas e fluxos visuais de autenticação.
+- `features/finance/ui`: dashboard, CRUDs e telas do produto.
+- `features/finance/domain`: tipos, estado inicial e cálculos financeiros.
+- `features/finance/forms`: schemas e validações de formulários.
+- `features/finance/data`: mapeadores e acesso aos dados financeiros.
+- `features/finance/hooks`: estado client-side e mutações financeiras.
+- `features/finance/presentation`: view models para a apresentação financeira.
 - `components/ui`: componentes shadcn/ui.
 - `lib/supabase`: clientes Supabase browser, server e admin.
 - `supabase/schema.sql`: tabelas, constraints, triggers e políticas RLS.

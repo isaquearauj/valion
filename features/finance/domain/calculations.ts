@@ -1,4 +1,4 @@
-import { getCurrentMonthKey } from "@/features/finance/initial-data"
+import { getCurrentMonthKey } from "@/features/finance/domain/initial-data"
 import type {
   FinanceState,
   FinanceSummary,
@@ -6,7 +6,7 @@ import type {
   Income,
   IncomeFrequency,
   MonthlySnapshot,
-} from "@/features/finance/types"
+} from "@/features/finance/domain/types"
 
 const frequencyMultiplier: Record<IncomeFrequency, number> = {
   Mensal: 1,

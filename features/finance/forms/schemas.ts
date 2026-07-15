@@ -9,7 +9,7 @@ import {
   REMINDER_FREQUENCIES,
   REMINDER_STATUSES,
   REMINDER_TYPES,
-} from "@/features/finance/types"
+} from "@/features/finance/domain/types"
 
 export const incomeSchema = z.object({
   amount: z.coerce.number().positive("Informe um valor maior que zero."),
@@ -28,6 +28,26 @@ export const expenseSchema = z.object({
   remainingInstallments: z.coerce.number().int().min(0),
   status: z.enum(EXPENSE_STATUSES),
   totalInstallments: z.coerce.number().int().min(0),
+}).superRefine((values, context) => {
+  if (values.totalInstallments <= 0) {
+    if (values.remainingInstallments > 0) {
+      context.addIssue({
+        code: "custom",
+        message: "Parcelas restantes devem ser zero quando a despesa não é parcelada.",
+        path: ["remainingInstallments"],
+      })
+    }
+
+    return
+  }
+
+  if (values.remainingInstallments > values.totalInstallments) {
+    context.addIssue({
+      code: "custom",
+      message: "Parcelas restantes não podem exceder o total.",
+      path: ["remainingInstallments"],
+    })
+  }
 })
 
 export const reminderSchema = z
