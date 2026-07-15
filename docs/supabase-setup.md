@@ -9,13 +9,11 @@ Este projeto usa Supabase em produção para autenticação, perfis e persistên
 3. Crie um novo projeto.
 4. Defina região, nome e senha do banco.
 
-## 2. Executar o schema
+## 2. Schema e migrations
 
-1. Abra o projeto no Supabase.
-2. Vá em `SQL Editor`.
-3. Copie o conteúdo de `supabase/schema.sql`.
-4. Execute o script completo.
-5. Confirme que as tabelas foram criadas com RLS ativo.
+O banco local é recriado exclusivamente a partir de migrations versionadas em
+`supabase/migrations/`. `supabase/schema.sql` é uma referência de schema, não o
+fluxo de aplicação em produção.
 
 ## 3. Configurar autenticação
 
@@ -31,7 +29,7 @@ https://www.valionapp.com/**
 http://localhost:3000/**
 ```
 
-## 4. Criar `.env.local`
+## 4. Ambiente local e produção
 
 Para produção/preview na Vercel, preencha as variáveis com o projeto Supabase Cloud:
 
@@ -43,7 +41,8 @@ SUPABASE_SERVICE_ROLE_KEY=sua-chave-service-role
 
 As chaves ficam em `Project Settings > API`. A `SUPABASE_SERVICE_ROLE_KEY` deve existir apenas em ambiente server-side e nunca deve ser exposta com prefixo `NEXT_PUBLIC`.
 
-Para desenvolvimento local, use Supabase CLI + Docker:
+Para desenvolvimento local, use Supabase CLI + Docker. `.env.supabase` não é
+necessário:
 
 ```bash
 pnpm supabase:start
@@ -68,10 +67,11 @@ Isso permite testar `/recover` sem consumir o rate limit do Supabase Cloud.
 
 Com confirmação de e-mail ativa, o cadastro cria o usuário no Auth, mas o acesso ao painel só acontece depois da confirmação pelo link recebido.
 
-Para recriar o banco local:
+Para recriar o banco local e aplicar todas as migrations:
 
 ```bash
-pnpm supabase:reset
+supabase db reset --local
+# ou: pnpm supabase:reset
 ```
 
 Para validar RLS e constraints no banco local:
@@ -117,6 +117,26 @@ pnpm test:supabase
 
 Não execute `supabase db push` diretamente contra produção como parte do fluxo normal.
 
+### Acesso local à CLI e inspeção autorizada
+
+Para consultar um projeto remoto de forma autorizada, sem aplicar migrations:
+
+```bash
+supabase login
+supabase link --project-ref <project-ref>
+supabase start
+supabase db diff --linked
+```
+
+`supabase login` autentica a CLI. `supabase link` vincula o projeto local ao
+projeto remoto e pode solicitar a senha interativamente. A senha nunca deve
+ser enviada pelo chat, commitada ou colocada em arquivos do repositório. A CLI
+pode armazenar credenciais no armazenamento nativo do sistema; esse acesso é
+persistente somente para a mesma máquina e usuário. Runners efêmeros devem
+usar secrets ou um secret manager. `supabase db diff --linked` serve apenas
+para inspeção e não aplica migrations. Use `supabase logout` quando o acesso
+não for mais necessário.
+
 ### Migrations de produção
 
 O deploy é feito pelo workflow manual `.github/workflows/supabase-migrations.yml`:
@@ -127,21 +147,33 @@ O deploy é feito pelo workflow manual `.github/workflows/supabase-migrations.ym
 4. Em `Review deployments`, aprove o environment `production`.
 5. Confirme o resultado do job antes de considerar a migration publicada.
 
-O workflow usa os secrets do environment `production`:
+O workflow usa exclusivamente os secrets do GitHub Environment `production`:
 
 - `SUPABASE_ACCESS_TOKEN`: token usado apenas pelo GitHub Actions.
 - `SUPABASE_DB_PASSWORD`: senha do banco de produção.
-- `SUPABASE_PROJECT_REF`: `xxtgvwcfphhqgpfkiwsl`.
+- `SUPABASE_PROJECT_REF`: project ref do projeto de produção.
 
 Esses valores não devem ser commitados, enviados ao chat ou colocados em arquivos `.env`. Agentes podem preparar migrations, executar testes locais e disparar o workflow, mas a aprovação de produção permanece humana.
 
 Em caso de erro, não edite uma migration já aplicada. Crie uma nova migration corretiva. Para mudanças destrutivas ou de alto risco, faça backup e valide primeiro em staging ou em uma cópia local.
 
-Para consultar o histórico remoto sem aplicar mudanças:
+Para consultar o histórico remoto sem aplicar mudanças, use a CLI autenticada
+e vinculada; nunca execute `supabase db push` diretamente contra produção.
 
 ```bash
-pnpm exec supabase migration list
+supabase migration list
 ```
+
+O workflow só aplica migrations versionadas em `supabase/migrations/`. Ele não
+executa seed, `supabase db reset --linked` nem SQL arbitrário. A configuração
+do GitHub deve manter o environment `production` com required reviewers para
+que a aprovação continue manual.
+
+Migrations de dados devem ser idempotentes quando possível. Depois que uma
+migration for aplicada, não a edite: crie uma nova migration corretiva. Para
+alterações destrutivas, faça backup e valide a operação localmente antes da
+aprovação. Rollback é feito por uma migration corretiva, não apagando o
+histórico aplicado.
 
 Para gerar tipos oficiais do Supabase no futuro:
 

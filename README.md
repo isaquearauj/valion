@@ -13,7 +13,7 @@ Produção: `https://valionapp.com`
 - Gráficos interativos com Recharts e shadcn chart.
 - Histórico financeiro mensal.
 - Light mode, dark mode e layout responsivo.
-- Schema Supabase com tabelas, triggers e políticas RLS em `supabase/schema.sql`.
+- Migrations Supabase versionadas com tabelas, triggers e políticas RLS.
 
 ## Rodando localmente
 
@@ -43,7 +43,7 @@ E-mails de recuperação em desenvolvimento aparecem no Mailpit, sem consumir ra
 - `pnpm test:supabase`: suíte opt-in de integração RLS/constraints contra Supabase local.
 - `pnpm quality`: lint, typecheck e testes unitários.
 
-## Variáveis de ambiente
+## Variáveis de ambiente da aplicação
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=
@@ -55,15 +55,15 @@ SUPABASE_SERVICE_ROLE_KEY=
 
 ## Supabase
 
-Execute `supabase/schema.sql` no SQL Editor do Supabase para criar tabelas, triggers e policies. Se o projeto já tiver o schema antigo, execute ao menos o bloco `handle_new_user` do arquivo para criar perfis automaticamente no cadastro.
-
-Para desenvolvimento local, a migration baseline está em `supabase/migrations/20260606000000_baseline.sql`. Use:
+Para desenvolvimento local, as migrations estão em `supabase/migrations/`. A
+baseline é `20260606000000_baseline.sql`. Use:
 
 ```bash
 pnpm supabase:reset
 ```
 
-Esse comando recria o banco local a partir das migrations.
+Esse comando recria o banco local a partir das migrations. `.env.supabase` não
+é necessário. Consulte `docs/supabase-setup.md` para o fluxo de produção.
 
 Configuração de Auth em produção:
 
