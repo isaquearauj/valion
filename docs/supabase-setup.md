@@ -104,16 +104,43 @@ A rota `DELETE /api/account` usa `SUPABASE_SERVICE_ROLE_KEY` para remover o usu�
 
 ## 7. Manutenção
 
-A migration baseline local está em `supabase/migrations/20260606000000_baseline.sql`. Como o schema já foi aplicado manualmente no Supabase Cloud antes da introdução das migrations, antes de usar `supabase db push` em produção marque essa baseline como aplicada no projeto remoto:
+A migration baseline local está em `supabase/migrations/20260606000000_baseline.sql`. Ela já foi reconciliada como aplicada no Supabase Cloud.
+
+### Migrations locais
+
+Toda alteração de tabelas, índices, triggers, constraints ou policies deve ser criada como uma nova migration em `supabase/migrations/`. Valide sempre no banco local:
 
 ```bash
-pnpm exec supabase migration repair 20260606000000 --status applied
+pnpm supabase:reset
+pnpm test:supabase
 ```
 
-Depois disso, novas migrations podem ser enviadas com:
+Não execute `supabase db push` diretamente contra produção como parte do fluxo normal.
+
+### Migrations de produção
+
+O deploy é feito pelo workflow manual `.github/workflows/supabase-migrations.yml`:
+
+1. Abra `Actions > Supabase migrations` no GitHub.
+2. Clique em `Run workflow` usando a branch `main`.
+3. Revise o commit que será aplicado.
+4. Em `Review deployments`, aprove o environment `production`.
+5. Confirme o resultado do job antes de considerar a migration publicada.
+
+O workflow usa os secrets do environment `production`:
+
+- `SUPABASE_ACCESS_TOKEN`: token usado apenas pelo GitHub Actions.
+- `SUPABASE_DB_PASSWORD`: senha do banco de produção.
+- `SUPABASE_PROJECT_REF`: `xxtgvwcfphhqgpfkiwsl`.
+
+Esses valores não devem ser commitados, enviados ao chat ou colocados em arquivos `.env`. Agentes podem preparar migrations, executar testes locais e disparar o workflow, mas a aprovação de produção permanece humana.
+
+Em caso de erro, não edite uma migration já aplicada. Crie uma nova migration corretiva. Para mudanças destrutivas ou de alto risco, faça backup e valide primeiro em staging ou em uma cópia local.
+
+Para consultar o histórico remoto sem aplicar mudanças:
 
 ```bash
-pnpm exec supabase db push
+pnpm exec supabase migration list
 ```
 
 Para gerar tipos oficiais do Supabase no futuro:

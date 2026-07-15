@@ -26,6 +26,7 @@
 - Nunca exponha `SUPABASE_SERVICE_ROLE_KEY` em Client Components; ela deve ficar restrita a rotas/server-side como `lib/supabase/admin.ts`.
 - Supabase local depende da Supabase CLI e Docker. URLs locais do README/config: API `http://127.0.0.1:55321`, DB `55322`, Studio `http://127.0.0.1:55323`, Mailpit/Inbucket `http://127.0.0.1:55324`.
 - Recriar banco local: `pnpm supabase:reset`, que aplica migrations em `supabase/migrations/`.
+- Migrations de produção devem passar pelo workflow manual `.github/workflows/supabase-migrations.yml` e pela aprovação do environment `production`; não executar `supabase db push` diretamente como fluxo normal.
 - `supabase/schema.sql` e migrations devem permanecer coerentes quando alterar tabelas, triggers, constraints ou policies RLS.
 - Emails de cadastro/recuperacao em dev aparecem no Mailpit/Inbucket; nao dependem de envio real.
 

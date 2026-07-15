@@ -88,6 +88,8 @@ Configuração de Auth em produção:
 - `pnpm supabase:reset:seed`: recria banco e carrega dados demonstrativos.
 - `pnpm supabase:status`: mostra URLs e chaves locais.
 
+Migrations de produção não são aplicadas pelo ambiente local. Depois de validar uma nova migration com `pnpm supabase:reset` e `pnpm test:supabase`, use manualmente o workflow `Supabase migrations` em `Actions` no GitHub. A aplicação exige aprovação no environment protegido `production`. Consulte `docs/supabase-setup.md` para o procedimento completo.
+
 ## Estrutura principal
 
 - `features/auth/ui`: telas e fluxos visuais de autenticação.
