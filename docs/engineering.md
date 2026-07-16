@@ -53,7 +53,7 @@ pnpm verify:agents
 pnpm build
 ```
 
-O guard lê `.nvmrc` e exige Node `22.22.3`; execute `nvm use` quando ele falhar.
+O guard lê `.nvmrc`, exige a mesma major/minor e alerta quando o patch hospedado diverge da versão local preferida `22.22.3`.
 O CI mantém OSV Scanner. `pnpm audit` não faz parte do gate porque o endpoint do
 registry não é confiável neste ambiente e duplicaria a auditoria independente.
 
