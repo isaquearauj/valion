@@ -53,6 +53,7 @@ escutar na interface de rede; use-os apenas em uma rede confiável e rode
 - `pnpm quality`: Biome, ESLint, typecheck e testes unitários.
 - `pnpm verify`: quality gate e build de produção.
 - `pnpm verify:supabase`: reset do banco local e testes reais de integração.
+- `pnpm verify:agents`: valida configuração, paridade e evals de agents/skills.
 
 ## Variáveis de ambiente da aplicação
 
@@ -96,6 +97,7 @@ Configuração de Auth em produção:
 - `pnpm quality`: checks estáticos, typecheck e testes unitários.
 - `pnpm verify`: quality gate e build.
 - `pnpm verify:supabase`: reset e testes do Supabase local.
+- `pnpm verify:agents`: valida agents, skills, evals e pastas locais protegidas.
 - `pnpm build`: build de produção.
 - `pnpm supabase:start`: sobe Supabase local.
 - `pnpm supabase:stop`: para Supabase local.
@@ -124,6 +126,12 @@ Migrations de produção não são aplicadas pelo ambiente local. Depois de vali
 - `docs/architecture.md`: fronteiras, fluxo de dados e dívida arquitetural conhecida.
 - `docs/history.md`: semântica de snapshots e correções históricas.
 - `.agents/skills`: workflows reutilizáveis para agentes de código.
+- `features/*/README.md`: contexto, fronteiras e invariantes dos módulos complexos.
+- `docs/decisions`: decisões arquiteturais duráveis (ADRs).
+
+O desenvolvimento relevante segue SDD com specs locais em `docs/specs/`. Essas specs não são
+versionadas; use o template `.agents/templates/spec.md` e leve ao PR apenas contexto, decisões,
+Definition of Done e validações necessárias para revisão.
 
 ## Deploy
 

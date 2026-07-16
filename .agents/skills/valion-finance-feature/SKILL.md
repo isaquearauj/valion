@@ -1,6 +1,6 @@
 ---
 name: valion-finance-feature
-description: Implementar ou revisar funcionalidades financeiras verticais no Valion. Use quando a tarefa alterar receitas, despesas, lembretes, investimentos, metas, aportes, historico, calculos, formularios ou secoes do dashboard. Inclui dominio, validacao, mapeamento, store, UI e testes. Nao use para toolchain, docs isoladas ou auth sem regra financeira.
+description: Implementar ou revisar funcionalidades financeiras verticais no Valion. Use sempre que a tarefa envolver receitas, despesas, lembretes, investimentos, metas, aportes, historico, snapshots, calculos, formularios, App Router financeiro, provider/store, concorrencia ou secoes do dashboard. Inclui dominio, validacao, mapeamento, repositorios, estado, UI e testes. Nao use para toolchain, docs isoladas ou auth sem regra financeira.
 ---
 
 # Funcionalidades financeiras no Valion

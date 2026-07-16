@@ -10,7 +10,7 @@
         "Cria bucket privado com limite e MIME e policies para o prefixo do auth.uid().",
         "Persiste apenas avatar_path e gera URL assinada; não cria base64 novo.",
         "Migra base64 legado de forma idempotente validando MIME, assinatura e tamanho sem logar conteúdo.",
-        "Testa leitura/escrita cruzada, MIME inválido e fallback por iniciais no Supabase local."
+        "Define leitura/escrita cruzada, MIME inválido e fallback por iniciais no Supabase local e relata ambiente bloqueado sem simular sucesso."
       ]
     },
     {
@@ -22,7 +22,7 @@
         "Aplica migrations localmente antes de gerar tipos e não usa projeto remoto sem autorização.",
         "Versiona database.types.ts e tipa clientes browser, server e admin com Database.",
         "Substitui rows manuais e casts por Tables, TablesInsert e TablesUpdate nos repositórios.",
-        "Executa typecheck, testes de mapper/repositório e verify:supabase."
+        "Define typecheck, mapper/repositório e verify:supabase e não afirma geração/testes quando o ambiente não permitiu executar."
       ]
     },
     {

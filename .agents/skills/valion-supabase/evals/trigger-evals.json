@@ -1,0 +1,43 @@
+[
+  {
+    "query": "adicione received_on em incomes com migration, backfill e constraint",
+    "should_trigger": true
+  },
+  {
+    "query": "um usuario consegue ler os snapshots de outra conta, investigue a RLS",
+    "should_trigger": true
+  },
+  { "query": "mova avatar base64 para um bucket privado com URL assinada", "should_trigger": true },
+  {
+    "query": "os tipos gerados do Supabase divergiram depois da migration",
+    "should_trigger": true
+  },
+  {
+    "query": "implemente uma RPC autenticada que derive o usuario de auth.uid",
+    "should_trigger": true
+  },
+  {
+    "query": "ao excluir a conta limpe todos os arquivos do Storage antes do Auth",
+    "should_trigger": true
+  },
+  { "query": "o seed local nao consegue escrever monthly_snapshots", "should_trigger": true },
+  {
+    "query": "prepare e valide uma migration de snapshots com triggers security definer",
+    "should_trigger": true
+  },
+  { "query": "como aplicamos essa migration em producao sem db push", "should_trigger": true },
+  { "query": "teste MIME tamanho e isolamento do bucket profile-avatars", "should_trigger": true },
+  { "query": "ajuste o layout mobile da tabela de receitas", "should_trigger": false },
+  {
+    "query": "corrija um calculo puro de percentual comprometido sem persistencia",
+    "should_trigger": false
+  },
+  { "query": "abra PR desta branch para main", "should_trigger": false },
+  { "query": "adicione teste de teclado ao dialog de metas", "should_trigger": false },
+  { "query": "refatore o provider para evitar rerender sem mudar banco", "should_trigger": false },
+  { "query": "mude a cor do avatar fallback", "should_trigger": false },
+  { "query": "rode o agent-browser nas seis rotas", "should_trigger": false },
+  { "query": "atualize a documentacao do Biome e ESLint", "should_trigger": false },
+  { "query": "crie um componente de confirmacao acessivel", "should_trigger": false },
+  { "query": "adicione uma view model local para formatar moeda", "should_trigger": false }
+]

@@ -32,6 +32,11 @@ app/ rotas e layouts
   compartilhada e a acessibilidade.
 - `lib/supabase/`: única porta de criação dos clientes Supabase.
 
+Features complexas possuem README próprio com propósito, fluxo, invariantes e
+pontos de extensão. Consulte `features/README.md`, `features/auth/README.md` e
+`features/finance/README.md`. Esses READMEs documentam fronteiras estáveis, não
+uma listagem linha a linha da implementação.
+
 ## Clientes Supabase
 
 | Cliente | Arquivo | Uso permitido |
@@ -93,3 +98,14 @@ mês recebido; investimento passado altera somente seus campos. A RPC
 - Rotas server-side não importam o cliente browser.
 - Imports entre módulos usam `@/*`; imports relativos ficam restritos a arquivos
   fortemente acoplados no mesmo diretório.
+
+## Evolução da estrutura
+
+Comece pelo menor módulo que resolve o problema da spec. A separação em domain,
+data, state, presentation e UI acontece quando responsabilidades reais surgem;
+ela não é um template obrigatório para qualquer feature. Cerca de 300 linhas é
+um sinal para revisar coesão, não um limite mecânico.
+
+Decisões duráveis ficam em `docs/decisions`. Specs de trabalho ficam localmente
+em `docs/specs`, são ignoradas pelo Git e não substituem ADRs ou documentação de
+arquitetura.

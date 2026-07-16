@@ -1,0 +1,25 @@
+[
+  { "query": "crie o PR desta branch do Valion para main", "should_trigger": true },
+  { "query": "faz push e abre um pull request", "should_trigger": true },
+  { "query": "prepara a descricao do PR sem criar nada ainda", "should_trigger": true },
+  { "query": "abre um draft PR e me coloca como assignee", "should_trigger": true },
+  { "query": "ja existe PR dessa branch, atualiza o titulo e o corpo", "should_trigger": true },
+  {
+    "query": "suba essas alteracoes para uma branch e mande para main por PR",
+    "should_trigger": true
+  },
+  { "query": "quero revisar o diff inteiro antes de abrir o pull request", "should_trigger": true },
+  { "query": "use gh cli para criar o PR com QA e DoD", "should_trigger": true },
+  { "query": "abre o PR mas nao publique a spec de docs/specs", "should_trigger": true },
+  { "query": "me diga se a branch ja tem PR aberto", "should_trigger": true },
+  { "query": "faça apenas um commit local", "should_trigger": false },
+  { "query": "crie uma branch para essas mudancas sem push", "should_trigger": false },
+  { "query": "aplique as migrations em producao", "should_trigger": false },
+  { "query": "revise o codigo como quality reviewer", "should_trigger": false },
+  { "query": "rode QA com agent-browser e salve screenshots", "should_trigger": false },
+  { "query": "escreva a spec local dessa feature", "should_trigger": false },
+  { "query": "resolva os conflitos da branch com main", "should_trigger": false },
+  { "query": "mostre o git status e o ultimo commit", "should_trigger": false },
+  { "query": "gere release notes sem criar PR", "should_trigger": false },
+  { "query": "adicione uma label nova no GitHub", "should_trigger": false }
+]

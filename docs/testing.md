@@ -26,6 +26,17 @@ git diff --check
 59% em branches e 67% em functions. Esses valores são piso: módulos novos ou
 refatorados recebem testes focados e os thresholds nunca são reduzidos.
 
+## QA de navegador
+
+Mudanças com comportamento observável em rotas, formulários, Auth, perfil,
+navegação ou responsividade devem considerar a skill `valion-browser-qa`. O QA
+usa `agent-browser` e grava relatório/screenshots em `.context/qa-<slug>/`.
+`.context` é local e nunca deve ser versionado.
+
+Exclusão de conta exige confirmação explícita imediatamente antes da ação,
+mesmo usando usuário demo e Supabase local. Ajustes sem efeito visual podem
+dispensar browser QA com justificativa proporcional ao risco.
+
 Inspeção remota autorizada pode usar `supabase db diff --linked`, que não
 aplica alterações. A aplicação em produção ocorre somente pelo workflow
 manual protegido e aprovado no environment `production`.

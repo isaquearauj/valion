@@ -1,6 +1,6 @@
 ---
 name: valion-supabase
-description: Trabalhar com Supabase no Valion com seguranca e validacao completa. Use sempre que a tarefa mencionar schema, migration, SQL, RLS, Auth, perfis, service role, exclusao de conta, seed, banco local, Supabase CLI ou deploy de banco deste repositorio. Nao use para mudancas puramente visuais sem persistencia ou auth.
+description: Trabalhar com Supabase no Valion com seguranca e validacao completa. Use sempre que a tarefa mencionar schema, migration, SQL, RLS, Auth, perfis, Storage, avatar, snapshots, tipos gerados, service role, exclusao de conta, seed, banco local, Supabase CLI ou deploy de banco. Nao use para mudancas puramente visuais sem persistencia ou auth.
 ---
 
 # Supabase no Valion

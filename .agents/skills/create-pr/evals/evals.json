@@ -1,0 +1,50 @@
+{
+  "skill_name": "create-pr",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Crie o PR desta branch do Valion para main. Quero PR normal e pode me sugerir assignee e labels.",
+      "expected_output": "Inspeção completa da branch, confirmação consolidada, push e PR para main com corpo SDD/DoD/QA.",
+      "files": [],
+      "assertions": [
+        "Compara main...HEAD e lê todos os commits/diff da branch.",
+        "Checa PR existente, usuário do gh e labels reais antes de criar.",
+        "Usa base main e confirma assignee, labels e estado normal/draft.",
+        "Corpo inclui problema, solução, arquitetura/dados, DoD, QA, validações e riscos."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Abre um draft PR do Valion. A spec completa está em docs/specs/avatar.md, coloca ela inteira na descrição.",
+      "expected_output": "Cria descrição útil sem publicar a spec local, sintetizando somente contexto e DoD.",
+      "files": [],
+      "assertions": [
+        "Recusa publicar ou versionar o conteúdo de docs/specs.",
+        "Sintetiza problema, decisões e DoD necessários para revisão.",
+        "Mantém o PR como draft e base main."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Faz push e abre o PR. Acho que já tem um PR dessa branch, mas pode criar outro se for mais fácil.",
+      "expected_output": "Detecta PR existente e oferece atualizar, sem duplicação.",
+      "files": [],
+      "assertions": [
+        "Consulta PRs abertos pela head branch.",
+        "Não cria PR duplicado para main.",
+        "Preserva informações manuais úteis ao atualizar."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Prepara a descrição do PR desta branch, mas não faça push nem crie nada no GitHub.",
+      "expected_output": "Gera proposta baseada no diff completo sem mutação externa.",
+      "files": [],
+      "assertions": [
+        "Respeita o pedido de não fazer push/PR.",
+        "Usa a branch inteira contra main como fonte.",
+        "Não afirma validações que não foram executadas."
+      ]
+    }
+  ]
+}

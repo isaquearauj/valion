@@ -1,5 +1,19 @@
 # Engenharia
 
+## Fluxo de desenvolvimento
+
+Mudanças relevantes seguem Spec Driven Development: descoberta do problema com
+Luis/Isaque, spec local com Definition of Done, implementação incremental e
+validação proporcional ao risco. As specs ficam em `docs/specs/`, são ignoradas
+pelo Git e nunca devem ser anexadas ao PR. O template versionado é
+`.agents/templates/spec.md`; decisões arquiteturais duráveis ficam em
+`docs/decisions/`.
+
+Comece pela menor implementação correta. Depois que o comportamento estiver
+comprovado, refatore para reduzir acoplamento, melhorar eficiência,
+manutenibilidade e segurança. O fluxo completo pode ser reduzido para tarefas
+realmente triviais, desde que o resultado esperado continue explícito.
+
 ## Migrations Supabase
 
 As migrations são arquivos versionados em `supabase/migrations/`. Alterações
@@ -31,6 +45,7 @@ pnpm check
 pnpm lint:eslint
 pnpm typecheck
 pnpm test
+pnpm verify:agents
 pnpm build
 ```
 
@@ -60,3 +75,20 @@ Para inspeção autorizada do remoto, use `supabase login`,
 senha é interativa e não deve ser enviada pelo chat ou commitada. A CLI pode
 guardar a sessão no armazenamento nativo da máquina; runners efêmeros devem
 usar secrets ou secret manager. Use `supabase logout` ao terminar.
+
+## Agents, skills e QA de navegador
+
+`AGENTS.md` é a fonte de verdade do workflow e `CLAUDE.md` aponta para ele. As
+skills compartilhadas ficam em `.agents/skills`; agentes Claude ficam em
+`.agents/agents` e seus equivalentes Codex em `.codex/agents`.
+`pnpm verify:agents` valida essa paridade, os contratos mínimos das skills e a
+proteção das pastas locais.
+
+Mudanças de fluxo visual devem, sempre que possível, passar pela skill
+`valion-browser-qa`. Relatórios e screenshots ficam em `.context/qa-<slug>/`,
+organizados por execução e nunca versionados. Exclusão de conta exige
+confirmação humana imediatamente antes da ação, inclusive no ambiente local.
+
+Quando o usuário autorizar push e abertura de PR, use a skill `create-pr`. O PR
+é aberto contra `main`, descreve problema, solução, Definition of Done,
+validações e riscos, mas não publica specs ou evidências locais.

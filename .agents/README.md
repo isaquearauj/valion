@@ -3,7 +3,8 @@
 Este diretório contém recursos compartilhados entre ferramentas de coding
 agents sem duplicar instruções.
 
-- `skills/`: skills no padrão aberto `SKILL.md`, lidas diretamente pelo Codex.
+- `skills/`: skills no padrão aberto `SKILL.md`, incluindo finanças, Supabase,
+  browser QA e criação de PR.
 - `agents/`: agentes Markdown do Claude Code.
 - `.claude/skills`: symlink para `.agents/skills`.
 - `.claude/agents`: symlink para `.agents/agents`.
@@ -15,3 +16,6 @@ agents sem duplicar instruções.
 Skills novas precisam ter escopo estreito, descrição com gatilhos e limites,
 casos realistas em `evals/evals.json` e validação antes de serem tratadas como
 estáveis. Workspaces gerados por avaliações são locais e ignorados pelo Git.
+
+`pnpm verify:agents` valida symlinks, paridade entre agents Claude/Codex,
+frontmatter, evals e a proteção de `.context`/`docs/specs` contra versionamento.

@@ -10,7 +10,7 @@
         "Cria migration nova com received_on, backfill por America/Sao_Paulo e constraint entre frequência e data.",
         "Atualiza domínio, Zod com data real, tipos gerados, mapper, repositório, provider, formulário e cálculo mensal.",
         "Mantém snapshots históricos recorrentes intactos e aplica somente delta da renda única no mês fechado.",
-        "Inclui testes unitários e Supabase local e executa os gates do projeto."
+        "Define testes unitários, integração Supabase e gates corretos; diferencia executado de bloqueado sem inventar validação."
       ]
     },
     {
@@ -22,7 +22,7 @@
         "Remove history.pushState, popstate e estado duplicado de seção.",
         "Mantém autenticação, provider financeiro e navegação no layout com slot children.",
         "Cada page.tsx renderiza sua seção e não importa um dashboard monolítico.",
-        "Preserva deep links, back/forward, aria-current, loading e erro com retry."
+        "Preserva deep links, back/forward, aria-current, loading e erro com retry e recomenda QA de navegador proporcional."
       ]
     },
     {
