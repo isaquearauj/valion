@@ -1,5 +1,7 @@
 # Engenharia
 
+Pull requests também geram um preview da Vercel para validar a integração de deploy antes do merge.
+
 ## Migrations Supabase
 
 As migrations são arquivos versionados em `supabase/migrations/`. Alterações
