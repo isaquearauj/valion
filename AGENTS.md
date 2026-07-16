@@ -129,9 +129,10 @@ Invariantes principais:
 | Reset e integração Supabase | `pnpm verify:supabase` |
 | Agents e skills | `pnpm verify:agents` |
 
-Use Supabase CLI + Docker somente no ambiente local confirmado. Produção recebe migrations apenas
-pelo workflow manual `.github/workflows/supabase-migrations.yml`; nunca use `supabase db push`
-diretamente contra produção. Consulte `docs/supabase-setup.md` antes de operar banco.
+Use Supabase CLI + Docker somente no ambiente local confirmado. Após um `push` na `main`, produção
+recebe migrations pelo workflow `.github/workflows/supabase-migrations.yml` somente se o CI do SHA
+terminar com sucesso; nunca use `supabase db push` diretamente contra produção. Consulte
+`docs/supabase-setup.md` antes de operar banco.
 
 ## 6. Código, produto e segurança
 

@@ -139,8 +139,12 @@ não for mais necessário.
 
 ### Migrations de produção
 
-O deploy é feito pelo workflow manual `.github/workflows/supabase-migrations.yml`.
-Um agente autorizado pode dispará-lo via CLI, sem exigir clique manual:
+O deploy é feito por `.github/workflows/supabase-migrations.yml`. Depois de
+qualquer `push` na `main`, o workflow aguarda o `CI` desse commit e só aplica as
+migrations se ele terminar com sucesso. Isso cobre tanto merges de PR quanto
+commits diretos, sempre com checkout do SHA exato que foi validado.
+
+O disparo manual permanece disponível como fallback operacional:
 
 ```bash
 gh workflow run "Supabase migrations" --ref main
@@ -153,7 +157,7 @@ O workflow usa exclusivamente os secrets do GitHub Environment `production`:
 - `SUPABASE_DB_PASSWORD`: senha do banco de produção.
 - `SUPABASE_PROJECT_REF`: project ref do projeto de produção.
 
-Esses valores não devem ser commitados, enviados ao chat ou colocados em arquivos `.env`. Agentes podem preparar migrations, executar testes locais e disparar o workflow, mas a aprovação de produção permanece humana.
+Esses valores não devem ser commitados, enviados ao chat ou colocados em arquivos `.env`. Agentes podem preparar migrations e executar testes locais. Proteções ou aprovações configuradas no GitHub Environment `production` continuam sendo respeitadas pelo workflow automático.
 
 Em caso de erro, não edite uma migration já aplicada. Crie uma nova migration corretiva. Para mudanças destrutivas ou de alto risco, faça backup e valide primeiro em staging ou em uma cópia local.
 

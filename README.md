@@ -107,7 +107,7 @@ Configuração de Auth em produção:
 - `pnpm supabase:status`: mostra URLs e chaves locais.
 - `pnpm supabase:types`: regenera os tipos oficiais após aplicar migrations locais.
 
-Migrations de produção não são aplicadas pelo ambiente local. Depois de validar uma nova migration com `pnpm supabase:reset` e `pnpm test:supabase`, um agente autorizado pode disparar o workflow `Supabase migrations` via `gh workflow run --ref main`. Consulte `docs/supabase-setup.md` para o procedimento completo.
+Migrations de produção não são aplicadas pelo ambiente local. Depois de um `push` na `main`, o workflow `Supabase migrations` aplica as migrations somente quando o CI desse SHA termina com sucesso. O disparo manual permanece disponível para recuperação operacional. Consulte `docs/supabase-setup.md` para o procedimento completo.
 
 ## Estrutura principal
 

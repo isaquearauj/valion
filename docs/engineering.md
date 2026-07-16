@@ -67,12 +67,12 @@ necessidade do script. Os scripts de `msw`, `sharp` e `unrs-resolver` são
 ignorados explicitamente: o projeto não usa um service worker do MSW, e os
 artefatos nativos publicados de Sharp/UNRS foram validados pelo build e lint.
 
-Produção só recebe migrations pelo workflow manual
-`.github/workflows/supabase-migrations.yml`, disparado em `workflow_dispatch`,
-com o GitHub Environment `production`. Um agente autorizado pode disparar a
-Action com `gh workflow run "Supabase migrations" --ref main`; não é necessário
-que o desenvolvedor clique no GitHub. Não execute `supabase db push`
-diretamente contra produção.
+Produção recebe migrations por `.github/workflows/supabase-migrations.yml`
+depois que o workflow `CI` conclui com sucesso para um `push` na `main`. O
+checkout usa o SHA exato validado, tanto para merges de PR quanto para commits
+diretos. `workflow_dispatch` permanece como fallback operacional. O deploy usa
+o GitHub Environment `production`; não execute `supabase db push` diretamente
+contra produção.
 
 Para inspeção autorizada do remoto, use `supabase login`,
 `supabase link --project-ref <project-ref>` e `supabase db diff --linked`. A
