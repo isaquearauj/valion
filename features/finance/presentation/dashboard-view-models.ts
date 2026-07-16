@@ -86,6 +86,7 @@ export function getIncomeDefaults(income: Income | null): IncomeFormInput {
     frequency: income?.frequency ?? "Mensal",
     name: income?.name ?? "",
     notes: income?.notes ?? "",
+    receivedOn: income?.receivedOn ?? getCurrentDateKey(),
     type: income?.type ?? "Salário",
   }
 }

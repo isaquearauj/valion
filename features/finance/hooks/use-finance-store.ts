@@ -1,25 +1,28 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { removeExpense, saveExpense } from "@/features/finance/data/repositories/expense-repository"
 import {
-  type ChargeReminderRow,
-  createEmptyFinanceState,
-  type FixedExpenseRow,
-  type GoalContributionRow,
-  type GoalRow,
-  getWorkspaceUpdatedAt,
-  type IncomeRow,
-  type InvestmentEntryRow,
-  type MonthlySnapshotRow,
-  mapChargeReminder,
-  mapFixedExpense,
-  mapGoal,
-  mapGoalContribution,
-  mapIncome,
-  mapInvestmentEntry,
-  mapMonthlySnapshot,
-  monthKeyToDate,
-} from "@/features/finance/data/supabase-mappers"
+  removeGoal,
+  removeGoalContribution,
+  saveGoal,
+  saveGoalContribution,
+} from "@/features/finance/data/repositories/goal-repository"
+import { removeIncome, saveIncome } from "@/features/finance/data/repositories/income-repository"
+import {
+  removeInvestment,
+  saveInvestment,
+} from "@/features/finance/data/repositories/investment-repository"
+import {
+  receiveReminder,
+  removeReminder,
+  saveReminder,
+} from "@/features/finance/data/repositories/reminder-repository"
+import {
+  listSnapshots,
+  loadFinanceWorkspace,
+} from "@/features/finance/data/repositories/workspace-repository"
+import { createEmptyFinanceState } from "@/features/finance/data/supabase-mappers"
 import type {
   ChargeReminder,
   FinanceState,
@@ -28,477 +31,304 @@ import type {
   GoalContribution,
   Income,
   InvestmentEntry,
-  ReminderFrequency,
 } from "@/features/finance/domain/types"
 import { createSupabaseBrowser } from "@/lib/supabase/client"
 
-function formatDateKey(date: Date) {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, "0")
-  const day = String(date.getDate()).padStart(2, "0")
+export type FinanceStatus = "error" | "loading" | "ready"
 
-  return `${year}-${month}-${day}`
-}
-
-function parseDateKey(dateKey: string) {
-  const [year, month, day] = dateKey.split("-").map(Number)
-
-  if (!year || !month || !day) {
-    return null
+export type FinanceStore = {
+  state: FinanceState
+  status: FinanceStatus
+  error: string | null
+  retry: () => Promise<void>
+  isPending: (actionKey: string) => boolean
+  incomes: {
+    save: (values: Omit<Income, "createdAt" | "id">, id?: string) => Promise<void>
+    remove: (id: string) => Promise<void>
   }
-
-  return new Date(year, month - 1, day)
-}
-
-function advanceReminderDate(dateKey: string, frequency: ReminderFrequency) {
-  const date = parseDateKey(dateKey)
-
-  if (!date) {
-    return dateKey
+  expenses: {
+    save: (values: Omit<FixedExpense, "createdAt" | "id">, id?: string) => Promise<void>
+    remove: (id: string) => Promise<void>
   }
-
-  if (frequency === "Semanal") {
-    date.setDate(date.getDate() + 7)
+  reminders: {
+    save: (values: Omit<ChargeReminder, "createdAt" | "id">, id?: string) => Promise<void>
+    remove: (id: string) => Promise<void>
+    markReceived: (id: string) => Promise<void>
   }
-
-  if (frequency === "Quinzenal") {
-    date.setDate(date.getDate() + 15)
+  investments: {
+    save: (values: Omit<InvestmentEntry, "createdAt" | "id">, id?: string) => Promise<void>
+    remove: (id: string) => Promise<void>
   }
-
-  if (frequency === "Mensal") {
-    date.setMonth(date.getMonth() + 1)
-  }
-
-  return formatDateKey(date)
-}
-
-function assertSupabaseSuccess(error: { message: string } | null) {
-  if (error) {
-    throw new Error(error.message)
+  goals: {
+    save: (values: Omit<Goal, "createdAt" | "id">, id?: string) => Promise<void>
+    remove: (id: string) => Promise<void>
+    saveContribution: (
+      values: Omit<GoalContribution, "createdAt" | "id">,
+      id?: string,
+    ) => Promise<void>
+    removeContribution: (id: string) => Promise<void>
   }
 }
 
-const INCOME_COLUMNS = "id,name,type,amount,frequency,notes,created_at,updated_at"
-const EXPENSE_COLUMNS =
-  "id,name,category,monthly_amount,due_day,total_installments,remaining_installments,status,notes,created_at,updated_at"
-const REMINDER_COLUMNS =
-  "id,name,person,type,amount,frequency,next_due_date,total_installments,remaining_installments,status,notes,created_at,updated_at"
-const INVESTMENT_COLUMNS = "id,month,planned_amount,invested_amount,notes,created_at,updated_at"
-const GOAL_COLUMNS = "id,name,target_amount,target_date,status,notes,created_at,updated_at"
-const GOAL_CONTRIBUTION_COLUMNS = "id,goal_id,amount,date,notes,created_at,updated_at"
-const SNAPSHOT_COLUMNS = "id,month,income,expenses,planned_investment,invested_amount,updated_at"
+function replaceOrPrepend<T extends { id: string }>(items: T[], item: T) {
+  return items.some((current) => current.id === item.id)
+    ? items.map((current) => (current.id === item.id ? item : current))
+    : [item, ...items]
+}
 
-export function useFinanceStore(userId: string | null = null) {
+export function useFinanceStore(userId: string | null = null): FinanceStore {
   const supabase = useMemo(() => createSupabaseBrowser(), [])
   const [state, setState] = useState<FinanceState>(() => createEmptyFinanceState())
-  const [isReady, setIsReady] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
+  const [status, setStatus] = useState<FinanceStatus>("loading")
   const [error, setError] = useState<string | null>(null)
+  const [pendingKeys, setPendingKeys] = useState<ReadonlySet<string>>(() => new Set())
+  const abortRef = useRef<AbortController | null>(null)
+  const requestIdRef = useRef(0)
+  const userIdRef = useRef(userId)
+  const pendingRef = useRef(new Set<string>())
 
-  const loadWorkspace = useCallback(async () => {
-    if (!userId) {
+  const load = useCallback(async () => {
+    const requestId = ++requestIdRef.current
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
+    const requestedUserId = userId
+
+    if (!requestedUserId) {
       setState(createEmptyFinanceState())
-      setIsReady(true)
+      setError(null)
+      setStatus("ready")
       return
     }
 
     setError(null)
+    setStatus("loading")
 
-    const [
-      incomesResult,
-      expensesResult,
-      remindersResult,
-      investmentsResult,
-      goalsResult,
-      goalContributionsResult,
-      snapshotsResult,
-    ] = await Promise.all([
-      supabase
-        .from("incomes")
-        .select(INCOME_COLUMNS)
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("fixed_expenses")
-        .select(EXPENSE_COLUMNS)
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("charge_reminders")
-        .select(REMINDER_COLUMNS)
-        .eq("user_id", userId)
-        .order("next_due_date", { ascending: true }),
-      supabase
-        .from("investment_entries")
-        .select(INVESTMENT_COLUMNS)
-        .eq("user_id", userId)
-        .order("month", { ascending: false }),
-      supabase
-        .from("financial_goals")
-        .select(GOAL_COLUMNS)
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("goal_contributions")
-        .select(GOAL_CONTRIBUTION_COLUMNS)
-        .eq("user_id", userId)
-        .order("date", { ascending: false }),
-      supabase
-        .from("monthly_snapshots")
-        .select(SNAPSHOT_COLUMNS)
-        .eq("user_id", userId)
-        .order("month", { ascending: true }),
-    ])
+    try {
+      const workspace = await loadFinanceWorkspace(supabase, requestedUserId, controller.signal)
 
-    const results = [
-      incomesResult,
-      expensesResult,
-      remindersResult,
-      investmentsResult,
-      goalsResult,
-      goalContributionsResult,
-      snapshotsResult,
-    ]
-    const failedResult = results.find((result) => result.error)
+      if (
+        controller.signal.aborted ||
+        requestId !== requestIdRef.current ||
+        requestedUserId !== userIdRef.current
+      ) {
+        return
+      }
 
-    if (failedResult?.error) {
-      throw new Error(failedResult.error.message)
+      setState(workspace)
+      setStatus("ready")
+    } catch {
+      if (controller.signal.aborted || requestId !== requestIdRef.current) {
+        return
+      }
+
+      setError("Não foi possível carregar seus dados financeiros.")
+      setStatus("error")
     }
-
-    const incomeRows = (incomesResult.data ?? []) as IncomeRow[]
-    const expenseRows = (expensesResult.data ?? []) as FixedExpenseRow[]
-    const reminderRows = (remindersResult.data ?? []) as ChargeReminderRow[]
-    const investmentRows = (investmentsResult.data ?? []) as InvestmentEntryRow[]
-    const goalRows = (goalsResult.data ?? []) as GoalRow[]
-    const goalContributionRows = (goalContributionsResult.data ?? []) as GoalContributionRow[]
-    const snapshotRows = (snapshotsResult.data ?? []) as MonthlySnapshotRow[]
-
-    setState({
-      expenses: expenseRows.map(mapFixedExpense),
-      goalContributions: goalContributionRows.map(mapGoalContribution),
-      goals: goalRows.map(mapGoal),
-      incomes: incomeRows.map(mapIncome),
-      investments: investmentRows.map(mapInvestmentEntry),
-      reminders: reminderRows.map(mapChargeReminder),
-      snapshots: snapshotRows.map(mapMonthlySnapshot),
-      updatedAt: getWorkspaceUpdatedAt([
-        incomeRows,
-        expenseRows,
-        reminderRows,
-        investmentRows,
-        goalRows,
-        goalContributionRows,
-        snapshotRows,
-      ]),
-    })
-    setIsReady(true)
   }, [supabase, userId])
 
   useEffect(() => {
-    let isCancelled = false
-
-    queueMicrotask(() => {
-      loadWorkspace().catch((loadError: unknown) => {
-        if (isCancelled) {
-          return
-        }
-
-        const message =
-          loadError instanceof Error ? loadError.message : "Não foi possível carregar seus dados."
-        setError(message)
-        setIsReady(true)
-      })
-    })
+    userIdRef.current = userId
+    // O carregamento assíncrono é a sincronização desta store com o workspace remoto.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void load()
 
     return () => {
-      isCancelled = true
+      abortRef.current?.abort()
     }
-  }, [loadWorkspace])
+  }, [load, userId])
 
-  async function runMutation(mutation: () => Promise<void>) {
-    if (!userId) {
-      throw new Error("Sessão expirada. Entre novamente para continuar.")
-    }
+  const runAction = useCallback(
+    async (actionKey: string, action: (activeUserId: string) => Promise<void>) => {
+      const activeUserId = userIdRef.current
 
-    setIsSaving(true)
-    setError(null)
-
-    try {
-      await mutation()
-      await loadWorkspace()
-    } catch (mutationError) {
-      const message =
-        mutationError instanceof Error ? mutationError.message : "Não foi possível salvar os dados."
-      setError(message)
-      throw mutationError
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
-  async function clearWorkspace() {
-    await runMutation(async () => {
-      const tables = [
-        "goal_contributions",
-        "monthly_snapshots",
-        "investment_entries",
-        "financial_goals",
-        "fixed_expenses",
-        "charge_reminders",
-        "incomes",
-      ]
-
-      for (const table of tables) {
-        const { error: deleteError } = await supabase.from(table).delete().eq("user_id", userId)
-        assertSupabaseSuccess(deleteError)
+      if (!activeUserId) {
+        throw new Error("Sessão expirada. Entre novamente para continuar.")
       }
-    })
-  }
 
-  async function resetWorkspace() {
-    await clearWorkspace()
-  }
-
-  async function upsertIncome(values: Omit<Income, "createdAt" | "id">, id?: string) {
-    await runMutation(async () => {
-      const payload = {
-        amount: values.amount,
-        frequency: values.frequency,
-        name: values.name,
-        notes: values.notes,
-        type: values.type,
-        user_id: userId,
+      if (pendingRef.current.has(actionKey)) {
+        return
       }
-      const result = id
-        ? await supabase.from("incomes").update(payload).eq("id", id).eq("user_id", userId)
-        : await supabase.from("incomes").insert(payload)
 
-      assertSupabaseSuccess(result.error)
-    })
-  }
+      pendingRef.current.add(actionKey)
+      setPendingKeys(new Set(pendingRef.current))
 
-  async function deleteIncome(id: string) {
-    await runMutation(async () => {
-      const { error: deleteError } = await supabase
-        .from("incomes")
-        .delete()
-        .eq("id", id)
-        .eq("user_id", userId)
-      assertSupabaseSuccess(deleteError)
-    })
-  }
-
-  async function upsertReminder(values: Omit<ChargeReminder, "createdAt" | "id">, id?: string) {
-    await runMutation(async () => {
-      const payload = {
-        amount: values.amount,
-        frequency: values.frequency,
-        name: values.name,
-        next_due_date: values.nextDueDate,
-        notes: values.notes,
-        person: values.person,
-        remaining_installments: values.remainingInstallments,
-        status: values.status,
-        total_installments: values.totalInstallments,
-        type: values.type,
-        user_id: userId,
+      try {
+        await action(activeUserId)
+      } finally {
+        pendingRef.current.delete(actionKey)
+        setPendingKeys(new Set(pendingRef.current))
       }
-      const result = id
-        ? await supabase.from("charge_reminders").update(payload).eq("id", id).eq("user_id", userId)
-        : await supabase.from("charge_reminders").insert(payload)
+    },
+    [],
+  )
 
-      assertSupabaseSuccess(result.error)
-    })
-  }
+  const store = useMemo<FinanceStore>(
+    () => ({
+      error,
+      expenses: {
+        remove: (id) =>
+          runAction(`expense:remove:${id}`, async (activeUserId) => {
+            await removeExpense(supabase, activeUserId, id)
+            const snapshots = await listSnapshots(supabase, activeUserId)
+            if (activeUserId === userIdRef.current) {
+              setState((current) => ({
+                ...current,
+                expenses: current.expenses.filter((item) => item.id !== id),
+                snapshots,
+              }))
+            }
+          }),
+        save: (values, id) =>
+          runAction(`expense:save:${id ?? "new"}`, async (activeUserId) => {
+            const item = await saveExpense(supabase, activeUserId, values, id)
+            const snapshots = await listSnapshots(supabase, activeUserId)
+            if (activeUserId === userIdRef.current) {
+              setState((current) => ({
+                ...current,
+                expenses: replaceOrPrepend(current.expenses, item),
+                snapshots,
+              }))
+            }
+          }),
+      },
+      goals: {
+        remove: (id) =>
+          runAction(`goal:remove:${id}`, async (activeUserId) => {
+            await removeGoal(supabase, activeUserId, id)
+            if (activeUserId === userIdRef.current) {
+              setState((current) => ({
+                ...current,
+                goalContributions: current.goalContributions.filter((item) => item.goalId !== id),
+                goals: current.goals.filter((item) => item.id !== id),
+              }))
+            }
+          }),
+        removeContribution: (id) =>
+          runAction(`contribution:remove:${id}`, async (activeUserId) => {
+            await removeGoalContribution(supabase, activeUserId, id)
+            if (activeUserId === userIdRef.current) {
+              setState((current) => ({
+                ...current,
+                goalContributions: current.goalContributions.filter((item) => item.id !== id),
+              }))
+            }
+          }),
+        save: (values, id) =>
+          runAction(`goal:save:${id ?? "new"}`, async (activeUserId) => {
+            const item = await saveGoal(supabase, activeUserId, values, id)
+            if (activeUserId === userIdRef.current) {
+              setState((current) => ({
+                ...current,
+                goals: replaceOrPrepend(current.goals, item),
+              }))
+            }
+          }),
+        saveContribution: (values, id) =>
+          runAction(`contribution:save:${id ?? "new"}`, async (activeUserId) => {
+            const item = await saveGoalContribution(supabase, activeUserId, values, id)
+            if (activeUserId === userIdRef.current) {
+              setState((current) => ({
+                ...current,
+                goalContributions: replaceOrPrepend(current.goalContributions, item),
+              }))
+            }
+          }),
+      },
+      incomes: {
+        remove: (id) =>
+          runAction(`income:remove:${id}`, async (activeUserId) => {
+            await removeIncome(supabase, activeUserId, id)
+            const snapshots = await listSnapshots(supabase, activeUserId)
+            if (activeUserId === userIdRef.current) {
+              setState((current) => ({
+                ...current,
+                incomes: current.incomes.filter((item) => item.id !== id),
+                snapshots,
+              }))
+            }
+          }),
+        save: (values, id) =>
+          runAction(`income:save:${id ?? "new"}`, async (activeUserId) => {
+            const item = await saveIncome(supabase, activeUserId, values, id)
+            const snapshots = await listSnapshots(supabase, activeUserId)
+            if (activeUserId === userIdRef.current) {
+              setState((current) => ({
+                ...current,
+                incomes: replaceOrPrepend(current.incomes, item),
+                snapshots,
+              }))
+            }
+          }),
+      },
+      investments: {
+        remove: (id) =>
+          runAction(`investment:remove:${id}`, async (activeUserId) => {
+            await removeInvestment(supabase, activeUserId, id)
+            const snapshots = await listSnapshots(supabase, activeUserId)
+            if (activeUserId === userIdRef.current) {
+              setState((current) => ({
+                ...current,
+                investments: current.investments.filter((item) => item.id !== id),
+                snapshots,
+              }))
+            }
+          }),
+        save: (values, id) =>
+          runAction(`investment:save:${id ?? "new"}`, async (activeUserId) => {
+            const item = await saveInvestment(supabase, activeUserId, values, id)
+            const snapshots = await listSnapshots(supabase, activeUserId)
+            if (activeUserId === userIdRef.current) {
+              setState((current) => ({
+                ...current,
+                investments: replaceOrPrepend(current.investments, item),
+                snapshots,
+              }))
+            }
+          }),
+      },
+      isPending: (actionKey) =>
+        actionKey === "*" ? pendingKeys.size > 0 : pendingKeys.has(actionKey),
+      reminders: {
+        markReceived: (id) =>
+          runAction(`reminder:receive:${id}`, async (activeUserId) => {
+            const reminder = state.reminders.find((item) => item.id === id)
+            if (reminder?.status !== "Ativo") return
+            const item = await receiveReminder(supabase, activeUserId, reminder)
+            if (activeUserId === userIdRef.current) {
+              setState((current) => ({
+                ...current,
+                reminders: replaceOrPrepend(current.reminders, item),
+              }))
+            }
+          }),
+        remove: (id) =>
+          runAction(`reminder:remove:${id}`, async (activeUserId) => {
+            await removeReminder(supabase, activeUserId, id)
+            if (activeUserId === userIdRef.current) {
+              setState((current) => ({
+                ...current,
+                reminders: current.reminders.filter((item) => item.id !== id),
+              }))
+            }
+          }),
+        save: (values, id) =>
+          runAction(`reminder:save:${id ?? "new"}`, async (activeUserId) => {
+            const item = await saveReminder(supabase, activeUserId, values, id)
+            if (activeUserId === userIdRef.current) {
+              setState((current) => ({
+                ...current,
+                reminders: replaceOrPrepend(current.reminders, item),
+              }))
+            }
+          }),
+      },
+      retry: load,
+      state,
+      status,
+    }),
+    [error, load, pendingKeys, runAction, state, status, supabase],
+  )
 
-  async function deleteReminder(id: string) {
-    await runMutation(async () => {
-      const { error: deleteError } = await supabase
-        .from("charge_reminders")
-        .delete()
-        .eq("id", id)
-        .eq("user_id", userId)
-      assertSupabaseSuccess(deleteError)
-    })
-  }
-
-  async function markReminderReceived(id: string) {
-    const reminder = state.reminders.find((item) => item.id === id)
-
-    if (reminder?.status !== "Ativo") {
-      return
-    }
-
-    await runMutation(async () => {
-      const remainingInstallments =
-        reminder.type === "Parcelado"
-          ? Math.max(reminder.remainingInstallments - 1, 0)
-          : reminder.remainingInstallments
-      const isCompleted = reminder.type === "Parcelado" && remainingInstallments === 0
-      const { error: updateError } = await supabase
-        .from("charge_reminders")
-        .update({
-          next_due_date: isCompleted
-            ? reminder.nextDueDate
-            : advanceReminderDate(reminder.nextDueDate, reminder.frequency),
-          remaining_installments: remainingInstallments,
-          status: isCompleted ? "Concluído" : reminder.status,
-        })
-        .eq("id", id)
-        .eq("user_id", userId)
-
-      assertSupabaseSuccess(updateError)
-    })
-  }
-
-  async function upsertExpense(values: Omit<FixedExpense, "createdAt" | "id">, id?: string) {
-    await runMutation(async () => {
-      const payload = {
-        category: values.category,
-        due_day: values.dueDay,
-        monthly_amount: values.monthlyAmount,
-        name: values.name,
-        notes: values.notes,
-        remaining_installments: values.remainingInstallments,
-        status: values.status,
-        total_installments: values.totalInstallments,
-        user_id: userId,
-      }
-      const result = id
-        ? await supabase.from("fixed_expenses").update(payload).eq("id", id).eq("user_id", userId)
-        : await supabase.from("fixed_expenses").insert(payload)
-
-      assertSupabaseSuccess(result.error)
-    })
-  }
-
-  async function deleteExpense(id: string) {
-    await runMutation(async () => {
-      const { error: deleteError } = await supabase
-        .from("fixed_expenses")
-        .delete()
-        .eq("id", id)
-        .eq("user_id", userId)
-      assertSupabaseSuccess(deleteError)
-    })
-  }
-
-  async function upsertInvestment(values: Omit<InvestmentEntry, "createdAt" | "id">, id?: string) {
-    await runMutation(async () => {
-      const payload = {
-        invested_amount: values.investedAmount,
-        month: monthKeyToDate(values.month),
-        notes: values.notes,
-        planned_amount: values.plannedAmount,
-        user_id: userId,
-      }
-      const result = id
-        ? await supabase
-            .from("investment_entries")
-            .update(payload)
-            .eq("id", id)
-            .eq("user_id", userId)
-        : await supabase.from("investment_entries").upsert(payload, { onConflict: "user_id,month" })
-
-      assertSupabaseSuccess(result.error)
-    })
-  }
-
-  async function deleteInvestment(id: string) {
-    await runMutation(async () => {
-      const { error: deleteError } = await supabase
-        .from("investment_entries")
-        .delete()
-        .eq("id", id)
-        .eq("user_id", userId)
-      assertSupabaseSuccess(deleteError)
-    })
-  }
-
-  async function upsertGoal(values: Omit<Goal, "createdAt" | "id">, id?: string) {
-    await runMutation(async () => {
-      const payload = {
-        name: values.name,
-        notes: values.notes,
-        status: values.status,
-        target_amount: values.targetAmount,
-        target_date: values.targetDate,
-        user_id: userId,
-      }
-      const result = id
-        ? await supabase.from("financial_goals").update(payload).eq("id", id).eq("user_id", userId)
-        : await supabase.from("financial_goals").insert(payload)
-
-      assertSupabaseSuccess(result.error)
-    })
-  }
-
-  async function deleteGoal(id: string) {
-    await runMutation(async () => {
-      const { error: deleteError } = await supabase
-        .from("financial_goals")
-        .delete()
-        .eq("id", id)
-        .eq("user_id", userId)
-      assertSupabaseSuccess(deleteError)
-    })
-  }
-
-  async function upsertGoalContribution(
-    values: Omit<GoalContribution, "createdAt" | "id">,
-    id?: string,
-  ) {
-    await runMutation(async () => {
-      const payload = {
-        amount: values.amount,
-        date: values.date,
-        goal_id: values.goalId,
-        notes: values.notes,
-        user_id: userId,
-      }
-      const result = id
-        ? await supabase
-            .from("goal_contributions")
-            .update(payload)
-            .eq("id", id)
-            .eq("user_id", userId)
-        : await supabase.from("goal_contributions").insert(payload)
-
-      assertSupabaseSuccess(result.error)
-    })
-  }
-
-  async function deleteGoalContribution(id: string) {
-    await runMutation(async () => {
-      const { error: deleteError } = await supabase
-        .from("goal_contributions")
-        .delete()
-        .eq("id", id)
-        .eq("user_id", userId)
-      assertSupabaseSuccess(deleteError)
-    })
-  }
-
-  return {
-    clearWorkspace,
-    deleteExpense,
-    deleteGoal,
-    deleteGoalContribution,
-    deleteIncome,
-    deleteInvestment,
-    deleteReminder,
-    error,
-    isReady,
-    isSaving,
-    markReminderReceived,
-    reload: loadWorkspace,
-    resetWorkspace,
-    state,
-    upsertExpense,
-    upsertGoal,
-    upsertGoalContribution,
-    upsertIncome,
-    upsertInvestment,
-    upsertReminder,
-  }
+  return store
 }

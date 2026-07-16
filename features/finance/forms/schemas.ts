@@ -11,13 +11,48 @@ import {
   REMINDER_TYPES,
 } from "@/features/finance/domain/types"
 
-export const incomeSchema = z.object({
-  amount: z.coerce.number().positive("Informe um valor maior que zero."),
-  frequency: z.enum(INCOME_FREQUENCIES),
-  name: z.string().min(2, "Informe um nome com pelo menos 2 caracteres."),
-  notes: z.string().max(300).optional().default(""),
-  type: z.enum(INCOME_TYPES),
-})
+function isValidDateKey(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return false
+  }
+
+  const [year, month, day] = value.split("-").map(Number)
+  const date = new Date(Date.UTC(year, month - 1, day))
+
+  return (
+    date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day
+  )
+}
+
+function isValidMonthKey(value: string) {
+  return /^\d{4}-\d{2}$/.test(value) && isValidDateKey(`${value}-01`)
+}
+
+const dateKeySchema = z.string().refine(isValidDateKey, "Informe uma data válida.")
+const optionalDateKeySchema = z.union([dateKeySchema, z.literal("")]).optional()
+
+export const incomeSchema = z
+  .object({
+    amount: z.coerce.number().positive("Informe um valor maior que zero."),
+    frequency: z.enum(INCOME_FREQUENCIES),
+    name: z.string().min(2, "Informe um nome com pelo menos 2 caracteres."),
+    notes: z.string().max(300).optional().default(""),
+    receivedOn: optionalDateKeySchema,
+    type: z.enum(INCOME_TYPES),
+  })
+  .superRefine((values, context) => {
+    if (values.frequency === "Única" && !values.receivedOn) {
+      context.addIssue({
+        code: "custom",
+        message: "Informe a data em que a renda foi recebida.",
+        path: ["receivedOn"],
+      })
+    }
+  })
+  .transform((values) => ({
+    ...values,
+    receivedOn: values.frequency === "Única" ? (values.receivedOn ?? null) : null,
+  }))
 
 export const expenseSchema = z
   .object({
@@ -57,7 +92,7 @@ export const reminderSchema = z
     amount: z.coerce.number().positive("Informe um valor maior que zero."),
     frequency: z.enum(REMINDER_FREQUENCIES),
     name: z.string().min(2, "Informe um nome com pelo menos 2 caracteres."),
-    nextDueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Informe uma data válida."),
+    nextDueDate: dateKeySchema,
     notes: z.string().max(300).optional().default(""),
     person: z.string().min(2, "Informe de quem você precisa cobrar."),
     remainingInstallments: z.coerce.number().int().min(0),
@@ -97,7 +132,7 @@ export const reminderSchema = z
 
 export const investmentSchema = z.object({
   investedAmount: z.coerce.number().min(0),
-  month: z.string().regex(/^\d{4}-\d{2}$/, "Informe um mês válido."),
+  month: z.string().refine(isValidMonthKey, "Informe um mês válido."),
   notes: z.string().max(300).optional().default(""),
   plannedAmount: z.coerce.number().min(0),
 })
@@ -105,11 +140,7 @@ export const investmentSchema = z.object({
 export const goalSchema = z
   .object({
     deadlineEnabled: z.boolean(),
-    deadlineDate: z
-      .string()
-      .regex(/^\d{4}-\d{2}-\d{2}$/, "Informe uma data válida.")
-      .optional()
-      .or(z.literal("")),
+    deadlineDate: optionalDateKeySchema,
     name: z.string().min(2, "Informe um nome com pelo menos 2 caracteres."),
     notes: z.string().max(300).optional().default(""),
     status: z.enum(GOAL_STATUSES),
@@ -131,7 +162,7 @@ export const goalSchema = z
 
 export const goalContributionSchema = z.object({
   amount: z.coerce.number().positive("Informe um valor maior que zero."),
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Informe uma data válida."),
+  date: dateKeySchema,
   goalId: z.string().min(1, "Selecione uma meta."),
   notes: z.string().max(300).optional().default(""),
 })

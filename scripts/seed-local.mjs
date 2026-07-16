@@ -238,9 +238,11 @@ const rows = {
 }
 
 for (const [table, values] of Object.entries(rows)) {
+  const client = table === "monthly_snapshots" ? admin : anonymous
+
   await assertSupabaseSuccess(
     `salvar dados demo em ${table}`,
-    await anonymous.from(table).upsert(values, { onConflict: "id" }),
+    await client.from(table).upsert(values, { onConflict: "id" }),
   )
 }
 

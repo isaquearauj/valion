@@ -57,6 +57,7 @@ export type Income = {
   amount: number
   frequency: IncomeFrequency
   notes: string
+  receivedOn: string | null
   createdAt: string
 }
 
@@ -120,7 +121,6 @@ export type FinanceState = {
   reminders: ChargeReminder[]
   investments: InvestmentEntry[]
   snapshots: MonthlySnapshot[]
-  updatedAt: string
 }
 
 export type FinanceSummary = {

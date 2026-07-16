@@ -175,8 +175,24 @@ alterações destrutivas, faça backup e valide a operação localmente antes da
 aprovação. Rollback é feito por uma migration corretiva, não apagando o
 histórico aplicado.
 
-Para gerar tipos oficiais do Supabase no futuro:
+Depois de aplicar migrations locais, gere e versione o contrato oficial:
 
 ```bash
-supabase gen types typescript --project-id <project-id> > lib/supabase/database.types.ts
+pnpm supabase:types
 ```
+
+Os clientes browser, server e admin usam `Database`. Repositórios financeiros
+consomem `Tables`, `TablesInsert` e `TablesUpdate`; não mantenha rows manuais ou
+casts para mascarar drift.
+
+## 8. Avatares privados
+
+O bucket `profile-avatars` é privado e aceita apenas JPEG, PNG e WebP de até 2
+MB. Objetos ficam em `<user-id>/<uuid>.<ext>` e policies conferem o primeiro
+segmento contra `auth.uid()`. `profiles.avatar_path` guarda somente o caminho;
+a aplicação cria URL assinada com validade curta. `avatar_url` existe
+temporariamente para a migração única de base64 legado.
+
+Ao excluir uma conta, a rota remove todos os objetos do prefixo antes de excluir
+o usuário Auth. Falha de Storage interrompe a exclusão para não deixar objetos
+órfãos.

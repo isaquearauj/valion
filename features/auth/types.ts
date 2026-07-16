@@ -4,4 +4,11 @@ export type AppUser = {
   email: string
   createdAt: string
   avatarUrl?: string
+  avatarPath?: string
+}
+
+export type ProfileUpdate = {
+  avatarFile?: File
+  name: string
+  removeAvatar: boolean
 }

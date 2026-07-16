@@ -23,13 +23,19 @@ app/ rotas e layouts
 - `features/finance/domain/`: tipos, estado inicial e cálculos puros. Não importa
   React nem clientes Supabase.
 - `features/finance/forms/`: schemas Zod e normalização de entradas.
-- `features/finance/data/`: tipos de rows e mapeamento entre banco e domínio.
-- `features/finance/hooks/`: carregamento e mutações do workspace no cliente.
+- `features/finance/data/`: mapeamento e repositórios tipados entre banco e domínio.
+- `features/finance/hooks/`: implementação do store com proteção contra respostas antigas.
+- `features/finance/providers/`: contrato explícito compartilhado entre as rotas.
 - `features/finance/presentation/`: view models e formatação específica da UI.
 - `features/finance/ui/`: shell, seções, tabelas, gráficos e diálogos.
 - `components/ui/`: primitives shadcn/base-ui. Alterações devem preservar a API
   compartilhada e a acessibilidade.
 - `lib/supabase/`: única porta de criação dos clientes Supabase.
+
+Features complexas possuem README próprio com propósito, fluxo, invariantes e
+pontos de extensão. Consulte `features/README.md`, `features/auth/README.md` e
+`features/finance/README.md`. Esses READMEs documentam fronteiras estáveis, não
+uma listagem linha a linha da implementação.
 
 ## Clientes Supabase
 
@@ -50,18 +56,21 @@ Uma mudança persistida normalmente atravessa a seguinte sequência:
 2. tipo de domínio em `features/finance/domain/types.ts`;
 3. schema de formulário em `features/finance/forms/schemas.ts`;
 4. row e mapper em `features/finance/data/supabase-mappers.ts`;
-5. query ou mutação em `features/finance/hooks/use-finance-store.ts`;
-6. view model e UI;
-7. testes unitários e, para banco/RLS, `pnpm verify:supabase`.
+5. repositório tipado em `features/finance/data/repositories`;
+6. ação agrupada no provider e atualização localizada do recurso;
+7. view model e UI de rota;
+8. testes unitários e, para banco/RLS, `pnpm verify:supabase`.
 
 Consulte a skill `valion-finance-feature` para o checklist completo.
 
 ## Decisões atuais
 
 - App Router e Server Components fazem a barreira inicial de autenticação.
-- O workspace financeiro é client-side e recarregado após cada mutação. Essa
-  abordagem é simples e suficiente para o volume atual, mas deve ser reavaliada
-  antes de paginação, colaboração em tempo real ou grandes volumes de dados.
+- O provider financeiro sobrevive à navegação do App Router. Sete consultas
+  paralelas ocorrem apenas no load/retry; mutações retornam a row persistida e
+  atualizam o recurso e os snapshots impactados.
+- O contrato público expõe `state`, `status`, `error`, `retry`, `isPending` e
+  ações agrupadas. Loads usam abort, id monotônico e conferência do usuário.
 - RLS é a barreira principal no banco; filtros por `user_id` continuam
   obrigatórios como defesa em profundidade.
 - Vitest é a única stack de testes. Não introduza uma segunda stack sem uma
@@ -69,25 +78,34 @@ Consulte a skill `valion-finance-feature` para o checklist completo.
 - Biome define formato e lint geral; ESLint cobre lacunas específicas do
   framework.
 
-## Dívida arquitetural conhecida
+## Rotas e snapshots
 
-- `features/finance/ui/dashboard/finance-dashboard.tsx` concentra várias
-  seções de produto.
-- `features/finance/ui/dashboard/finance-dialogs.tsx` concentra todos os
-  formulários modais.
-- `use-finance-store.ts` centraliza sete recursos e recarrega todos depois de
-  cada mutação.
+`/dashboard`, `/receitas`, `/despesas`, `/investimentos`, `/metas` e
+`/historico` renderizam módulos próprios. O layout autenticado mantém sessão,
+provider, navegação e o slot da rota; `Link` e `usePathname` são as fontes da
+navegação.
 
-Esses pontos não justificam uma reescrita ampla durante uma mudança de
-toolchain. Ao tocar funcionalmente neles, extraia módulos por seção/recurso,
-mantenha a API pública pequena e preserve os testes antes de alterar o fluxo de
-dados.
+O banco é dono de `monthly_snapshots`: recorrências, despesas e investimento do
+mês atual atualizam o snapshot corrente; renda única histórica aplica delta no
+mês recebido; investimento passado altera somente seus campos. A RPC
+`ensure_current_month_snapshot()` deriva o usuário de `auth.uid()`.
 
 ## Regras de dependência
 
 - Domínio não depende de UI, Next ou Supabase.
 - Data pode depender de domínio, mas domínio não depende de data.
-- UI usa presentation/domain e chama o hook; não monta payload SQL diretamente.
+- UI usa presentation/domain e ações do provider; não monta payload SQL.
 - Rotas server-side não importam o cliente browser.
 - Imports entre módulos usam `@/*`; imports relativos ficam restritos a arquivos
   fortemente acoplados no mesmo diretório.
+
+## Evolução da estrutura
+
+Comece pelo menor módulo que resolve o problema da spec. A separação em domain,
+data, state, presentation e UI acontece quando responsabilidades reais surgem;
+ela não é um template obrigatório para qualquer feature. Cerca de 300 linhas é
+um sinal para revisar coesão, não um limite mecânico.
+
+Decisões duráveis ficam em `docs/decisions`. Specs de trabalho são locais, não
+possuem diretório obrigatório, não são versionadas e não substituem ADRs ou
+documentação de arquitetura.

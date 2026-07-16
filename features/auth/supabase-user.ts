@@ -1,12 +1,8 @@
 import type { SupabaseClient, User } from "@supabase/supabase-js"
-
+import { migrateLegacyAvatar } from "@/features/auth/avatar-migration"
+import { AVATAR_BUCKET } from "@/features/auth/profile-repository"
 import type { AppUser } from "@/features/auth/types"
-
-type ProfileRow = {
-  avatar_url: string | null
-  created_at: string | null
-  full_name: string | null
-}
+import type { Database } from "@/lib/supabase/database.types"
 
 function getFallbackName(user: User) {
   const metadataName = user.user_metadata?.full_name
@@ -19,21 +15,21 @@ function getFallbackName(user: User) {
 }
 
 export async function getAppUserFromSupabaseUser(
-  client: SupabaseClient,
+  client: SupabaseClient<Database>,
   user: User,
 ): Promise<AppUser> {
-  const { data } = await client
+  const { data: profile } = await client
     .from("profiles")
-    .select("full_name, avatar_url, created_at")
+    .select("full_name,avatar_url,avatar_path,created_at")
     .eq("id", user.id)
     .maybeSingle()
-  const profile = data as ProfileRow | null
 
   if (!profile) {
     const fallbackName = getFallbackName(user)
 
     await client.from("profiles").upsert(
       {
+        avatar_path: null,
         avatar_url: null,
         full_name: fallbackName,
         id: user.id,
@@ -49,8 +45,15 @@ export async function getAppUserFromSupabaseUser(
     }
   }
 
+  const avatarPath =
+    profile.avatar_path ?? (await migrateLegacyAvatar(client, user.id, profile.avatar_url))
+  const signedAvatar = avatarPath
+    ? await client.storage.from(AVATAR_BUCKET).createSignedUrl(avatarPath, 3600)
+    : null
+
   return {
-    avatarUrl: profile.avatar_url ?? undefined,
+    avatarPath: avatarPath ?? undefined,
+    avatarUrl: signedAvatar?.data?.signedUrl,
     createdAt: profile.created_at ?? user.created_at,
     email: user.email ?? "",
     id: user.id,

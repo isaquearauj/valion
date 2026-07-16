@@ -49,6 +49,7 @@ yarn-error.log*
 !/.codex/agents/
 !/.codex/agents/*.toml
 /.agents/skills/*-workspace/
+/.context/
 /.windsurf/
 /docs/specs/
 /.pnpm-store/

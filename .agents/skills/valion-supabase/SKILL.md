@@ -1,6 +1,6 @@
 ---
 name: valion-supabase
-description: Trabalhar com Supabase no Valion com seguranca e validacao completa. Use sempre que a tarefa mencionar schema, migration, SQL, RLS, Auth, perfis, service role, exclusao de conta, seed, banco local, Supabase CLI ou deploy de banco deste repositorio. Nao use para mudancas puramente visuais sem persistencia ou auth.
+description: Trabalhar com Supabase no Valion com seguranca e validacao completa. Use sempre que a tarefa mencionar schema, migration, SQL, RLS, Auth, perfis, Storage, avatar, snapshots, tipos gerados, service role, exclusao de conta, seed, banco local, Supabase CLI ou deploy de banco. Nao use para mudancas puramente visuais sem persistencia ou auth.
 ---
 
 # Supabase no Valion
@@ -32,8 +32,30 @@ description: Trabalhar com Supabase no Valion com seguranca e validacao completa
 3. Preserve constraints, cascades, triggers e policies RLS por usuario.
 4. Atualize tipos de dominio, rows/mappers, schemas Zod, store e UI quando o
    contrato persistido mudar.
-5. Mantenha filtros explicitos por `user_id` alem da RLS.
-6. Adicione teste de regressao para a regra alterada.
+5. Gere `lib/supabase/database.types.ts` com `pnpm supabase:types` depois de
+   aplicar as migrations locais; clientes browser/server/admin usam `Database`.
+6. Mantenha filtros explicitos por `user_id` alem da RLS.
+7. Adicione teste de regressao para a regra alterada.
+
+## Storage privado e snapshots derivados
+
+- Avatares ficam no bucket privado `profile-avatars`, com JPEG/PNG/WebP de ate
+  2 MB. Policies restringem todas as operacoes ao prefixo `<auth.uid()>/`.
+- Persista somente `profiles.avatar_path` e gere URL assinada para exibir. Nao
+  grave base64 novo. Migracao legada valida MIME, assinatura e tamanho, e nunca
+  registra o conteudo.
+- Exclusao de conta remove primeiro todos os objetos do prefixo do usuario e so
+  depois chama Admin Auth. A rota valida sessao e origem e retorna erros genericos.
+- Snapshots sao derivados por funcoes/triggers `security definer` com
+  `search_path` vazio e privilegios internos revogados. A RPC publica nao recebe
+  `user_id`; deriva o dono de `auth.uid()`.
+- Usuarios autenticados podem selecionar seus snapshots, mas nao escrever
+  diretamente quando triggers/RPC sao os donos da integridade.
+- Ao introduzir delta para registros pontuais ja existentes, inicialize antes o
+  baseline apenas dos meses sem snapshot, com fatos que possam ser comprovados.
+  Preserve snapshots historicos existentes sem recalculo; sem esse baseline,
+  editar um registro legado pode inserir apenas a diferenca em vez do valor
+  total. Cubra insercao, edicao, mudanca de mes e exclusao no Supabase local.
 
 ## Validacao local obrigatoria
 
@@ -65,6 +87,8 @@ um teste real de RLS por mocks quando o comportamento pertence ao banco.
   executar `pnpm supabase:reset`, `pnpm test:supabase` e `pnpm verify`. O reset e
   obrigatorio nesse ambiente isolado; nao o proiba nem o substitua apenas por
   testes mockados.
+- Remova objetos privados do Storage antes de excluir Auth e teste que falha de
+  limpeza interrompe a exclusao, evitando objetos orfaos.
 
 ## Entrega
 

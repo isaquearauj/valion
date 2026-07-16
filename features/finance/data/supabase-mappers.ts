@@ -8,92 +8,17 @@ import type {
   InvestmentEntry,
   MonthlySnapshot,
 } from "@/features/finance/domain/types"
+import type { Tables } from "@/lib/supabase/database.types"
 
-type DbValue = string | number | null
+export type IncomeRow = Tables<"incomes">
+export type ChargeReminderRow = Tables<"charge_reminders">
+export type FixedExpenseRow = Tables<"fixed_expenses">
+export type GoalRow = Tables<"financial_goals">
+export type GoalContributionRow = Tables<"goal_contributions">
+export type InvestmentEntryRow = Tables<"investment_entries">
+export type MonthlySnapshotRow = Tables<"monthly_snapshots">
 
-export type IncomeRow = {
-  id: string
-  name: string
-  type: Income["type"]
-  amount: DbValue
-  frequency: Income["frequency"]
-  notes: string | null
-  created_at: string
-  updated_at?: string
-}
-
-export type ChargeReminderRow = {
-  id: string
-  name: string
-  person: string
-  type: ChargeReminder["type"]
-  amount: DbValue
-  frequency: ChargeReminder["frequency"]
-  next_due_date: string
-  total_installments: number | null
-  remaining_installments: number | null
-  status: ChargeReminder["status"]
-  notes: string | null
-  created_at: string
-  updated_at?: string
-}
-
-export type FixedExpenseRow = {
-  id: string
-  name: string
-  category: FixedExpense["category"]
-  monthly_amount: DbValue
-  due_day: number
-  total_installments: number | null
-  remaining_installments: number | null
-  status: FixedExpense["status"]
-  notes: string | null
-  created_at: string
-  updated_at?: string
-}
-
-export type GoalRow = {
-  id: string
-  name: string
-  target_amount: DbValue
-  target_date: string | null
-  status: Goal["status"]
-  notes: string | null
-  created_at: string
-  updated_at?: string
-}
-
-export type GoalContributionRow = {
-  id: string
-  goal_id: string
-  amount: DbValue
-  date: string
-  notes: string | null
-  created_at: string
-  updated_at?: string
-}
-
-export type InvestmentEntryRow = {
-  id: string
-  month: string
-  planned_amount: DbValue
-  invested_amount: DbValue
-  notes: string | null
-  created_at: string
-  updated_at?: string
-}
-
-export type MonthlySnapshotRow = {
-  id: string
-  month: string
-  income: DbValue
-  expenses: DbValue
-  planned_investment: DbValue
-  invested_amount: DbValue
-  updated_at?: string
-}
-
-function toNumber(value: DbValue) {
+function toNumber(value: number | string | null) {
   return Number(value ?? 0)
 }
 
@@ -109,11 +34,12 @@ export function mapIncome(row: IncomeRow): Income {
   return {
     amount: toNumber(row.amount),
     createdAt: row.created_at,
-    frequency: row.frequency,
+    frequency: row.frequency as Income["frequency"],
     id: row.id,
     name: row.name,
-    notes: row.notes ?? "",
-    type: row.type,
+    notes: row.notes,
+    receivedOn: row.received_on,
+    type: row.type as Income["type"],
   }
 }
 
@@ -121,31 +47,31 @@ export function mapChargeReminder(row: ChargeReminderRow): ChargeReminder {
   return {
     amount: toNumber(row.amount),
     createdAt: row.created_at,
-    frequency: row.frequency,
+    frequency: row.frequency as ChargeReminder["frequency"],
     id: row.id,
     name: row.name,
     nextDueDate: row.next_due_date,
-    notes: row.notes ?? "",
+    notes: row.notes,
     person: row.person,
-    remainingInstallments: row.remaining_installments ?? 0,
-    status: row.status,
-    totalInstallments: row.total_installments ?? 0,
-    type: row.type,
+    remainingInstallments: row.remaining_installments,
+    status: row.status as ChargeReminder["status"],
+    totalInstallments: row.total_installments,
+    type: row.type as ChargeReminder["type"],
   }
 }
 
 export function mapFixedExpense(row: FixedExpenseRow): FixedExpense {
   return {
-    category: row.category,
+    category: row.category as FixedExpense["category"],
     createdAt: row.created_at,
     dueDay: row.due_day,
     id: row.id,
     monthlyAmount: toNumber(row.monthly_amount),
     name: row.name,
-    notes: row.notes ?? "",
-    remainingInstallments: row.remaining_installments ?? 0,
-    status: row.status,
-    totalInstallments: row.total_installments ?? 0,
+    notes: row.notes,
+    remainingInstallments: row.remaining_installments,
+    status: row.status as FixedExpense["status"],
+    totalInstallments: row.total_installments,
   }
 }
 
@@ -154,8 +80,8 @@ export function mapGoal(row: GoalRow): Goal {
     createdAt: row.created_at,
     id: row.id,
     name: row.name,
-    notes: row.notes ?? "",
-    status: row.status,
+    notes: row.notes,
+    status: row.status as Goal["status"],
     targetAmount: toNumber(row.target_amount),
     targetDate: row.target_date,
   }
@@ -168,7 +94,7 @@ export function mapGoalContribution(row: GoalContributionRow): GoalContribution 
     date: row.date,
     goalId: row.goal_id,
     id: row.id,
-    notes: row.notes ?? "",
+    notes: row.notes,
   }
 }
 
@@ -178,7 +104,7 @@ export function mapInvestmentEntry(row: InvestmentEntryRow): InvestmentEntry {
     id: row.id,
     investedAmount: toNumber(row.invested_amount),
     month: toMonthKey(row.month),
-    notes: row.notes ?? "",
+    notes: row.notes,
     plannedAmount: toNumber(row.planned_amount),
   }
 }
@@ -194,12 +120,6 @@ export function mapMonthlySnapshot(row: MonthlySnapshotRow): MonthlySnapshot {
   }
 }
 
-export function getWorkspaceUpdatedAt(rows: Array<{ updated_at?: string }[]>) {
-  const timestamps = rows.flatMap((items) => items.map((item) => item.updated_at).filter(Boolean))
-
-  return timestamps.toSorted().at(-1) ?? new Date().toISOString()
-}
-
 export function createEmptyFinanceState(): FinanceState {
   return {
     expenses: [],
@@ -209,6 +129,5 @@ export function createEmptyFinanceState(): FinanceState {
     investments: [],
     reminders: [],
     snapshots: [],
-    updatedAt: new Date().toISOString(),
   }
 }

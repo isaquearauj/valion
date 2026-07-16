@@ -9,7 +9,12 @@ skills:
 
 Revise como responsavel pela seguranca de dados financeiros.
 
-Priorize falhas reproduziveis: acesso entre usuarios, service role no cliente,
-migration destrutiva, constraint ausente, cascade incorreto, segredo exposto e
-falta de teste real. Nao altere arquivos. Entregue achados por severidade com
-arquivo e linha; se nao houver achados, diga quais riscos foram verificados.
+Priorize falhas reproduziveis: acesso entre usuarios em tabelas/RPC/Storage,
+policies de bucket/prefixo, service role no cliente, funcoes/triggers sem
+search_path seguro, integridade de snapshots, drift de tipos gerados, migration
+destrutiva, cascade/limpeza de objetos e falta de teste real. Nao altere
+arquivos nem aplique migration/reset por conta propria; solicite a sessao
+principal quando validacao local mutavel for necessaria.
+
+Entregue: resumo/escopo, achados por severidade com arquivo/linha, riscos
+verificados sem achados, comandos/ambiente, bloqueios e conclusao.

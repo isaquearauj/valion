@@ -1,0 +1,52 @@
+[
+  {
+    "query": "a renda unica continua aparecendo em todos os meses, corrige o calculo e o historico",
+    "should_trigger": true
+  },
+  {
+    "query": "adicione parcelamento nas despesas com validacao, persistencia e formulario",
+    "should_trigger": true
+  },
+  {
+    "query": "a mutacao de investimento refaz sete queries e uma resposta antiga troca o usuario",
+    "should_trigger": true
+  },
+  {
+    "query": "migra receitas e despesas para paginas reais do App Router mantendo o provider",
+    "should_trigger": true
+  },
+  {
+    "query": "crie uma meta financeira com aportes e progresso no dashboard",
+    "should_trigger": true
+  },
+  {
+    "query": "o resumo comprometido esta errado quando a receita eh quinzenal",
+    "should_trigger": true
+  },
+  {
+    "query": "o botao salvar receita duplica registros quando clico duas vezes",
+    "should_trigger": true
+  },
+  { "query": "extraia a secao de investimentos do dashboard monolitico", "should_trigger": true },
+  {
+    "query": "adicione estados de loading erro e vazio na rota de despesas",
+    "should_trigger": true
+  },
+  { "query": "revise o mapper e o schema Zod de lembretes de cobranca", "should_trigger": true },
+  {
+    "query": "ajuste apenas o cache do eslint e a ordem dos scripts no package.json",
+    "should_trigger": false
+  },
+  { "query": "troque o avatar do perfil por Storage privado", "should_trigger": false },
+  { "query": "documente como configurar o Docker Desktop no WSL", "should_trigger": false },
+  { "query": "corrija o callback de login para impedir open redirect", "should_trigger": false },
+  { "query": "atualize a versao do Next.js e o pnpm-lock", "should_trigger": false },
+  { "query": "abra um pull request desta branch para main", "should_trigger": false },
+  {
+    "query": "rode QA visual de todas as rotas sem alterar regras financeiras",
+    "should_trigger": false
+  },
+  { "query": "crie policy RLS para o bucket de avatares", "should_trigger": false },
+  { "query": "melhore o README principal sem mudar codigo", "should_trigger": false },
+  { "query": "adicione metadata SEO na pagina de login", "should_trigger": false }
+]

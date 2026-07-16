@@ -1,0 +1,40 @@
+[
+  { "query": "faz QA completo das rotas do Valion com agent-browser", "should_trigger": true },
+  {
+    "query": "valide login, dashboard e logout no navegador e tire screenshots",
+    "should_trigger": true
+  },
+  {
+    "query": "o date picker fecha o dialog, reproduza e reteste a correcao",
+    "should_trigger": true
+  },
+  { "query": "dogfood da branch em mobile tablet desktop light e dark", "should_trigger": true },
+  { "query": "teste keyboard focus escape e aria-current na navegacao", "should_trigger": true },
+  {
+    "query": "confirme pelo browser que renda unica persiste no mes certo",
+    "should_trigger": true
+  },
+  {
+    "query": "verifique upload e remocao do avatar privado depois do reload",
+    "should_trigger": true
+  },
+  {
+    "query": "procure erros de console e requests falhos durante os CRUDs",
+    "should_trigger": true
+  },
+  { "query": "valide se clique duplo cria apenas uma meta", "should_trigger": true },
+  { "query": "gere um relatorio PASS FAIL BLOCKED com evidencias da UI", "should_trigger": true },
+  { "query": "revise estaticamente as policies RLS da migration", "should_trigger": false },
+  { "query": "rode apenas os testes unitarios do mapper de receitas", "should_trigger": false },
+  { "query": "atualize docs/security.md sem mudar a aplicacao", "should_trigger": false },
+  { "query": "gere os tipos oficiais do Supabase local", "should_trigger": false },
+  {
+    "query": "analise o diff procurando race conditions sem abrir navegador",
+    "should_trigger": false
+  },
+  { "query": "crie a descricao do pull request", "should_trigger": false },
+  { "query": "refatore um script Node usado no preinstall", "should_trigger": false },
+  { "query": "explique a arquitetura do FinanceProvider", "should_trigger": false },
+  { "query": "adicione uma constraint SQL em incomes", "should_trigger": false },
+  { "query": "corrija somente uma assercao de teste mockado", "should_trigger": false }
+]

@@ -3,40 +3,50 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Adicione ao Valion uma categoria opcional para receitas e mostre essa categoria na tabela. Quero persistencia real.",
-      "expected_output": "Mudanca vertical cobrindo migration, schema consolidado, dominio, Zod, mapper, store, UI e testes Supabase.",
+      "prompt": "No Valion, adicione uma receita de frequência Única com data de recebimento e garanta que ela apareça só no mês certo, inclusive no histórico.",
+      "expected_output": "Mudança vertical com received_on, validação condicional, mapper/repositório/provider, cálculo por mês, snapshot histórico por delta e testes.",
       "files": [],
-      "expectations": [
-        "O plano cria uma migration nova, mantem supabase/schema.sql coerente e usa a skill valion-supabase.",
-        "O contrato vertical cobre tipo de dominio, schema Zod, row/mapper, store, formulario e coluna da tabela.",
-        "A UI nova nao aumenta desnecessariamente os arquivos monoliticos e preserva estados e acessibilidade.",
-        "A validacao inclui pnpm verify:supabase, pnpm verify e teste de regressao do contrato persistido."
+      "assertions": [
+        "Cria migration nova com received_on, backfill por America/Sao_Paulo e constraint entre frequência e data.",
+        "Atualiza domínio, Zod com data real, tipos gerados, mapper, repositório, provider, formulário e cálculo mensal.",
+        "Mantém snapshots históricos recorrentes intactos e aplica somente delta da renda única no mês fechado.",
+        "Define testes unitários, integração Supabase e gates corretos; diferencia executado de bloqueado sem inventar validação."
       ]
     },
     {
       "id": 2,
-      "prompt": "O percentual comprometido do dashboard fica negativo quando nao ha renda. Corrija sem mudar o banco.",
-      "expected_output": "Diagnostico do estado real; se a protecao e o teste ja existirem, reporte a divergencia sem inventar mudanca. Caso reproduza, corrija calculo/view model com regressao e sem banco.",
+      "prompt": "As páginas /receitas e /despesas do Valion ainda trocam conteúdo por pushState. Migre para App Router sem perder o estado financeiro compartilhado.",
+      "expected_output": "Rotas reais com layout/provider compartilhado, Link/usePathname, seções separadas e testes de navegação.",
       "files": [],
-      "expectations": [
-        "A resposta inspeciona e tenta reproduzir o caminho real antes de propor alteracao.",
-        "Se renda zero ja estiver protegida e testada, a resposta registra esse fato e procura consumidores duplicados sem inventar correcao.",
-        "Uma falha reproduzida fica restrita a calculo ou view model e recebe teste de regressao.",
-        "Migration, mapper Supabase e store permanecem fora do escopo quando o banco nao muda.",
-        "A validacao final usa pnpm verify e git diff --check."
+      "assertions": [
+        "Remove history.pushState, popstate e estado duplicado de seção.",
+        "Mantém autenticação, provider financeiro e navegação no layout com slot children.",
+        "Cada page.tsx renderiza sua seção e não importa um dashboard monolítico.",
+        "Preserva deep links, back/forward, aria-current, loading e erro com retry e recomenda QA de navegador proporcional."
       ]
     },
     {
       "id": 3,
-      "prompt": "Crie uma nova secao de reservas no dashboard, responsiva e em pt-BR, reaproveitando os dados existentes.",
-      "expected_output": "Planejamento de UI extraida em modulo proprio, tokens existentes, estados e testes, sem aumentar o dashboard monolitico.",
+      "prompt": "Uma mutação de investimento está refazendo sete queries e às vezes uma resposta antiga troca os dados da conta atual. Corrija o provider do Valion.",
+      "expected_output": "Repositórios tipados, atualização localizada, abort/request id/user guard, pending por ação e regressões.",
       "files": [],
-      "expectations": [
-        "A secao permanece no dashboard e nao cria rota, sidebar, migration, tabela ou persistencia nao solicitada.",
-        "A proposta extrai um modulo proprio em vez de aumentar finance-dashboard.tsx.",
-        "Formula e semantica de reservas sao separadas entre fatos, hipotese recomendada e decisao que exige aprovacao.",
-        "A UI usa tokens existentes, copy pt-BR, responsividade, acessibilidade e estados de loading, erro, vazio e dados.",
-        "O plano reaproveita o store/view model atual e inclui testes focados mais pnpm verify."
+      "assertions": [
+        "Extrai payloads Supabase da UI/provider para repositórios tipados que retornam rows.",
+        "Limita sete consultas ao load/retry e atualiza investimento e snapshots após a mutação.",
+        "Usa AbortController, id monotônico e conferência de usuário antes de aplicar estado.",
+        "Expõe contrato explícito status/error/retry/isPending e bloqueia submissão duplicada."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Crie uma seção de reservas dentro do dashboard usando os dados existentes; não quero tabela, migration nem rota nova.",
+      "expected_output": "Seção extraída, cálculo definido sem inventar persistência, estados e UI responsiva em pt-BR.",
+      "files": [],
+      "assertions": [
+        "Mantém banco, provider, rotas e navegação fora do escopo.",
+        "Separa fato confirmado de hipótese de fórmula que exige decisão de produto.",
+        "Extrai a seção sem recriar monólito e usa tokens, acessibilidade e responsividade.",
+        "Inclui teste de cálculo/view model e gates sem Supabase desnecessário."
       ]
     }
   ]
