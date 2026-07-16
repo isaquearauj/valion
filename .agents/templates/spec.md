@@ -1,6 +1,6 @@
 # Spec: <título curto>
 
-> Arquivo local: copie para `docs/specs/<slug>.md`. Não versione specs de trabalho.
+> Artefato de trabalho local. Não versione nem publique esta spec.
 
 ## Problema
 
@@ -41,10 +41,38 @@ Liste explicitamente o que não faz parte desta entrega.
 | --- | --- | --- | --- |
 | | | | |
 
+## Modelo de dados envolvido
+
+Esta seção é obrigatória. Se a entrega não envolver dados, registre explicitamente “não se aplica” e
+justifique em uma frase.
+
+### Entidades, tabelas e campos
+
+| Entidade/tabela | Campo | Tipo | Nulo/default | Regra/invariante |
+| --- | --- | --- | --- | --- |
+| | | | | |
+
+### Relações e ciclo de vida
+
+- Relações, cardinalidade e dependências:
+- Criação, atualização, exclusão e retenção:
+- Ownership e isolamento entre usuários:
+
+### Integridade e acesso
+
+- Constraints, índices e unicidade:
+- RLS/policies, autenticação e autorização:
+- Dados sensíveis e exposição permitida:
+
+### Evolução e contratos
+
+- Migration e compatibilidade:
+- Backfill/rollback:
+- Impacto em tipos gerados, domínio, schemas, mappers e APIs:
+
 ## Impacto técnico
 
 - Arquitetura/pastas:
-- Dados/migrations:
 - Contratos/tipos:
 - Observabilidade/erros:
 

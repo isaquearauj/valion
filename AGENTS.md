@@ -1,580 +1,198 @@
 # AGENTS.md
 
-## Propósito
+## 1. Como trabalhar no Valion
 
-Este arquivo é o manual operacional dos agentes que trabalham no Valion. Ele descreve o
-workflow de desenvolvimento, as fronteiras de arquitetura, os comandos oficiais e as regras de
-segurança que devem permanecer verdadeiras em qualquer mudança.
+Valion é um app de finanças pessoais em pt-BR, construído com Next.js 16, React 19, TypeScript,
+Tailwind CSS v4 e Supabase Auth/Postgres/RLS. Produção: `https://valionapp.com`.
 
-O projeto segue Spec-Driven Development (SDD): mudanças relevantes começam pela compreensão do
-problema e por uma spec local com Definition of Done. Luis e Isaque são fontes essenciais de
-contexto de produto; o agente ajuda na investigação, ideação, design thinking, escrita da spec,
-implementação e validação. Tarefas triviais e de baixo risco podem usar um fluxo reduzido.
+Este arquivo é um mapa operacional, não a documentação completa. Siga estas orientações com bom
+senso: adapte o processo ao risco e ao tamanho da mudança, sem criar burocracia para tarefas triviais.
 
-`CLAUDE.md` é um symlink para este arquivo. Não crie uma segunda fonte de instruções.
+- Entenda o problema antes de escolher a solução. Luis e Isaque são fontes essenciais de contexto de
+  produto; o agente contribui com investigação, ideação, design e execução.
+- Comece pela menor solução correta. Depois de comprová-la, refatore quando isso melhorar clareza,
+  eficiência, segurança ou manutenção.
+- Preserve trabalho local alheio e não amplie o escopo sem necessidade.
+- Use o mapa documental abaixo antes de redescobrir o repositório inteiro.
+- Segurança, privacidade e integridade financeira fazem parte do comportamento, não são acabamento.
 
-## Índice
+## 2. Workflow orientado por spec
 
-1. Visão rápida
-2. Workflow SDD
-3. Estrutura do projeto
-4. Stack e arquitetura
-5. Setup e ambientes
-6. Comandos oficiais
-7. Banco de dados e Supabase
-8. Padrões de código
-9. Frontend e experiência do usuário
-10. Testes e QA
-11. Segurança e privacidade
-12. Git, commits e pull requests
-13. Documentação
-14. Agents e skills
-15. Definition of Done
+Use SDD para mudanças relevantes ou ambíguas. Para correções óbvias, documentação e ajustes pequenos,
+um objetivo e uma Definition of Done curtos são suficientes.
 
-## 1. Visão rápida
+1. Descubra o problema, pessoas afetadas, evidências, restrições e resultado desejado.
+2. Inspecione o comportamento, a arquitetura e os testes existentes.
+3. Registre uma spec de trabalho local quando ela reduzir ambiguidade.
+4. Confirme decisões de produto que alterem escopo, dados ou UX com Luis/Isaque.
+5. Implemente em cortes verificáveis, mantendo o escopo explícito.
+6. Valide proporcionalmente ao risco e entregue fatos, limitações e pendências.
 
-- Valion é um app Next.js 16 + React 19 para controle financeiro pessoal em pt-BR.
-- Supabase fornece Auth, Postgres, RLS e Storage privado.
-- Produção está em `https://valionapp.com` com deploy Vercel.
-- Use `pnpm`; `package.json` fixa `pnpm@10.28.0`.
-- Use Node `22.22.3`, definido em `.nvmrc`.
-- TypeScript é `strict` e imports internos usam o alias `@/*`.
-- Biome é a fonte de verdade para formato, imports e lint geral.
-- ESLint complementa o Biome com regras de Next.js e React Hooks.
-- Vitest é a única stack de testes automatizados desta iniciativa.
-- RLS e filtros explícitos por `user_id` protegem dados financeiros.
-- Migrations de produção só são aplicadas pelo workflow protegido do GitHub Actions.
-- Leia `README.md`, `docs/architecture.md` e o README da feature tocada antes de explorar o repo.
+Uma spec útil explicita, no mínimo:
 
-## 2. Workflow SDD
+- problema, objetivo, não objetivos e requisitos;
+- alternativas e decisões relevantes;
+- modelo de dados envolvido — entidades/tabelas, campos, relações, constraints, ownership/RLS,
+  migration/backfill e impactos em tipos; escreva “não se aplica” quando realmente não houver dados;
+- riscos, casos de borda, plano incremental e Definition of Done verificável;
+- estratégia de testes e QA.
 
-### 2.1 Quando usar o fluxo completo
+Specs de trabalho são artefatos locais: não podem ser versionadas nem publicadas no PR. Não há local
+obrigatório para criá-las. O template reutilizável fica em `.agents/templates/spec.md`; o PR sintetiza
+somente o contexto necessário para revisão.
 
-Use SDD completo quando a tarefa envolver pelo menos um destes pontos:
+## 3. Mapa de documentação
 
-- comportamento novo ou alteração de regra de produto;
-- mudança financeira, persistência, Auth, RLS ou Storage;
-- nova rota, seção, integração ou contrato público;
-- refatoração que atravessa camadas;
-- risco de regressão, dados pessoais ou decisão arquitetural;
-- problema cuja causa ou resultado esperado ainda não está claro.
+Leia apenas o que se aplica à tarefa:
 
-Uma correção óbvia de texto, ajuste isolado de estilo, rename mecânico ou manutenção equivalente
-pode usar o fluxo reduzido: confirmar o resultado, alterar, executar gates proporcionais e entregar.
+| Assunto | Fonte de verdade |
+| --- | --- |
+| Setup, scripts e visão geral | `README.md` |
+| Fronteiras e fluxo de dados | `docs/architecture.md` |
+| Workflow, qualidade e ambientes | `docs/engineering.md` |
+| Estratégia e comandos de teste | `docs/testing.md` |
+| Segurança e privacidade | `docs/security.md` |
+| Supabase local e produção | `docs/supabase-setup.md` |
+| Snapshots e histórico | `docs/history.md` |
+| Decisões arquiteturais | `docs/decisions/` |
+| Regras de uma feature | `features/*/README.md` |
+| Agents, skills e evals | `.agents/README.md` |
 
-### 2.2 Descobrir antes de construir
+Atualize a fonte durável correspondente quando uma mudança alterar arquitetura, operação ou
+invariantes. ADRs registram decisões amplas; não substituem specs de entrega.
 
-1. Leia as instruções e documentos da área.
-2. Inspecione o comportamento e os testes atuais antes de propor uma solução.
-3. Separe fatos confirmados, hipóteses e decisões de produto.
-4. Consulte Luis ou Isaque quando a resposta alterar produto, fórmula, taxonomia ou escopo.
-5. Explique alternativas, impacto e recomendação sem transformar hipótese em requisito.
-6. Identifique riscos de dados, segurança, acessibilidade, concorrência e migração.
+## 4. Estrutura e arquitetura
 
-### 2.3 Spec local
-
-Specs de trabalho vivem em `docs/specs/`, são locais e não podem ser versionadas. Use o template
-versionado em `.agents/templates/spec.md` e mantenha a spec atualizada durante a implementação.
-
-Uma spec relevante contém:
-
-- problema real e evidências;
-- pessoas e fluxos afetados;
-- objetivo e não objetivos;
-- requisitos funcionais e de segurança;
-- decisões e alternativas descartadas;
-- impacto em arquitetura e dados;
-- plano incremental;
-- Definition of Done verificável;
-- estratégia de testes e QA;
-- perguntas ainda abertas.
-
-O PR não publica a spec local. Ele registra o contexto necessário para revisão: problema, solução,
-decisões, DoD atendido, validações executadas e pendências reais.
-
-### 2.4 Implementar em cortes pequenos
-
-1. Resolva primeiro o menor corte correto e seguro.
-2. Prove o comportamento com teste ou reprodução.
-3. Só então otimize e refatore onde isso melhorar clareza, eficiência ou manutenção.
-4. Evite abstração antecipada, generalização hipotética e código sem consumidor.
-5. Preserve trabalho local alheio e mantenha cada mudança dentro do escopo da spec.
-6. Para mudanças grandes, prefira commits e PRs revisáveis, mas não crie commit sem pedido.
-
-### 2.5 Validar e entregar
-
-- Execute os gates proporcionais ao risco e registre exatamente o que rodou.
-- Diferencie teste automatizado, QA em navegador e validação ainda pendente.
-- Compare o resultado final com cada item do Definition of Done.
-- Revise `git diff --check`, `git status` e a ausência de segredos/artefatos locais.
-- Explique comportamento entregue, decisões importantes, riscos e próximos passos.
-
-## 3. Estrutura do projeto
-
-Tree curada das áreas que definem a arquitetura:
+Árvore curada — confirme detalhes no diretório e nos documentos da área:
 
 ```text
 valion/
-├── app/                              # App Router, layouts, páginas e Route Handlers
-│   ├── (app)/                        # Rotas autenticadas
-│   │   ├── layout.tsx                # Auth + providers + shell compartilhada
-│   │   ├── dashboard/page.tsx
-│   │   ├── receitas/page.tsx
-│   │   ├── despesas/page.tsx
-│   │   ├── investimentos/page.tsx
-│   │   ├── metas/page.tsx
-│   │   └── historico/page.tsx
-│   ├── (auth)/                       # Login, cadastro e recuperação
-│   ├── api/account/                  # Exclusão segura de conta
-│   ├── auth/callback/                # Callback seguro do Supabase Auth
-│   ├── globals.css                   # Tokens, temas e estilos globais
-│   └── layout.tsx
-├── features/                         # Organização por domínio/feature
-│   ├── README.md                     # Convenção para módulos de feature
-│   ├── auth/
-│   │   ├── README.md
-│   │   ├── providers/                # Estado de sessão autenticada
-│   │   ├── ui/                       # Telas e diálogos de conta
-│   │   ├── profile-repository.ts     # Perfil e Storage privado
-│   │   └── avatar-migration.ts       # Migração base64 legada
+├── app/
+│   ├── (app)/                    # Rotas autenticadas do App Router
+│   ├── api/                      # Route Handlers
+│   └── auth/                     # Callback do Supabase
+├── components/ui/                # Primitives shadcn compartilhadas
+├── features/
+│   ├── auth/                     # Sessão, perfil, avatar e UI de conta
 │   ├── finance/
-│   │   ├── README.md
-│   │   ├── domain/                   # Tipos e regras puras
-│   │   ├── forms/                    # Zod e normalização de entradas
-│   │   ├── data/                     # Mappers e repositórios Supabase
-│   │   ├── hooks/                    # Implementação do store
-│   │   ├── providers/                # Contrato financeiro compartilhado
-│   │   ├── presentation/             # View models e formatação
-│   │   └── ui/                       # Rotas, shell e componentes financeiros
-│   └── navigation/                   # Fonte de verdade de paths/seções
-├── components/ui/                    # Primitives shadcn/Base UI compartilhadas
-├── lib/supabase/                     # Clientes browser, server, admin e tipos gerados
+│   │   ├── data/repositories/    # Queries e mutações Supabase tipadas
+│   │   ├── domain/               # Tipos e regras financeiras puras
+│   │   ├── forms/                # Schemas Zod
+│   │   ├── hooks/                # Estado e concorrência
+│   │   ├── providers/            # Contrato compartilhado das rotas
+│   │   ├── presentation/         # View models
+│   │   └── ui/                   # Rotas, dialogs, shell e componentes
+│   └── navigation/               # Fonte de verdade das rotas principais
+├── lib/supabase/                 # Clientes browser/server/admin e tipos gerados
 ├── supabase/
-│   ├── migrations/                   # Histórico imutável de migrations
-│   ├── schema.sql                    # Referência consolidada do schema
-│   └── config.toml                   # Supabase local
-├── tests/integration/                # Integração real com Supabase local
-├── scripts/                          # Guards e automações determinísticas
-├── docs/
-│   ├── architecture.md               # Arquitetura detalhada
-│   ├── decisions/                    # ADRs versionados
-│   ├── specs/                        # Specs locais, nunca versionadas
-│   ├── security.md
-│   ├── supabase-setup.md
-│   └── testing.md
-├── .agents/
-│   ├── agents/                       # Agents Claude em Markdown
-│   ├── skills/                       # Skills compartilhadas
-│   └── templates/                    # Templates operacionais, incluindo spec
-├── .claude/
-│   ├── agents -> ../.agents/agents
-│   └── skills -> ../.agents/skills
-├── .codex/agents/                    # Agents Codex no formato TOML
-├── AGENTS.md                         # Fonte canônica de instruções
-└── CLAUDE.md -> AGENTS.md
+│   ├── migrations/               # Histórico imutável de migrations
+│   └── schema.sql                # Referência consolidada do schema
+├── tests/                        # Integrações transversais
+├── docs/                         # Documentação durável e ADRs
+├── .agents/                      # Skills, agents, templates e evals
+├── .codex/agents/                # Agents Codex em TOML
+└── scripts/                      # Automação e guards locais
 ```
 
-### 3.1 Organização por feature
+Invariantes principais:
 
-- Uma feature complexa deve possuir README próprio quando tiver múltiplas camadas, invariantes de
-  domínio, persistência ou workflows que não sejam óbvios pela tree.
-- O README explica propósito, fronteiras, fluxo de dados, pontos de extensão e testes; não replica
-  cada detalhe do código.
-- Evite criar README para diretórios triviais sem decisões próprias.
-- Prefira feature-first para regras do produto e `components/ui`/`lib` somente para infraestrutura
-  realmente compartilhada.
-- Não crie barrels amplos que escondam dependências ou provoquem ciclos.
+- `app/(app)/layout.tsx` protege a sessão e mantém provider/shell compartilhados; cada rota renderiza
+  sua própria seção.
+- `features/navigation/routes.ts` é a fonte de verdade dos paths principais.
+- UI e providers não montam payloads SQL; repositórios tipados isolam persistência.
+- Regras financeiras puras ficam em `domain`; validação de entrada fica em schemas Zod.
+- Clientes Supabase são separados por ambiente em `lib/supabase` e usam `Database` gerado.
+- Ao mudar um contrato persistido, atualize apenas as camadas realmente afetadas: migration/schema,
+  tipos, validação, mapper/repositório, estado, UI e testes.
+- Prefira módulos por responsabilidade. Aproximadamente 300 linhas é um alerta para revisar coesão,
+  não um limite automático nem motivo para fragmentar código claro.
 
-### 3.2 Regra de dependências
+## 5. Setup, stack e comandos
 
-```text
-app → features → components/lib
-finance/ui → presentation/domain + provider
-finance/providers/hooks → repositories + domain
-finance/data → domain + lib/supabase
-finance/domain → nenhuma camada de framework ou infraestrutura
-```
+- Use `pnpm`; `package.json` fixa `pnpm@10.28.0`.
+- Use `nvm use`; `.nvmrc` fixa Node `22.22.3`.
+- Imports internos usam `@/*` para a raiz.
+- O ambiente comum é WSL Debian, mas scripts não devem depender de configuração pessoal da distro.
+- `.env.local` usa `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` e, quando necessário,
+  `SUPABASE_SERVICE_ROLE_KEY` exclusivamente server-side.
 
-- Domínio não importa React, Next.js ou Supabase.
-- UI não monta payload SQL e não acessa tabelas diretamente.
-- Repositórios não contêm regra visual.
-- Server Components e Route Handlers não usam o cliente browser.
-- Dependência entre features precisa ser explícita e pequena; extraia para compartilhado apenas
-  quando houver mais de um consumidor real.
-
-## 4. Stack e arquitetura
-
-### 4.1 Stack
-
-| Área | Tecnologia |
+| Objetivo | Comando |
 | --- | --- |
-| Framework | Next.js 16 App Router |
-| UI | React 19, Tailwind CSS v4, shadcn/Base UI, Lucide |
-| Linguagem | TypeScript strict |
-| Formulários | React Hook Form + Zod |
-| Dados/Auth | Supabase Auth, Postgres, RLS e Storage |
-| Gráficos | Recharts |
-| Testes | Vitest + Testing Library + integração Supabase |
-| Qualidade | Biome, ESLint Next/React Hooks, TypeScript |
-| Deploy | Vercel + workflow protegido de migrations |
-
-### 4.2 App Router e sessão
-
-- A raiz redireciona para `/dashboard` ou `/login` conforme a sessão.
-- `app/(app)/layout.tsx` valida o usuário no servidor com `getCurrentAppUser()`.
-- O layout monta `AuthSessionProvider`, `FinanceProvider`, navegação e o slot da rota.
-- `FinanceRouteShell` consome os providers e renderiza loading, erro/retry e a shell; não carrega
-  tabelas diretamente e não renderiza um dashboard monolítico.
-- `features/navigation/routes.ts` é a fonte de verdade para rotas principais.
-- Use `Link`, `useRouter` e `usePathname`; não use `history.pushState`, `popstate` ou estado paralelo
-  para simular roteamento.
-
-### 4.3 Estado financeiro
-
-O contrato público expõe `state`, `status`, `error`, `retry`, `isPending` e ações agrupadas por
-recurso. `useFinanceStore` é implementação, não o contrato público da UI.
-
-- Sete consultas paralelas são permitidas somente no load inicial e retry.
-- Loads usam `AbortController`, id monotônico e conferência do usuário.
-- Mutações retornam a row persistida e atualizam somente o recurso e snapshots afetados.
-- Chaves de pending impedem duplicidade de submissão e ações destrutivas.
-- Erros de carga aparecem na UI com retry; não transforme falha em estado vazio silencioso.
-
-### 4.4 Corte vertical financeiro
-
-Uma mudança persistida normalmente atravessa:
-
-1. migration e `supabase/schema.sql`;
-2. tipos gerados do Supabase;
-3. tipo de domínio;
-4. schema Zod e normalização;
-5. mapper DB ↔ domínio;
-6. repositório tipado;
-7. provider/store;
-8. cálculo ou view model;
-9. UI de rota;
-10. testes unitários, integração e QA proporcional.
-
-Use `valion-finance-feature` e, havendo persistência, também `valion-supabase`.
-
-## 5. Setup e ambientes
-
-O projeto deve funcionar em WSL, Linux e macOS. Luis e Isaque usam WSL com Debian, mas diferenças
-locais não devem mudar os comandos do projeto; normalize versões por `.nvmrc`, Corepack, lockfile e
-Supabase CLI.
-
-### 5.1 Pré-requisitos
-
-- Git com suporte a symlinks.
-- NVM ou gerenciador compatível com `.nvmrc`.
-- Corepack e pnpm.
-- Docker compatível com Supabase CLI.
-- Supabase CLI.
-- GitHub CLI para o workflow de PR/deploy autorizado.
-
-No WSL, prefira Docker Desktop com integração habilitada para a distro. Não mantenha Docker Desktop
-e um segundo Docker Engine publicando as mesmas portas. Em Linux/macOS, use Docker Desktop ou Engine
-compatível e confirme que o daemon está acessível ao usuário atual.
-
-### 5.2 Bootstrap
-
-```bash
-nvm install
-nvm use
-corepack enable
-pnpm install --frozen-lockfile
-pnpm dev:all
-```
-
-Abra `http://localhost:3000`.
-
-### 5.3 Variáveis
-
-`.env.local` precisa de:
-
-```text
-NEXT_PUBLIC_SUPABASE_URL
-NEXT_PUBLIC_SUPABASE_ANON_KEY
-SUPABASE_SERVICE_ROLE_KEY
-```
-
-`SUPABASE_SERVICE_ROLE_KEY` é server-only. Nunca use prefixo `NEXT_PUBLIC`, nunca leia em Client
-Component e nunca imprima seu valor.
-
-### 5.4 Serviços locais
-
-| Serviço | Endereço padrão |
-| --- | --- |
-| App | `http://localhost:3000` |
-| API Supabase | `http://127.0.0.1:55321` |
-| Postgres | `127.0.0.1:55322` |
-| Studio | `http://127.0.0.1:55323` |
-| Mailpit | `http://127.0.0.1:55324` |
-
-Credenciais locais são compartilhadas e a stack pode publicar portas na rede. Use rede confiável e
-rode `pnpm supabase:stop` ao terminar.
-
-## 6. Comandos oficiais
-
-| Intenção | Comando |
-| --- | --- |
-| Ativar Node | `nvm use` |
 | Instalar | `pnpm install --frozen-lockfile` |
-| Dev app | `pnpm dev` |
-| Dev app + Supabase | `pnpm dev:all` |
-| Formato/lint/imports | `pnpm check` |
-| Correção segura | `pnpm check:write` |
-| ESLint complementar | `pnpm lint:eslint` |
-| Typecheck | `pnpm typecheck` |
-| Testes | `pnpm test` |
-| Coverage | `pnpm test:coverage` |
-| Build | `pnpm build` |
-| Gate sem Docker | `pnpm verify` |
-| Subir Supabase | `pnpm supabase:start` |
-| Parar Supabase | `pnpm supabase:stop` |
-| Reset local | `pnpm supabase:reset` |
-| Seed local | `pnpm supabase:seed` |
-| Tipos Supabase | `pnpm supabase:types` |
-| Integração Supabase | `pnpm test:supabase` |
-| Gate Supabase | `pnpm verify:supabase` |
-| Config de agents | `pnpm verify:agents` |
+| App local | `pnpm dev` |
+| App + Supabase local | `pnpm dev:all` |
+| Formato/lint Biome | `pnpm check` / `pnpm check:write` |
+| ESLint Next/React | `pnpm lint:eslint` |
+| TypeScript | `pnpm typecheck` |
+| Testes / coverage | `pnpm test` / `pnpm test:coverage` |
+| Gate sem banco | `pnpm verify` |
+| Reset e integração Supabase | `pnpm verify:supabase` |
+| Agents e skills | `pnpm verify:agents` |
 
-Não troque pnpm por npm/yarn e não improvise variantes de comandos sem conferir `package.json`.
+Use Supabase CLI + Docker somente no ambiente local confirmado. Produção recebe migrations apenas
+pelo workflow manual `.github/workflows/supabase-migrations.yml`; nunca use `supabase db push`
+diretamente contra produção. Consulte `docs/supabase-setup.md` antes de operar banco.
 
-## 7. Banco de dados e Supabase
+## 6. Código, produto e segurança
 
-### 7.1 Clientes
+- TypeScript é `strict`; prefira contratos explícitos, `import type` e evite `any`/casts para esconder
+  inconsistências.
+- Biome é a fonte de verdade para formato, imports e lint geral; ESLint cobre regras específicas de
+  Next.js e React Hooks.
+- Client Components declaram `"use client"`; código server-side usa o cliente Supabase de servidor.
+- Produto, validações, toasts e mensagens de erro permanecem em pt-BR.
+- Reuse tokens de `app/globals.css` e primitives de `components/ui`; preserve responsividade,
+  acessibilidade, loading, erro, retry e pending onde forem relevantes.
+- Valide entradas na fronteira. Não duplique a mesma regra em UI, estado e persistência sem motivo.
+- Migrations aplicadas são imutáveis; correções usam nova migration. Mantenha `schema.sql` e tipos
+  gerados coerentes.
+- Preserve RLS e filtros explícitos por `user_id`; derive identidade da sessão, nunca de um identificador
+  livre enviado pelo cliente.
+- `SUPABASE_SERVICE_ROLE_KEY` nunca entra em Client Components, logs ou respostas.
+- Não registre dados financeiros, tokens, emails completos, cookies ou payloads pessoais.
+- Em auth/rotas server-side, considere CSRF/origin, open redirect, session confusion e mensagens que
+  revelem existência ou detalhes internos.
 
-| Cliente | Arquivo | Uso |
-| --- | --- | --- |
-| Browser | `lib/supabase/client.ts` | Client Components, providers e hooks |
-| Server | `lib/supabase/server.ts` | Server Components e Route Handlers |
-| Admin | `lib/supabase/admin.ts` | Operações server-only com service role |
+## 7. Testes e QA
 
-Todos usam `Database` de `lib/supabase/database.types.ts`.
+Use Vitest como stack padrão. Funcionalidades e bugs alterados precisam de testes focados; regras
+financeiras, schemas, mappers, repositórios, auth e RLS merecem prioridade.
 
-### 7.2 Migrations
-
-- Crie migration nova; nunca edite migration aplicada.
-- Mantenha `supabase/schema.sql` coerente como referência consolidada.
-- Aplique localmente com `pnpm supabase:reset`.
-- Gere tipos com `pnpm supabase:types` depois das migrations locais.
-- Use `Tables`, `TablesInsert` e `TablesUpdate`; não esconda drift com casts.
-- Mudança destrutiva exige backup e estratégia corretiva.
-- `.env.supabase` não é requisito e permanece ignorado.
-
-### 7.3 RLS e defesa em profundidade
-
-- Toda tabela de usuário mantém RLS e filtro explícito por `user_id`.
-- RPC pública deriva identidade de `auth.uid()`; não aceite `user_id` do cliente quando desnecessário.
-- Funções `security definer` usam `search_path` seguro e privilégios mínimos.
-- Teste acesso cruzado com dois usuários reais no Supabase local.
-- Snapshots são derivados pelo banco; usuários autenticados não escrevem diretamente.
-- Storage privado usa prefixo do próprio usuário e policies para cada operação.
-
-### 7.4 Produção
-
-Desenvolvimento e testes podem automatizar reset/seed apenas quando a URL foi confirmada como
-`localhost` ou `127.0.0.1`.
-
-Produção recebe somente migrations versionadas por `.github/workflows/supabase-migrations.yml`,
-com `workflow_dispatch` e GitHub Environment `production`. Dispare somente quando o usuário pedir
-explicitamente. Nunca use `supabase db push`, seed remoto, `db reset --linked` ou SQL arbitrário em
-produção.
-
-Não exponha `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD` ou `SUPABASE_PROJECT_REF`.
-
-## 8. Padrões de código
-
-### 8.1 Princípios
-
-- Escreva primeiro o mínimo de código que resolve corretamente o problema comprovado.
-- Depois de provar o comportamento, refatore para clareza, eficiência, segurança e manutenção.
-- Prefira código direto a abstrações especulativas.
-- Remova APIs sem consumidor e não adicione dependência sem necessidade concreta.
-- Otimize algoritmos quando houver impacto ou risco demonstrável; evite micro-otimização obscura.
-- Preserve contratos existentes ou documente claramente a mudança.
-
-### 8.2 TypeScript e formato
-
-- TypeScript strict; evite `any` em domínio, payloads e Supabase.
-- Use `import type` para símbolos somente de tipos.
-- `verbatimModuleSyntax` está habilitado.
-- Biome: 2 espaços, LF, largura 100, aspas duplas e semicolon conforme configuração.
-- Não duplique regras de estilo no ESLint.
-- Imports internos usam `@/*`; relativos ficam em arquivos fortemente acoplados do mesmo módulo.
-
-### 8.3 Componentes e módulos
-
-- Client Components declaram `"use client"`.
-- Hooks, `window`, `toast`, router client e Supabase browser ficam no cliente.
-- Server Components e Route Handlers usam clientes server-side.
-- Um arquivo com cerca de 300 linhas é um alerta para revisar responsabilidades, não uma falha
-  automática. Extraia quando houver mais de um motivo para mudar, não para satisfazer contagem.
-- Coloque formulários junto da feature/rota proprietária e preserve primitives compartilhadas.
-- Não recrie dashboard, store ou arquivo de diálogos monolítico.
-
-### 8.4 Validação e erros
-
-- Normalize entradas com Zod ou validação equivalente na fronteira.
-- Valide datas reais, limites numéricos, enums e relações condicionais.
-- UI recebe mensagens em pt-BR e não detalhes de SQL, Auth ou Storage.
-- Falhas não viram sucesso silencioso, estado vazio ou toast enganoso.
-- Não registre valores financeiros, emails completos, tokens ou payloads pessoais.
-
-## 9. Frontend e experiência do usuário
-
-- Use tokens de `app/globals.css`: `background`, `foreground`, `primary`, `muted`, `card`, `chart-*`.
-- Preserve a linguagem visual financeira existente; evite cores avulsas e layouts genéricos.
-- Toda superfície relevante funciona em light/dark e de mobile a desktop.
-- Estados necessários: loading, erro, vazio, dados, pending e sucesso quando aplicável.
-- Ações destrutivas usam diálogo acessível, confirmação explícita e pending.
-- Navegação por teclado, foco visível, labels, `aria-current`, alerts e leitores de tela são parte do
-  comportamento, não polimento posterior.
-- Evite layout shift, trabalho síncrono excessivo e rerenderizações globais sem necessidade.
-
-## 10. Testes e QA
-
-### 10.1 Matriz por risco
-
-| Mudança | Validação mínima |
+| Risco da mudança | Validação mínima esperada |
 | --- | --- |
-| Docs/config simples | check direcionado + `git diff --check` |
-| UI/client localizada | `pnpm check`, `pnpm lint:eslint`, `pnpm typecheck`, teste relevante |
-| Funcionalidade/regra | testes focados + `pnpm verify` |
-| Banco/Auth/Storage | `pnpm verify:supabase` + `pnpm verify` |
-| Refatoração ampla | `pnpm test:coverage` + gates acima |
+| Docs/config simples | `pnpm check` + `git diff --check` |
+| UI/client | acima + ESLint + typecheck + testes focados |
+| Funcionalidade/refatoração | `pnpm verify` + coverage quando relevante |
+| Banco/auth/RLS | acima + `pnpm verify:supabase` |
 | Agents/skills | `pnpm verify:agents` + evals relevantes |
 
-Coverage bloqueia abaixo de 73% statements, 73% lines, 59% branches e 67% functions. Esses valores
-são piso e nunca podem ser reduzidos para fazer o gate passar.
+QA com `agent-browser` é altamente recomendado para mudanças observáveis em rotas, formulários,
+CRUD, auth, responsividade, tema ou teclado. Use a skill `valion-browser-qa`; evidências ficam em
+`.context/` e nunca são versionadas. Exclusão de conta exige confirmação explícita imediatamente
+antes da ação, inclusive no Supabase local.
 
-### 10.2 Estratégia de testes
+Relate separadamente o que passou, falhou ou ficou bloqueado pelo ambiente. Não transforme teste não
+executado em sucesso presumido.
 
-- Regra financeira pura: domain/presentation.
-- Entrada e normalização: schemas Zod.
-- Contrato banco/domínio: mappers e repositórios.
-- Corrida, retry e pending: store/provider.
-- Comportamento visual: Testing Library e QA em navegador.
-- RLS, constraints, triggers e Storage: Supabase local real, não apenas mocks.
-- Bug corrigido recebe teste de regressão que teria falhado antes.
+## 8. Git, documentação e agentes
 
-### 10.3 QA com agent-browser
+- Revise `git status` antes e depois; não reverta mudanças alheias nem inclua segredos/artefatos.
+- Crie branch e commit quando solicitado. Push, PR, deploy e mutações externas exigem autorização
+  explícita.
+- Commits seguem Conventional Commits. PRs normais usam `main` como base.
+- Quando o usuário pedir PR, use a skill `create-pr`; ela revisa `main...HEAD`, evita duplicação e
+  registra DoD, QA, validações e riscos sem publicar specs/evidências locais.
+- `CLAUDE.md` aponta para este arquivo. Skills compartilhadas ficam em `.agents/skills`; agents Claude
+  em `.agents/agents`; agents Codex em `.codex/agents`.
+- Use `valion-finance-feature` para cortes financeiros e `valion-supabase` para schema, RLS, Auth,
+  Storage, tipos gerados ou deploy de banco.
+- Delegue somente trabalho independente. A sessão principal continua responsável por integração,
+  segurança e validação final.
 
-QA real com `agent-browser` é altamente recomendado quando a mudança afeta rotas, navegação,
-formulários, Auth, perfil, responsividade, tema ou interação relevante. Ajustes triviais podem usar
-validação reduzida, desde que o risco seja explicado.
+Antes de entregar, confirme:
 
-Use a skill `valion-browser-qa`. Evidências ficam organizadas em `.context/qa-<slug>/`, que é local e
-nunca versionado. O relatório usa `PASS`, `FAIL` e `BLOCKED`, inclui ambiente, passos, console/network,
-screenshots e reteste.
-
-Excluir conta durante QA sempre exige confirmação explícita do usuário, mesmo com Supabase local e
-usuário demo. Nunca execute fluxo destrutivo em ambiente remoto.
-
-## 11. Segurança e privacidade
-
-- Dados financeiros pessoais são sensíveis por padrão.
-- Segredos nunca entram em Client Components, logs, commits, screenshots ou respostas de erro.
-- Service role permanece exclusivamente server-side.
-- Valide sessão no servidor e mantenha RLS como barreira principal.
-- Verifique open redirect, CSRF/origin, session confusion e acesso cruzado em mudanças de Auth.
-- Avatares são privados, limitados por MIME/tamanho e exibidos por URL assinada.
-- Exclusão de conta limpa Storage antes de Auth e interrompe se a limpeza falhar.
-- Base64 legado é validado sem logs e removido ou migrado com segurança.
-- Dependências e workflows mantêm permissões mínimas; OSV Scanner continua no CI.
-- Não use comandos destrutivos de Git ou banco fora do escopo explicitamente autorizado.
-
-## 12. Git, commits e pull requests
-
-- Preserve mudanças locais existentes; trabalho desconhecido pertence ao usuário.
-- Não use `git reset --hard`, `git checkout --` ou equivalente destrutivo sem autorização explícita.
-- Crie branch ou commit somente quando o usuário pedir.
-- Push e PR sempre exigem pedido explícito.
-- PRs do Valion usam `main` como base padrão.
-- Branches preferem `feat/<slug>`, `fix/<slug>`, `refactor/<slug>` ou tipo Conventional equivalente.
-- Commits usam Conventional Commits e descrevem uma unidade coerente.
-- Leia o diff completo da branch contra o merge-base antes de escrever o PR.
-- Use a skill `create-pr`; não invente labels e não duplique PR aberto.
-- O corpo do PR descreve problema, solução, arquitetura/dados, QA, validações e pendências.
-
-## 13. Documentação
-
-| Fonte | Responsabilidade |
-| --- | --- |
-| `AGENTS.md` | Política, workflow, mapa e invariantes |
-| `README.md` | Onboarding e operação rápida do projeto |
-| `docs/architecture.md` | Arquitetura e dependências detalhadas |
-| `docs/decisions/` | ADRs de decisões duráveis |
-| `docs/security.md` | Modelo e regras de segurança |
-| `docs/supabase-setup.md` | Setup/operação do Supabase |
-| `docs/testing.md` | Estratégia e comandos de teste |
-| `features/*/README.md` | Contexto e fronteiras da feature |
-| `docs/specs/` | Specs de trabalho locais e não versionadas |
-| Skills | Procedimentos especializados para agentes |
-
-Atualize a fonte correta junto com a mudança. Evite copiar detalhes operacionais em vários arquivos;
-repita apenas invariantes de segurança cuja visibilidade reduz risco.
-
-## 14. Agents e skills
-
-### 14.1 Organização
-
-- Skills canônicas: `.agents/skills/<nome>/SKILL.md`.
-- Claude acessa skills por `.claude/skills`.
-- Agents Claude: `.agents/agents/*.md`.
-- Agents Codex: `.codex/agents/*.toml`.
-- Workspaces de eval: `.agents/skills/*-workspace/`, locais e ignorados.
-- `pnpm verify:agents` valida symlinks, paridade de agents, skills e evals.
-
-Markdown Claude e TOML Codex são formatos diferentes; mantenha o objetivo e as proteções equivalentes,
-sem tentar compartilhar o mesmo arquivo.
-
-### 14.2 Skills disponíveis
-
-- `valion-finance-feature`: corte vertical financeiro.
-- `valion-supabase`: schema, Auth, RLS, Storage, tipos, snapshots e deploy de banco.
-- `valion-browser-qa`: QA real local com agent-browser e evidências.
-- `create-pr`: push e PR estruturado da branch atual para `main`.
-
-Se uma tarefa persistida for financeira, use finance + Supabase. Se afetar comportamento de UI, avalie
-browser QA. Se o usuário pedir PR, use create-pr.
-
-### 14.3 Reviewers
-
-- `quality-reviewer`: corretude, arquitetura, corridas, UX e cobertura.
-- `supabase-reviewer`: migrations, RLS, Auth, Storage e integridade.
-- `browser-qa-reviewer`: comportamento real, acessibilidade operacional e evidências.
-
-Delegue somente trabalho independente ou ruidoso. A sessão principal continua responsável por integrar,
-resolver conflitos, executar gates e comunicar o resultado.
-
-Reviews usam esta estrutura:
-
-1. resumo e escopo;
-2. achados por severidade;
-3. evidência com arquivo/linha ou passos de reprodução;
-4. riscos verificados sem achados;
-5. comandos e ambiente;
-6. bloqueios e conclusão.
-
-## 15. Definition of Done
-
-Uma entrega está pronta quando, proporcionalmente ao escopo:
-
-- [ ] problema e resultado esperado estão compreendidos;
-- [ ] spec local/fluxo reduzido registra decisões suficientes;
-- [ ] comportamento atende requisitos e não objetivos;
-- [ ] arquitetura e READMEs continuam coerentes;
-- [ ] entradas, erros, loading, vazio e pending estão tratados;
-- [ ] isolamento por usuário e privacidade foram preservados;
-- [ ] testes de regressão e integração relevantes passam;
-- [ ] QA em navegador foi executado ou a dispensa foi justificada;
-- [ ] `pnpm verify` passa quando há código de aplicação;
-- [ ] `pnpm verify:supabase` passa quando há banco/Auth/Storage;
-- [ ] `pnpm test:coverage` passa em funcionalidade/refatoração ampla;
-- [ ] `pnpm verify:agents` passa ao tocar em agents/skills;
-- [ ] documentação correta foi atualizada sem versionar specs/evidências locais;
-- [ ] `git diff --check` e `git status` foram revisados;
-- [ ] nenhuma credencial, `.env.local`, `.context` ou artefato local entrou no diff;
-- [ ] entrega informa validações executadas e pendências reais.
+- escopo e Definition of Done atendidos ou pendências explícitas;
+- testes proporcionais executados no estado final;
+- documentação durável atualizada quando necessário;
+- specs e evidências locais fora do Git;
+- `git diff --check` e `git status` revisados.

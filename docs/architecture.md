@@ -106,6 +106,6 @@ data, state, presentation e UI acontece quando responsabilidades reais surgem;
 ela não é um template obrigatório para qualquer feature. Cerca de 300 linhas é
 um sinal para revisar coesão, não um limite mecânico.
 
-Decisões duráveis ficam em `docs/decisions`. Specs de trabalho ficam localmente
-em `docs/specs`, são ignoradas pelo Git e não substituem ADRs ou documentação de
-arquitetura.
+Decisões duráveis ficam em `docs/decisions`. Specs de trabalho são locais, não
+possuem diretório obrigatório, não são versionadas e não substituem ADRs ou
+documentação de arquitetura.

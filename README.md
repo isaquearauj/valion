@@ -129,9 +129,10 @@ Migrations de produção não são aplicadas pelo ambiente local. Depois de vali
 - `features/*/README.md`: contexto, fronteiras e invariantes dos módulos complexos.
 - `docs/decisions`: decisões arquiteturais duráveis (ADRs).
 
-O desenvolvimento relevante segue SDD com specs locais em `docs/specs/`. Essas specs não são
-versionadas; use o template `.agents/templates/spec.md` e leve ao PR apenas contexto, decisões,
-Definition of Done e validações necessárias para revisão.
+O desenvolvimento relevante segue SDD com specs de trabalho locais e não versionadas. Não há um
+diretório obrigatório; use o template `.agents/templates/spec.md`. Toda spec explicita o modelo de
+dados envolvido ou registra que ele não se aplica. O PR leva somente contexto, decisões, Definition
+of Done e validações necessárias para revisão.
 
 ## Deploy
 

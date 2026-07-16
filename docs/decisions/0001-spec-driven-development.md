@@ -13,8 +13,9 @@ produto que não pode ser inferido apenas pelo código.
 ## Decisão
 
 Mudanças relevantes usam SDD: descoberta colaborativa, spec local, Definition of Done verificável,
-implementação incremental e validação proporcional. Specs ficam em `docs/specs/`, são locais e não
-são versionadas. Tarefas triviais podem usar fluxo reduzido.
+implementação incremental e validação proporcional. Specs não possuem diretório obrigatório, são
+locais, não são versionadas e explicitam o modelo de dados envolvido. Tarefas triviais podem usar
+fluxo reduzido.
 
 ## Consequências
 

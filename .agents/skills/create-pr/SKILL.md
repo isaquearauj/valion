@@ -25,7 +25,7 @@ Use três pontos para comparar contra o merge-base. Leia todos os commits e não
 para o usuário.
 
 Se houver mudança não commitada relevante, pergunte se deve entrar antes do PR. Nunca inclua
-`.env*`, `docs/specs`, `.context`, auth state ou credencial.
+`.env*`, specs de trabalho, `.context`, auth state ou credencial.
 
 ## 2. Confirmar branch
 

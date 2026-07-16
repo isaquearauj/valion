@@ -127,9 +127,29 @@ function expectNoTrackedFiles(pathspec) {
   if (tracked) fail(`${pathspec} contem arquivos versionados: ${tracked.split("\n")[0]}`)
 }
 
+function expectMaxLines(path, maximum) {
+  const lines = readFileSync(join(root, path), "utf8").split("\n").length
+  if (lines > maximum) fail(`${path} possui ${lines} linhas; o maximo e ${maximum}.`)
+}
+
+function expectText(path, snippets) {
+  const content = readFileSync(join(root, path), "utf8")
+  for (const snippet of snippets) {
+    if (!content.includes(snippet)) fail(`${path} deve conter: ${snippet}`)
+  }
+}
+
 expectSymlink("CLAUDE.md", "AGENTS.md")
 expectSymlink(".claude/skills", "../.agents/skills")
 expectSymlink(".claude/agents", "../.agents/agents")
+expectMaxLines("AGENTS.md", 300)
+expectText(".agents/templates/spec.md", [
+  "## Modelo de dados envolvido",
+  "### Entidades, tabelas e campos",
+  "### Relações e ciclo de vida",
+  "### Integridade e acesso",
+  "### Evolução e contratos",
+])
 
 const claudeAgents = getClaudeAgentNames()
 const codexAgents = getCodexAgentNames()

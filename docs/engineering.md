@@ -4,10 +4,14 @@
 
 Mudanças relevantes seguem Spec Driven Development: descoberta do problema com
 Luis/Isaque, spec local com Definition of Done, implementação incremental e
-validação proporcional ao risco. As specs ficam em `docs/specs/`, são ignoradas
-pelo Git e nunca devem ser anexadas ao PR. O template versionado é
-`.agents/templates/spec.md`; decisões arquiteturais duráveis ficam em
-`docs/decisions/`.
+validação proporcional ao risco. Specs de trabalho não possuem diretório
+obrigatório, não são versionadas e nunca devem ser anexadas ao PR. O template
+versionado é `.agents/templates/spec.md`; decisões arquiteturais duráveis ficam
+em `docs/decisions/`.
+
+Toda spec explicita o modelo de dados envolvido: entidades/tabelas, campos,
+relações, constraints, ownership/RLS, migration/backfill e impacto nos contratos.
+Quando não houver dados envolvidos, a spec registra “não se aplica” e a razão.
 
 Comece pela menor implementação correta. Depois que o comportamento estiver
 comprovado, refatore para reduzir acoplamento, melhorar eficiência,

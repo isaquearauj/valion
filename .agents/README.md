@@ -18,4 +18,4 @@ casos realistas em `evals/evals.json` e validação antes de serem tratadas como
 estáveis. Workspaces gerados por avaliações são locais e ignorados pelo Git.
 
 `pnpm verify:agents` valida symlinks, paridade entre agents Claude/Codex,
-frontmatter, evals e a proteção de `.context`/`docs/specs` contra versionamento.
+frontmatter, evals e a proteção de specs/evidências locais contra versionamento.
