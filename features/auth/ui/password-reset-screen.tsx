@@ -1,8 +1,8 @@
 "use client"
 
 import { ArrowLeftIcon, KeyRoundIcon, MailIcon, ShieldCheckIcon } from "lucide-react"
-import { toast } from "sonner"
 import { type FormEvent, useMemo, useState } from "react"
+import { toast } from "sonner"
 
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
@@ -93,9 +93,7 @@ export function PasswordResetScreen({ email, onBack }: PasswordResetScreenProps)
                       value={email}
                       className="bg-muted/50 text-muted-foreground"
                     />
-                    <FieldDescription>
-                      A nova senha será aplicada para esta conta.
-                    </FieldDescription>
+                    <FieldDescription>A nova senha será aplicada para esta conta.</FieldDescription>
                   </Field>
                   <Field>
                     <FieldLabel htmlFor="new-password">Nova senha</FieldLabel>

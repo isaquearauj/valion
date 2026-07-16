@@ -1,9 +1,8 @@
 import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { beforeEach, describe, expect, it, vi } from "vitest"
-
-import { PasswordResetScreen } from "@/features/auth/ui/password-reset-screen"
 import { toast } from "sonner"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+import { PasswordResetScreen } from "@/features/auth/ui/password-reset-screen"
 
 type SupabaseResetMock = {
   auth: {
@@ -81,7 +80,11 @@ describe("PasswordResetScreen", () => {
     await user.type(screen.getByLabelText("Confirmar nova senha"), "123456")
     await user.click(screen.getByRole("button", { name: /atualizar senha/i }))
 
-    await waitFor(() => expect(toastMock.error).toHaveBeenCalledWith("Não foi possível atualizar a senha", { description: "Token inválido" }))
+    await waitFor(() =>
+      expect(toastMock.error).toHaveBeenCalledWith("Não foi possível atualizar a senha", {
+        description: "Token inválido",
+      }),
+    )
   })
 
   it("updates password and returns on success", async () => {
@@ -93,8 +96,12 @@ describe("PasswordResetScreen", () => {
     await user.type(screen.getByLabelText("Confirmar nova senha"), "123456")
     await user.click(screen.getByRole("button", { name: /atualizar senha/i }))
 
-    await waitFor(() => expect(supabase().auth.updateUser).toHaveBeenCalledWith({ password: "123456" }))
-    expect(toastMock.success).toHaveBeenCalledWith("Senha atualizada", { description: "Use a nova senha no próximo acesso." })
+    await waitFor(() =>
+      expect(supabase().auth.updateUser).toHaveBeenCalledWith({ password: "123456" }),
+    )
+    expect(toastMock.success).toHaveBeenCalledWith("Senha atualizada", {
+      description: "Use a nova senha no próximo acesso.",
+    })
     expect(onBack).toHaveBeenCalled()
   })
 })

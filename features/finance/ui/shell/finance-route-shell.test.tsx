@@ -1,13 +1,12 @@
 import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import type { ComponentProps } from "react"
+import { toast } from "sonner"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-
-import { FinanceDashboard } from "@/features/finance/ui/dashboard/finance-dashboard"
-import { FinanceRouteShell } from "@/features/finance/ui/shell/finance-route-shell"
 import type { AppUser } from "@/features/auth/types"
 import { useFinanceStore } from "@/features/finance/hooks/use-finance-store"
-import { toast } from "sonner"
+import { FinanceDashboard } from "@/features/finance/ui/dashboard/finance-dashboard"
+import { FinanceRouteShell } from "@/features/finance/ui/shell/finance-route-shell"
 
 const router = vi.hoisted(() => ({
   push: vi.fn(),
@@ -47,10 +46,18 @@ vi.mock("@/features/finance/ui/dashboard/finance-dashboard", () => ({
     <div data-testid="finance-dashboard">
       <span>{props.activeSection}</span>
       <span>{props.user.name}</span>
-      <button onClick={() => props.onNavigateSection?.("expenses")} type="button">Ir despesas</button>
-      <button onClick={() => void props.onLogout()} type="button">Sair</button>
-      <button onClick={() => props.onRequestPasswordReset()} type="button">Alterar senha</button>
-      <button onClick={() => void props.onDeleteAccount()} type="button">Excluir conta</button>
+      <button onClick={() => props.onNavigateSection?.("expenses")} type="button">
+        Ir despesas
+      </button>
+      <button onClick={() => void props.onLogout()} type="button">
+        Sair
+      </button>
+      <button onClick={() => props.onRequestPasswordReset()} type="button">
+        Alterar senha
+      </button>
+      <button onClick={() => void props.onDeleteAccount()} type="button">
+        Excluir conta
+      </button>
       <button
         onClick={() =>
           void props.onUpdateUser({
@@ -104,7 +111,10 @@ describe("FinanceRouteShell", () => {
     financeState.store = createFinanceStore()
     supabaseState.client = createSupabaseMock()
     window.history.replaceState(null, "", "/dashboard")
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ json: vi.fn().mockResolvedValue({ ok: true }), ok: true }))
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ json: vi.fn().mockResolvedValue({ ok: true }), ok: true }),
+    )
   })
 
   it("renders children for routes outside the finance app", () => {

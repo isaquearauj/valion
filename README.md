@@ -17,10 +17,15 @@ Produção: `https://valionapp.com`
 
 ## Rodando localmente
 
+Pré-requisitos: NVM e Docker Desktop com integração WSL habilitada para a
+distribuição em uso.
+
 ```bash
-pnpm install
-pnpm supabase:start
-pnpm dev
+nvm install
+nvm use
+corepack enable
+pnpm install --frozen-lockfile
+pnpm dev:all
 ```
 
 Abra `http://localhost:3000`.
@@ -32,16 +37,22 @@ O ambiente local usa Supabase CLI + Docker:
 - Mailpit: `http://127.0.0.1:55324`
 
 E-mails de recuperação em desenvolvimento aparecem no Mailpit, sem consumir rate limit do Supabase Cloud.
+Os serviços locais usam credenciais compartilhadas de desenvolvimento e podem
+escutar na interface de rede; use-os apenas em uma rede confiável e rode
+`pnpm supabase:stop` quando terminar.
 
-## Verificação E Testes
+## Verificação e testes
 
-- `pnpm lint`: análise estática.
-- `pnpm exec tsc --noEmit`: typecheck.
+- `pnpm check`: formato, lint Biome e organização de imports.
+- `pnpm check:write`: aplica correções seguras do Biome.
+- `pnpm lint`: Biome + regras complementares de Next/React no ESLint.
 - `pnpm typecheck`: verificação TypeScript.
 - `pnpm test`: suíte Vitest padrão.
 - `pnpm test:coverage`: gera coverage sem threshold global bloqueante.
 - `pnpm test:supabase`: suíte opt-in de integração RLS/constraints contra Supabase local.
-- `pnpm quality`: lint, typecheck e testes unitários.
+- `pnpm quality`: Biome, ESLint, typecheck e testes unitários.
+- `pnpm verify`: quality gate e build de produção.
+- `pnpm verify:supabase`: reset do banco local e testes reais de integração.
 
 ## Variáveis de ambiente da aplicação
 
@@ -74,12 +85,17 @@ Configuração de Auth em produção:
 ## Scripts
 
 - `pnpm dev`: ambiente de desenvolvimento.
-- `pnpm lint`: análise estática.
+- `pnpm dev:all`: sobe o Supabase local e inicia o Next.js.
+- `pnpm check`: valida formato, lint e imports com Biome.
+- `pnpm check:write`: corrige automaticamente o que for seguro.
+- `pnpm lint`: executa Biome e ESLint.
 - `pnpm test`: suíte padrão.
 - `pnpm test:coverage`: coverage da suíte padrão.
 - `pnpm test:supabase`: integração Supabase local.
 - `pnpm typecheck`: verificação TypeScript.
-- `pnpm quality`: lint, typecheck e testes unitários.
+- `pnpm quality`: checks estáticos, typecheck e testes unitários.
+- `pnpm verify`: quality gate e build.
+- `pnpm verify:supabase`: reset e testes do Supabase local.
 - `pnpm build`: build de produção.
 - `pnpm supabase:start`: sobe Supabase local.
 - `pnpm supabase:stop`: para Supabase local.
@@ -102,6 +118,8 @@ Migrations de produção não são aplicadas pelo ambiente local. Depois de vali
 - `components/ui`: componentes shadcn/ui.
 - `lib/supabase`: clientes Supabase browser, server e admin.
 - `supabase/schema.sql`: tabelas, constraints, triggers e políticas RLS.
+- `docs/architecture.md`: fronteiras, fluxo de dados e dívida arquitetural conhecida.
+- `.agents/skills`: workflows reutilizáveis para agentes de código.
 
 ## Deploy
 

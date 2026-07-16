@@ -63,10 +63,7 @@ describe("getAppUserFromSupabaseUser", () => {
     const { client, upsert } = clientWithProfile(null)
 
     await expect(
-      getAppUserFromSupabaseUser(
-        client,
-        user({ user_metadata: { full_name: "  Maria Souza  " } })
-      )
+      getAppUserFromSupabaseUser(client, user({ user_metadata: { full_name: "  Maria Souza  " } })),
     ).resolves.toMatchObject({ name: "Maria Souza" })
     expect(upsert).toHaveBeenCalledWith(
       {
@@ -74,7 +71,7 @@ describe("getAppUserFromSupabaseUser", () => {
         full_name: "Maria Souza",
         id: "user-1",
       },
-      { onConflict: "id" }
+      { onConflict: "id" },
     )
   })
 
@@ -83,10 +80,10 @@ describe("getAppUserFromSupabaseUser", () => {
     const noEmailClient = clientWithProfile(null)
 
     await expect(
-      getAppUserFromSupabaseUser(emailClient.client, user({ email: "joao-pedro.dev@example.com" }))
+      getAppUserFromSupabaseUser(emailClient.client, user({ email: "joao-pedro.dev@example.com" })),
     ).resolves.toMatchObject({ email: "joao-pedro.dev@example.com", name: "joao pedro dev" })
     await expect(
-      getAppUserFromSupabaseUser(noEmailClient.client, user({ email: undefined }))
+      getAppUserFromSupabaseUser(noEmailClient.client, user({ email: undefined })),
     ).resolves.toMatchObject({ email: "", name: "Usuário" })
   })
 

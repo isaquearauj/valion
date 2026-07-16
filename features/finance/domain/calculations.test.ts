@@ -95,7 +95,7 @@ describe("finance calculations", () => {
         ],
         incomes: [income({ amount: 5000 }), income({ amount: 500, frequency: "Quinzenal" })],
         investments: [investment({ investedAmount: 800, plannedAmount: 700 })],
-      })
+      }),
     )
 
     expect(summary).toEqual({
@@ -123,16 +123,19 @@ describe("finance calculations", () => {
 
   it("classifies investment insight by delta", () => {
     expect(
-      calculateFinanceSummary(state({ investments: [investment({ investedAmount: 300, plannedAmount: 200 })] }))
-        .investmentInsight
+      calculateFinanceSummary(
+        state({ investments: [investment({ investedAmount: 300, plannedAmount: 200 })] }),
+      ).investmentInsight,
     ).toBe("above")
     expect(
-      calculateFinanceSummary(state({ investments: [investment({ investedAmount: 100, plannedAmount: 200 })] }))
-        .investmentInsight
+      calculateFinanceSummary(
+        state({ investments: [investment({ investedAmount: 100, plannedAmount: 200 })] }),
+      ).investmentInsight,
     ).toBe("below")
     expect(
-      calculateFinanceSummary(state({ investments: [investment({ investedAmount: 200, plannedAmount: 200 })] }))
-        .investmentInsight
+      calculateFinanceSummary(
+        state({ investments: [investment({ investedAmount: 200, plannedAmount: 200 })] }),
+      ).investmentInsight,
     ).toBe("on-track")
   })
 
@@ -155,8 +158,8 @@ describe("finance calculations", () => {
             expense({ category: "Assinaturas", id: "c", monthlyAmount: 60 }),
             expense({ category: "Outros", id: "d", monthlyAmount: 999, status: "Quitada" }),
           ],
-        })
-      )
+        }),
+      ),
     ).toEqual([
       { category: "Contas fixas", value: 700 },
       { category: "Assinaturas", value: 110 },
@@ -173,21 +176,57 @@ describe("finance calculations", () => {
           incomes: [income({ amount: 1000 })],
           investments: [investment({ investedAmount: 90, plannedAmount: 100 })],
           snapshots: [
-            { expenses: 1, id: "current-old", income: 1, investedAmount: 1, month: currentMonth, plannedInvestment: 1 },
-            { expenses: 700, id: "old", income: 2000, investedAmount: 100, month: "2025-12", plannedInvestment: 100 },
+            {
+              expenses: 1,
+              id: "current-old",
+              income: 1,
+              investedAmount: 1,
+              month: currentMonth,
+              plannedInvestment: 1,
+            },
+            {
+              expenses: 700,
+              id: "old",
+              income: 2000,
+              investedAmount: 100,
+              month: "2025-12",
+              plannedInvestment: 100,
+            },
           ],
-        })
-      )
+        }),
+      ),
     ).toEqual([
-      { expenses: 700, id: "old", income: 2000, investedAmount: 100, month: "2025-12", plannedInvestment: 100 },
-      { expenses: 400, id: "snap-current", income: 1000, investedAmount: 90, month: currentMonth, plannedInvestment: 100 },
+      {
+        expenses: 700,
+        id: "old",
+        income: 2000,
+        investedAmount: 100,
+        month: "2025-12",
+        plannedInvestment: 100,
+      },
+      {
+        expenses: 400,
+        id: "snap-current",
+        income: 1000,
+        investedAmount: 90,
+        month: currentMonth,
+        plannedInvestment: 100,
+      },
     ])
   })
 
   it("calculates installment progress with safe bounds", () => {
-    expect(getInstallmentProgress(expense({ remainingInstallments: 0, totalInstallments: 0 }))).toBe(0)
-    expect(getInstallmentProgress(expense({ remainingInstallments: 6, totalInstallments: 12 }))).toBe(50)
-    expect(getInstallmentProgress(expense({ remainingInstallments: -2, totalInstallments: 10 }))).toBe(100)
-    expect(getInstallmentProgress(expense({ remainingInstallments: 12, totalInstallments: 10 }))).toBe(0)
+    expect(
+      getInstallmentProgress(expense({ remainingInstallments: 0, totalInstallments: 0 })),
+    ).toBe(0)
+    expect(
+      getInstallmentProgress(expense({ remainingInstallments: 6, totalInstallments: 12 })),
+    ).toBe(50)
+    expect(
+      getInstallmentProgress(expense({ remainingInstallments: -2, totalInstallments: 10 })),
+    ).toBe(100)
+    expect(
+      getInstallmentProgress(expense({ remainingInstallments: 12, totalInstallments: 10 })),
+    ).toBe(0)
   })
 })

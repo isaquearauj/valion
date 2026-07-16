@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server"
-
-import { createSupabaseServer } from "@/lib/supabase/server"
 import { createSupabaseAdmin } from "@/lib/supabase/admin"
+import { createSupabaseServer } from "@/lib/supabase/server"
 
 export async function DELETE() {
   const supabase = await createSupabaseServer()

@@ -50,7 +50,9 @@ describe("account API route", () => {
   })
 
   it("returns a generic error when admin deletion fails", async () => {
-    const deleteUser = vi.fn().mockResolvedValue({ error: { message: "service_role leaked sql detail" } })
+    const deleteUser = vi
+      .fn()
+      .mockResolvedValue({ error: { message: "service_role leaked sql detail" } })
     serverUserResult({ id: "user-1" })
     createSupabaseAdminMock.mockReturnValue({ auth: { admin: { deleteUser } } } as never)
 

@@ -1,7 +1,25 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
-
+import {
+  type ChargeReminderRow,
+  createEmptyFinanceState,
+  type FixedExpenseRow,
+  type GoalContributionRow,
+  type GoalRow,
+  getWorkspaceUpdatedAt,
+  type IncomeRow,
+  type InvestmentEntryRow,
+  type MonthlySnapshotRow,
+  mapChargeReminder,
+  mapFixedExpense,
+  mapGoal,
+  mapGoalContribution,
+  mapIncome,
+  mapInvestmentEntry,
+  mapMonthlySnapshot,
+  monthKeyToDate,
+} from "@/features/finance/data/supabase-mappers"
 import type {
   ChargeReminder,
   FinanceState,
@@ -12,25 +30,6 @@ import type {
   InvestmentEntry,
   ReminderFrequency,
 } from "@/features/finance/domain/types"
-import {
-  createEmptyFinanceState,
-  getWorkspaceUpdatedAt,
-  mapChargeReminder,
-  mapFixedExpense,
-  mapGoal,
-  mapGoalContribution,
-  mapIncome,
-  mapInvestmentEntry,
-  mapMonthlySnapshot,
-  monthKeyToDate,
-  type ChargeReminderRow,
-  type FixedExpenseRow,
-  type GoalContributionRow,
-  type GoalRow,
-  type IncomeRow,
-  type InvestmentEntryRow,
-  type MonthlySnapshotRow,
-} from "@/features/finance/data/supabase-mappers"
 import { createSupabaseBrowser } from "@/lib/supabase/client"
 
 function formatDateKey(date: Date) {
@@ -80,8 +79,10 @@ function assertSupabaseSuccess(error: { message: string } | null) {
 }
 
 const INCOME_COLUMNS = "id,name,type,amount,frequency,notes,created_at,updated_at"
-const EXPENSE_COLUMNS = "id,name,category,monthly_amount,due_day,total_installments,remaining_installments,status,notes,created_at,updated_at"
-const REMINDER_COLUMNS = "id,name,person,type,amount,frequency,next_due_date,total_installments,remaining_installments,status,notes,created_at,updated_at"
+const EXPENSE_COLUMNS =
+  "id,name,category,monthly_amount,due_day,total_installments,remaining_installments,status,notes,created_at,updated_at"
+const REMINDER_COLUMNS =
+  "id,name,person,type,amount,frequency,next_due_date,total_installments,remaining_installments,status,notes,created_at,updated_at"
 const INVESTMENT_COLUMNS = "id,month,planned_amount,invested_amount,notes,created_at,updated_at"
 const GOAL_COLUMNS = "id,name,target_amount,target_date,status,notes,created_at,updated_at"
 const GOAL_CONTRIBUTION_COLUMNS = "id,goal_id,amount,date,notes,created_at,updated_at"
@@ -112,13 +113,41 @@ export function useFinanceStore(userId: string | null = null) {
       goalContributionsResult,
       snapshotsResult,
     ] = await Promise.all([
-      supabase.from("incomes").select(INCOME_COLUMNS).eq("user_id", userId).order("created_at", { ascending: false }),
-      supabase.from("fixed_expenses").select(EXPENSE_COLUMNS).eq("user_id", userId).order("created_at", { ascending: false }),
-      supabase.from("charge_reminders").select(REMINDER_COLUMNS).eq("user_id", userId).order("next_due_date", { ascending: true }),
-      supabase.from("investment_entries").select(INVESTMENT_COLUMNS).eq("user_id", userId).order("month", { ascending: false }),
-      supabase.from("financial_goals").select(GOAL_COLUMNS).eq("user_id", userId).order("created_at", { ascending: false }),
-      supabase.from("goal_contributions").select(GOAL_CONTRIBUTION_COLUMNS).eq("user_id", userId).order("date", { ascending: false }),
-      supabase.from("monthly_snapshots").select(SNAPSHOT_COLUMNS).eq("user_id", userId).order("month", { ascending: true }),
+      supabase
+        .from("incomes")
+        .select(INCOME_COLUMNS)
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("fixed_expenses")
+        .select(EXPENSE_COLUMNS)
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("charge_reminders")
+        .select(REMINDER_COLUMNS)
+        .eq("user_id", userId)
+        .order("next_due_date", { ascending: true }),
+      supabase
+        .from("investment_entries")
+        .select(INVESTMENT_COLUMNS)
+        .eq("user_id", userId)
+        .order("month", { ascending: false }),
+      supabase
+        .from("financial_goals")
+        .select(GOAL_COLUMNS)
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("goal_contributions")
+        .select(GOAL_CONTRIBUTION_COLUMNS)
+        .eq("user_id", userId)
+        .order("date", { ascending: false }),
+      supabase
+        .from("monthly_snapshots")
+        .select(SNAPSHOT_COLUMNS)
+        .eq("user_id", userId)
+        .order("month", { ascending: true }),
     ])
 
     const results = [
@@ -174,7 +203,8 @@ export function useFinanceStore(userId: string | null = null) {
           return
         }
 
-        const message = loadError instanceof Error ? loadError.message : "Não foi possível carregar seus dados."
+        const message =
+          loadError instanceof Error ? loadError.message : "Não foi possível carregar seus dados."
         setError(message)
         setIsReady(true)
       })
@@ -197,7 +227,8 @@ export function useFinanceStore(userId: string | null = null) {
       await mutation()
       await loadWorkspace()
     } catch (mutationError) {
-      const message = mutationError instanceof Error ? mutationError.message : "Não foi possível salvar os dados."
+      const message =
+        mutationError instanceof Error ? mutationError.message : "Não foi possível salvar os dados."
       setError(message)
       throw mutationError
     } finally {
@@ -248,7 +279,11 @@ export function useFinanceStore(userId: string | null = null) {
 
   async function deleteIncome(id: string) {
     await runMutation(async () => {
-      const { error: deleteError } = await supabase.from("incomes").delete().eq("id", id).eq("user_id", userId)
+      const { error: deleteError } = await supabase
+        .from("incomes")
+        .delete()
+        .eq("id", id)
+        .eq("user_id", userId)
       assertSupabaseSuccess(deleteError)
     })
   }
@@ -278,7 +313,11 @@ export function useFinanceStore(userId: string | null = null) {
 
   async function deleteReminder(id: string) {
     await runMutation(async () => {
-      const { error: deleteError } = await supabase.from("charge_reminders").delete().eq("id", id).eq("user_id", userId)
+      const { error: deleteError } = await supabase
+        .from("charge_reminders")
+        .delete()
+        .eq("id", id)
+        .eq("user_id", userId)
       assertSupabaseSuccess(deleteError)
     })
   }
@@ -286,18 +325,22 @@ export function useFinanceStore(userId: string | null = null) {
   async function markReminderReceived(id: string) {
     const reminder = state.reminders.find((item) => item.id === id)
 
-    if (!reminder || reminder.status !== "Ativo") {
+    if (reminder?.status !== "Ativo") {
       return
     }
 
     await runMutation(async () => {
       const remainingInstallments =
-        reminder.type === "Parcelado" ? Math.max(reminder.remainingInstallments - 1, 0) : reminder.remainingInstallments
+        reminder.type === "Parcelado"
+          ? Math.max(reminder.remainingInstallments - 1, 0)
+          : reminder.remainingInstallments
       const isCompleted = reminder.type === "Parcelado" && remainingInstallments === 0
       const { error: updateError } = await supabase
         .from("charge_reminders")
         .update({
-          next_due_date: isCompleted ? reminder.nextDueDate : advanceReminderDate(reminder.nextDueDate, reminder.frequency),
+          next_due_date: isCompleted
+            ? reminder.nextDueDate
+            : advanceReminderDate(reminder.nextDueDate, reminder.frequency),
           remaining_installments: remainingInstallments,
           status: isCompleted ? "Concluído" : reminder.status,
         })
@@ -331,7 +374,11 @@ export function useFinanceStore(userId: string | null = null) {
 
   async function deleteExpense(id: string) {
     await runMutation(async () => {
-      const { error: deleteError } = await supabase.from("fixed_expenses").delete().eq("id", id).eq("user_id", userId)
+      const { error: deleteError } = await supabase
+        .from("fixed_expenses")
+        .delete()
+        .eq("id", id)
+        .eq("user_id", userId)
       assertSupabaseSuccess(deleteError)
     })
   }
@@ -346,7 +393,11 @@ export function useFinanceStore(userId: string | null = null) {
         user_id: userId,
       }
       const result = id
-        ? await supabase.from("investment_entries").update(payload).eq("id", id).eq("user_id", userId)
+        ? await supabase
+            .from("investment_entries")
+            .update(payload)
+            .eq("id", id)
+            .eq("user_id", userId)
         : await supabase.from("investment_entries").upsert(payload, { onConflict: "user_id,month" })
 
       assertSupabaseSuccess(result.error)
@@ -355,7 +406,11 @@ export function useFinanceStore(userId: string | null = null) {
 
   async function deleteInvestment(id: string) {
     await runMutation(async () => {
-      const { error: deleteError } = await supabase.from("investment_entries").delete().eq("id", id).eq("user_id", userId)
+      const { error: deleteError } = await supabase
+        .from("investment_entries")
+        .delete()
+        .eq("id", id)
+        .eq("user_id", userId)
       assertSupabaseSuccess(deleteError)
     })
   }
@@ -380,12 +435,19 @@ export function useFinanceStore(userId: string | null = null) {
 
   async function deleteGoal(id: string) {
     await runMutation(async () => {
-      const { error: deleteError } = await supabase.from("financial_goals").delete().eq("id", id).eq("user_id", userId)
+      const { error: deleteError } = await supabase
+        .from("financial_goals")
+        .delete()
+        .eq("id", id)
+        .eq("user_id", userId)
       assertSupabaseSuccess(deleteError)
     })
   }
 
-  async function upsertGoalContribution(values: Omit<GoalContribution, "createdAt" | "id">, id?: string) {
+  async function upsertGoalContribution(
+    values: Omit<GoalContribution, "createdAt" | "id">,
+    id?: string,
+  ) {
     await runMutation(async () => {
       const payload = {
         amount: values.amount,
@@ -395,7 +457,11 @@ export function useFinanceStore(userId: string | null = null) {
         user_id: userId,
       }
       const result = id
-        ? await supabase.from("goal_contributions").update(payload).eq("id", id).eq("user_id", userId)
+        ? await supabase
+            .from("goal_contributions")
+            .update(payload)
+            .eq("id", id)
+            .eq("user_id", userId)
         : await supabase.from("goal_contributions").insert(payload)
 
       assertSupabaseSuccess(result.error)
@@ -404,7 +470,11 @@ export function useFinanceStore(userId: string | null = null) {
 
   async function deleteGoalContribution(id: string) {
     await runMutation(async () => {
-      const { error: deleteError } = await supabase.from("goal_contributions").delete().eq("id", id).eq("user_id", userId)
+      const { error: deleteError } = await supabase
+        .from("goal_contributions")
+        .delete()
+        .eq("id", id)
+        .eq("user_id", userId)
       assertSupabaseSuccess(deleteError)
     })
   }

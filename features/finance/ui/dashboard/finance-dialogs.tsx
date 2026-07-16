@@ -26,15 +26,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field"
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Separator } from "@/components/ui/separator"
 import {
   Select,
   SelectContent,
@@ -43,27 +36,51 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Separator } from "@/components/ui/separator"
 import type { AppUser } from "@/features/auth/types"
 import { getCurrentMonthKey } from "@/features/finance/domain/initial-data"
 import {
-  expenseSchema,
-  goalContributionSchema,
-  goalSchema,
-  incomeSchema,
-  investmentSchema,
-  reminderSchema,
+  type ChargeReminder,
+  EXPENSE_CATEGORIES,
+  EXPENSE_STATUSES,
+  type ExpenseCategory,
+  type ExpenseStatus,
+  type FixedExpense,
+  GOAL_STATUSES,
+  type Goal,
+  type GoalContribution,
+  INCOME_FREQUENCIES,
+  INCOME_TYPES,
+  type Income,
+  type IncomeFrequency,
+  type IncomeType,
+  type InvestmentEntry,
+  REMINDER_FREQUENCIES,
+  REMINDER_STATUSES,
+  REMINDER_TYPES,
+  type ReminderFrequency,
+  type ReminderStatus,
+  type ReminderType,
+} from "@/features/finance/domain/types"
+import {
   type ExpenseFormInput,
   type ExpenseFormValues,
+  expenseSchema,
   type GoalContributionFormInput,
   type GoalContributionFormValues,
   type GoalFormInput,
   type GoalFormValues,
+  goalContributionSchema,
+  goalSchema,
   type IncomeFormInput,
   type IncomeFormValues,
   type InvestmentFormInput,
   type InvestmentFormValues,
+  incomeSchema,
+  investmentSchema,
   type ReminderFormInput,
   type ReminderFormValues,
+  reminderSchema,
 } from "@/features/finance/forms/schemas"
 import {
   addMonthsToMonthKey,
@@ -72,33 +89,10 @@ import {
   getGoalContributionDefaults,
   getGoalDefaults,
   getIncomeDefaults,
+  getInitials,
   getInvestmentDefaults,
   getReminderDefaults,
-  getInitials,
 } from "@/features/finance/presentation/dashboard-view-models"
-import {
-  EXPENSE_CATEGORIES,
-  EXPENSE_STATUSES,
-  GOAL_STATUSES,
-  INCOME_FREQUENCIES,
-  INCOME_TYPES,
-  REMINDER_FREQUENCIES,
-  REMINDER_STATUSES,
-  REMINDER_TYPES,
-  type ChargeReminder,
-  type ExpenseCategory,
-  type ExpenseStatus,
-  type FixedExpense,
-  type Goal,
-  type GoalContribution,
-  type Income,
-  type IncomeFrequency,
-  type IncomeType,
-  type InvestmentEntry,
-  type ReminderFrequency,
-  type ReminderStatus,
-  type ReminderType,
-} from "@/features/finance/domain/types"
 import {
   getActionErrorMessage,
   SelectField,
@@ -197,8 +191,14 @@ export function AccountDialog({
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-hidden p-0 sm:max-w-md" showCloseButton={false}>
-        <form className="flex max-h-[calc(100dvh-2rem)] flex-col overflow-hidden" onSubmit={handleSubmit}>
+      <DialogContent
+        className="max-h-[calc(100dvh-2rem)] overflow-hidden p-0 sm:max-w-md"
+        showCloseButton={false}
+      >
+        <form
+          className="flex max-h-[calc(100dvh-2rem)] flex-col overflow-hidden"
+          onSubmit={handleSubmit}
+        >
           <div className="flex items-center justify-between border-b px-5 py-4 sm:px-6">
             <DialogTitle className="text-lg">Meu perfil</DialogTitle>
             <div className="flex items-center gap-1">
@@ -225,7 +225,12 @@ export function AccountDialog({
                   <label className="absolute -right-1 -bottom-1 inline-flex size-9 cursor-pointer items-center justify-center rounded-full border border-border bg-background text-foreground shadow-sm transition hover:bg-muted focus-within:ring-3 focus-within:ring-ring/50">
                     <CameraIcon />
                     <span className="sr-only">Alterar foto de perfil</span>
-                    <input accept="image/*" className="sr-only" onChange={handleProfilePhotoChange} type="file" />
+                    <input
+                      accept="image/*"
+                      className="sr-only"
+                      onChange={handleProfilePhotoChange}
+                      type="file"
+                    />
                   </label>
                 </div>
 
@@ -267,11 +272,21 @@ export function AccountDialog({
                 <div className="space-y-2">
                   <p className="text-sm font-medium">Segurança</p>
                   <div className="flex flex-col gap-2 sm:flex-row">
-                    <Button className="flex-1 justify-center" onClick={onRequestPasswordReset} type="button" variant="outline">
+                    <Button
+                      className="flex-1 justify-center"
+                      onClick={onRequestPasswordReset}
+                      type="button"
+                      variant="outline"
+                    >
                       <KeyRoundIcon data-icon="inline-start" />
                       Alterar senha
                     </Button>
-                    <Button className="flex-1 justify-center" onClick={() => setIsDeleteConfirmOpen(true)} type="button" variant="destructive">
+                    <Button
+                      className="flex-1 justify-center"
+                      onClick={() => setIsDeleteConfirmOpen(true)}
+                      type="button"
+                      variant="destructive"
+                    >
                       <Trash2Icon data-icon="inline-start" />
                       Excluir conta
                     </Button>
@@ -283,7 +298,12 @@ export function AccountDialog({
 
           <div className="border-t px-5 py-4 sm:px-6">
             <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <Button className="justify-start" onClick={onLogout} type="button" variant="destructive">
+              <Button
+                className="justify-start"
+                onClick={onLogout}
+                type="button"
+                variant="destructive"
+              >
                 <LogOutIcon data-icon="inline-start" />
                 Sair
               </Button>
@@ -349,7 +369,9 @@ export function IncomeDialog({
   })
 
   useEffect(() => {
-    form.reset(getIncomeDefaults(income))
+    if (open) {
+      form.reset(getIncomeDefaults(income))
+    }
   }, [form, income, open])
 
   async function submit(values: IncomeFormValues) {
@@ -362,11 +384,17 @@ export function IncomeDialog({
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>{income ? "Editar receita" : "Nova receita"}</DialogTitle>
-          <DialogDescription>Cadastre entradas mensais e frequências recorrentes.</DialogDescription>
+          <DialogDescription>
+            Cadastre entradas mensais e frequências recorrentes.
+          </DialogDescription>
         </DialogHeader>
         <form className="flex flex-col gap-5" onSubmit={form.handleSubmit(submit)}>
           <FieldGroup>
-            <TextInputField error={form.formState.errors.name} label="Nome" registration={form.register("name")} />
+            <TextInputField
+              error={form.formState.errors.name}
+              label="Nome"
+              registration={form.register("name")}
+            />
             <div className="grid gap-4 sm:grid-cols-2">
               <Controller
                 control={form.control}
@@ -395,7 +423,12 @@ export function IncomeDialog({
                 )}
               />
             </div>
-            <TextInputField error={form.formState.errors.amount} label="Valor" registration={form.register("amount")} type="number" />
+            <TextInputField
+              error={form.formState.errors.amount}
+              label="Valor"
+              registration={form.register("amount")}
+              type="number"
+            />
           </FieldGroup>
           <DialogFooter>
             <Button onClick={() => onOpenChange(false)} type="button" variant="outline">
@@ -427,7 +460,9 @@ export function ReminderDialog({
   const reminderType = useWatch({ control: form.control, name: "type" })
 
   useEffect(() => {
-    form.reset(getReminderDefaults(reminder))
+    if (open) {
+      form.reset(getReminderDefaults(reminder))
+    }
   }, [form, open, reminder])
 
   useEffect(() => {
@@ -453,8 +488,16 @@ export function ReminderDialog({
         </DialogHeader>
         <form className="flex flex-col gap-5" onSubmit={form.handleSubmit(submit)}>
           <FieldGroup>
-            <TextInputField error={form.formState.errors.name} label="Nome" registration={form.register("name")} />
-            <TextInputField error={form.formState.errors.person} label="De quem cobrar" registration={form.register("person")} />
+            <TextInputField
+              error={form.formState.errors.name}
+              label="Nome"
+              registration={form.register("name")}
+            />
+            <TextInputField
+              error={form.formState.errors.person}
+              label="De quem cobrar"
+              registration={form.register("person")}
+            />
             <div className="grid gap-4 sm:grid-cols-2">
               <Controller
                 control={form.control}
@@ -484,8 +527,18 @@ export function ReminderDialog({
               />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <TextInputField error={form.formState.errors.amount} label="Valor da cobrança" registration={form.register("amount")} type="number" />
-              <TextInputField error={form.formState.errors.nextDueDate} label="Próxima cobrança" registration={form.register("nextDueDate")} type="date" />
+              <TextInputField
+                error={form.formState.errors.amount}
+                label="Valor da cobrança"
+                registration={form.register("amount")}
+                type="number"
+              />
+              <TextInputField
+                error={form.formState.errors.nextDueDate}
+                label="Próxima cobrança"
+                registration={form.register("nextDueDate")}
+                type="date"
+              />
             </div>
             <Controller
               control={form.control}
@@ -502,8 +555,18 @@ export function ReminderDialog({
             />
             {reminderType === "Parcelado" ? (
               <div className="grid gap-4 sm:grid-cols-2">
-                <TextInputField error={form.formState.errors.totalInstallments} label="Total de parcelas" registration={form.register("totalInstallments")} type="number" />
-                <TextInputField error={form.formState.errors.remainingInstallments} label="Parcelas restantes" registration={form.register("remainingInstallments")} type="number" />
+                <TextInputField
+                  error={form.formState.errors.totalInstallments}
+                  label="Total de parcelas"
+                  registration={form.register("totalInstallments")}
+                  type="number"
+                />
+                <TextInputField
+                  error={form.formState.errors.remainingInstallments}
+                  label="Parcelas restantes"
+                  registration={form.register("remainingInstallments")}
+                  type="number"
+                />
               </div>
             ) : null}
           </FieldGroup>
@@ -536,7 +599,9 @@ export function ExpenseDialog({
   })
 
   useEffect(() => {
-    form.reset(getExpenseDefaults(expense))
+    if (open) {
+      form.reset(getExpenseDefaults(expense))
+    }
   }, [expense, form, open])
 
   async function submit(values: ExpenseFormValues) {
@@ -557,11 +622,17 @@ export function ExpenseDialog({
       <DialogContent className="max-h-[min(90dvh,760px)] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{expense ? "Editar despesa" : "Nova despesa fixa"}</DialogTitle>
-          <DialogDescription>Registre compromissos mensais, parcelados ou contínuos.</DialogDescription>
+          <DialogDescription>
+            Registre compromissos mensais, parcelados ou contínuos.
+          </DialogDescription>
         </DialogHeader>
         <form className="flex flex-col gap-5" onSubmit={form.handleSubmit(submit)}>
           <FieldGroup>
-            <TextInputField error={form.formState.errors.name} label="Nome" registration={form.register("name")} />
+            <TextInputField
+              error={form.formState.errors.name}
+              label="Nome"
+              registration={form.register("name")}
+            />
             <div className="grid gap-4 sm:grid-cols-2">
               <Controller
                 control={form.control}
@@ -591,12 +662,33 @@ export function ExpenseDialog({
               />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <TextInputField error={form.formState.errors.monthlyAmount} label="Valor mensal" registration={form.register("monthlyAmount")} type="number" />
-              <TextInputField error={form.formState.errors.dueDay} label="Data de vencimento" registration={form.register("dueDay")} type="number" />
+              <TextInputField
+                error={form.formState.errors.monthlyAmount}
+                label="Valor mensal"
+                registration={form.register("monthlyAmount")}
+                type="number"
+              />
+              <TextInputField
+                error={form.formState.errors.dueDay}
+                label="Data de vencimento"
+                registration={form.register("dueDay")}
+                type="number"
+              />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <TextInputField description="Use 0 para despesas contínuas sem parcelas." error={form.formState.errors.totalInstallments} label="Total de parcelas" registration={form.register("totalInstallments")} type="number" />
-              <TextInputField error={form.formState.errors.remainingInstallments} label="Parcelas restantes" registration={form.register("remainingInstallments")} type="number" />
+              <TextInputField
+                description="Use 0 para despesas contínuas sem parcelas."
+                error={form.formState.errors.totalInstallments}
+                label="Total de parcelas"
+                registration={form.register("totalInstallments")}
+                type="number"
+              />
+              <TextInputField
+                error={form.formState.errors.remainingInstallments}
+                label="Parcelas restantes"
+                registration={form.register("remainingInstallments")}
+                type="number"
+              />
             </div>
           </FieldGroup>
           <DialogFooter>
@@ -629,11 +721,13 @@ export function InvestmentDialog({
   const selectedMonth = useWatch({ control: form.control, name: "month" })
   const monthOptions = useMemo(
     () => getAdjacentMonthKeys(selectedMonth ?? getCurrentMonthKey()),
-    [selectedMonth]
+    [selectedMonth],
   )
 
   useEffect(() => {
-    form.reset(getInvestmentDefaults(investment))
+    if (open) {
+      form.reset(getInvestmentDefaults(investment))
+    }
   }, [form, investment, open])
 
   async function submit(values: InvestmentFormValues) {
@@ -657,10 +751,14 @@ export function InvestmentDialog({
                   aria-label="Mês anterior"
                   className="shrink-0"
                   onClick={() => {
-                    form.setValue("month", addMonthsToMonthKey(selectedMonth ?? getCurrentMonthKey(), -1), {
-                      shouldDirty: true,
-                      shouldValidate: true,
-                    })
+                    form.setValue(
+                      "month",
+                      addMonthsToMonthKey(selectedMonth ?? getCurrentMonthKey(), -1),
+                      {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      },
+                    )
                   }}
                   size="icon-sm"
                   type="button"
@@ -676,7 +774,7 @@ export function InvestmentDialog({
                         "h-8 min-w-0 rounded-full px-2 text-xs",
                         month === (selectedMonth ?? getCurrentMonthKey())
                           ? "border-primary bg-primary text-primary-foreground shadow-sm hover:bg-primary hover:text-primary-foreground"
-                          : "border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground"
+                          : "border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground",
                       )}
                       key={month}
                       onClick={() => {
@@ -693,10 +791,14 @@ export function InvestmentDialog({
                   aria-label="Próximo mês"
                   className="shrink-0"
                   onClick={() => {
-                    form.setValue("month", addMonthsToMonthKey(selectedMonth ?? getCurrentMonthKey(), 1), {
-                      shouldDirty: true,
-                      shouldValidate: true,
-                    })
+                    form.setValue(
+                      "month",
+                      addMonthsToMonthKey(selectedMonth ?? getCurrentMonthKey(), 1),
+                      {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      },
+                    )
                   }}
                   size="icon-sm"
                   type="button"
@@ -709,8 +811,18 @@ export function InvestmentDialog({
               <FieldError>{form.formState.errors.month?.message}</FieldError>
             </Field>
             <div className="grid gap-4 sm:grid-cols-2">
-              <TextInputField error={form.formState.errors.plannedAmount} label="Valor planejado" registration={form.register("plannedAmount")} type="number" />
-              <TextInputField error={form.formState.errors.investedAmount} label="Valor investido" registration={form.register("investedAmount")} type="number" />
+              <TextInputField
+                error={form.formState.errors.plannedAmount}
+                label="Valor planejado"
+                registration={form.register("plannedAmount")}
+                type="number"
+              />
+              <TextInputField
+                error={form.formState.errors.investedAmount}
+                label="Valor investido"
+                registration={form.register("investedAmount")}
+                type="number"
+              />
             </div>
           </FieldGroup>
           <DialogFooter>
@@ -744,7 +856,9 @@ export function GoalDialog({
   const selectedStatus = useWatch({ control: form.control, name: "status" })
 
   useEffect(() => {
-    form.reset(getGoalDefaults(goal))
+    if (open) {
+      form.reset(getGoalDefaults(goal))
+    }
   }, [form, goal, open])
 
   useEffect(() => {
@@ -763,27 +877,61 @@ export function GoalDialog({
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>{goal ? "Editar meta" : "Criar meta"}</DialogTitle>
-          <DialogDescription>Defina o objetivo financeiro, o prazo e o status da sua meta.</DialogDescription>
+          <DialogDescription>
+            Defina o objetivo financeiro, o prazo e o status da sua meta.
+          </DialogDescription>
         </DialogHeader>
         <form className="flex flex-col gap-5" onSubmit={form.handleSubmit(submit)}>
           <FieldGroup>
-            <TextInputField error={form.formState.errors.name} label="Nome da meta" registration={form.register("name")} />
-            <TextInputField error={form.formState.errors.targetAmount} label="Valor alvo" registration={form.register("targetAmount")} type="number" />
-            <Field data-invalid={Boolean(form.formState.errors.deadlineEnabled || form.formState.errors.deadlineDate)}>
+            <TextInputField
+              error={form.formState.errors.name}
+              label="Nome da meta"
+              registration={form.register("name")}
+            />
+            <TextInputField
+              error={form.formState.errors.targetAmount}
+              label="Valor alvo"
+              registration={form.register("targetAmount")}
+              type="number"
+            />
+            <Field
+              data-invalid={Boolean(
+                form.formState.errors.deadlineEnabled || form.formState.errors.deadlineDate,
+              )}
+            >
               <FieldLabel>Prazo</FieldLabel>
               <div className="grid gap-4">
                 <div className="flex flex-wrap gap-2">
-                  <Button aria-pressed={!deadlineEnabled} onClick={() => form.setValue("deadlineEnabled", false, { shouldDirty: true })} size="sm" type="button" variant={!deadlineEnabled ? "default" : "outline"}>
+                  <Button
+                    aria-pressed={!deadlineEnabled}
+                    onClick={() => form.setValue("deadlineEnabled", false, { shouldDirty: true })}
+                    size="sm"
+                    type="button"
+                    variant={!deadlineEnabled ? "default" : "outline"}
+                  >
                     Sem prazo
                   </Button>
-                  <Button aria-pressed={deadlineEnabled} onClick={() => form.setValue("deadlineEnabled", true, { shouldDirty: true })} size="sm" type="button" variant={deadlineEnabled ? "default" : "outline"}>
+                  <Button
+                    aria-pressed={deadlineEnabled}
+                    onClick={() => form.setValue("deadlineEnabled", true, { shouldDirty: true })}
+                    size="sm"
+                    type="button"
+                    variant={deadlineEnabled ? "default" : "outline"}
+                  >
                     Com prazo
                   </Button>
                 </div>
                 {deadlineEnabled ? (
-                  <TextInputField error={form.formState.errors.deadlineDate} label="Data do prazo" registration={form.register("deadlineDate")} type="date" />
+                  <TextInputField
+                    error={form.formState.errors.deadlineDate}
+                    label="Data do prazo"
+                    registration={form.register("deadlineDate")}
+                    type="date"
+                  />
                 ) : null}
-                <FieldDescription>Se preferir, lance a meta sem prazo para acompanhar apenas o progresso.</FieldDescription>
+                <FieldDescription>
+                  Se preferir, lance a meta sem prazo para acompanhar apenas o progresso.
+                </FieldDescription>
               </div>
             </Field>
             <SelectField
@@ -828,7 +976,9 @@ export function GoalContributionDialog({
   const selectedGoalId = useWatch({ control: form.control, name: "goalId" })
 
   useEffect(() => {
-    form.reset(getGoalContributionDefaults(defaultGoalId, goals, contribution))
+    if (open) {
+      form.reset(getGoalContributionDefaults(defaultGoalId, goals, contribution))
+    }
   }, [contribution, defaultGoalId, form, goals, open])
 
   async function submit(values: GoalContributionFormValues) {
@@ -841,7 +991,9 @@ export function GoalContributionDialog({
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>{contribution ? "Editar aporte" : "Registrar aporte"}</DialogTitle>
-          <DialogDescription>Lance o valor aportado para atualizar a evolução da meta.</DialogDescription>
+          <DialogDescription>
+            Lance o valor aportado para atualizar a evolução da meta.
+          </DialogDescription>
         </DialogHeader>
         <form className="flex flex-col gap-5" onSubmit={form.handleSubmit(submit)}>
           <FieldGroup>
@@ -856,7 +1008,10 @@ export function GoalContributionDialog({
                 }}
                 value={selectedGoalId ?? ""}
               >
-                <SelectTrigger aria-invalid={Boolean(form.formState.errors.goalId)} aria-label="Meta">
+                <SelectTrigger
+                  aria-invalid={Boolean(form.formState.errors.goalId)}
+                  aria-label="Meta"
+                >
                   <SelectValue placeholder="Selecione uma meta" />
                 </SelectTrigger>
                 <SelectContent alignItemWithTrigger={false}>
@@ -872,8 +1027,18 @@ export function GoalContributionDialog({
               <FieldError>{form.formState.errors.goalId?.message}</FieldError>
             </Field>
             <div className="grid gap-4 sm:grid-cols-2">
-              <TextInputField error={form.formState.errors.amount} label="Valor do aporte" registration={form.register("amount")} type="number" />
-              <TextInputField error={form.formState.errors.date} label="Data do aporte" registration={form.register("date")} type="date" />
+              <TextInputField
+                error={form.formState.errors.amount}
+                label="Valor do aporte"
+                registration={form.register("amount")}
+                type="number"
+              />
+              <TextInputField
+                error={form.formState.errors.date}
+                label="Data do aporte"
+                registration={form.register("date")}
+                type="date"
+              />
             </div>
           </FieldGroup>
           <DialogFooter>

@@ -3,18 +3,23 @@
 ## Projeto
 
 - Valion e um app Next.js 16 + React 19 para controle financeiro pessoal, em portugues do Brasil, com Supabase Auth/Postgres/RLS e deploy Vercel em `https://valionapp.com`.
-- Use `pnpm` neste repo; `package.json` fixa `packageManager: pnpm@10.28.0` e `engines.node: 22.x`.
+- Use `pnpm` neste repo; `package.json` fixa `packageManager: pnpm@10.28.0` e `.nvmrc` fixa Node `22.22.3`.
 - Imports internos usam alias `@/*` apontando para a raiz via `tsconfig.json`.
+- Comece por `README.md`, `docs/architecture.md` e o documento especifico da area tocada. Nao redescubra o repo inteiro quando esse mapa ja responder ao trabalho.
 
 ## Comandos Verificados
 
-- Instalar deps: `pnpm install`.
+- Ativar a versao correta: `nvm use`.
+- Instalar deps de forma reproduzivel: `pnpm install --frozen-lockfile`.
 - Dev app apenas: `pnpm dev` e abra `http://localhost:3000`.
 - Dev com Supabase local: `pnpm dev:all` ou, em terminais separados, `pnpm supabase:start` e `pnpm dev`.
-- Lint: `pnpm lint`.
+- Formatar, lintar e organizar imports: `pnpm check`; corrigir automaticamente: `pnpm check:write`.
+- Lint completo: `pnpm lint` (`Biome` + regras especificas de Next/React no ESLint).
 - Build de producao: `pnpm build`.
-- Typecheck: `pnpm typecheck` (ou `pnpm exec tsc --noEmit`).
+- Typecheck: `pnpm typecheck`.
 - Quality gate local: `pnpm quality`.
+- Verificacao local completa sem Supabase: `pnpm verify`.
+- Verificacao do banco local: `pnpm verify:supabase`.
 - Testes unitarios/integracao leve: `pnpm test`.
 - Coverage: `pnpm test:coverage`.
 - Integracao Supabase local: `pnpm test:supabase`.
@@ -25,6 +30,8 @@
 - `.env.local` precisa de `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` e, para exclusao de conta, `SUPABASE_SERVICE_ROLE_KEY` server-side.
 - Nunca exponha `SUPABASE_SERVICE_ROLE_KEY` em Client Components; ela deve ficar restrita a rotas/server-side como `lib/supabase/admin.ts`.
 - Supabase local depende da Supabase CLI e Docker. URLs locais do README/config: API `http://127.0.0.1:55321`, DB `55322`, Studio `http://127.0.0.1:55323`, Mailpit/Inbucket `http://127.0.0.1:55324`.
+- No WSL, use Docker Desktop com integracao habilitada para a distro. Nao instale um segundo Docker Engine dentro do WSL em paralelo.
+- A stack local pode publicar portas em `0.0.0.0` e usa credenciais de desenvolvimento compartilhadas; execute apenas em rede confiavel e pare com `pnpm supabase:stop` quando nao estiver usando.
 - Recriar banco local: `supabase db reset --local` ou `pnpm supabase:reset`, que aplica somente migrations em `supabase/migrations/`.
 - `.env.supabase` não é necessário e não deve ser documentado como requisito.
 - Migrations de produção são aplicadas exclusivamente pelo workflow manual `.github/workflows/supabase-migrations.yml`, com `workflow_dispatch` e GitHub Environment `production`; um agente autorizado pode disparar a Action via `gh workflow run "Supabase migrations" --ref main`, sem pedir clique manual ao usuário. É proibido executar `supabase db push` diretamente contra produção.
@@ -44,6 +51,7 @@
 - Tipos de dominio vivem em `features/finance/domain/types.ts`; validacoes de formularios vivem em `features/finance/forms/schemas.ts`; calculos agregados em `features/finance/domain/calculations.ts`; mapeamento DB<->UI em `features/finance/data/supabase-mappers.ts`.
 - Clientes Supabase sao separados: browser em `lib/supabase/client.ts`, server/cookies em `lib/supabase/server.ts`, admin/service-role em `lib/supabase/admin.ts`.
 - Callback de Auth permite apenas redirects seguros para `/dashboard` e `/alterar-senha` em `app/auth/callback/route.ts`.
+- `features/finance/ui/dashboard/finance-dashboard.tsx` e `finance-dialogs.tsx` ainda concentram UI demais. Nao acrescente novos blocos grandes neles: extraia por secao ou dialogo ao tocar nessas areas, mantendo o comportamento coberto pelos testes existentes.
 
 ## Frontend E Design
 
@@ -57,11 +65,14 @@
 ## Convencoes De Codigo
 
 - O projeto esta em TypeScript `strict`; mantenha tipos de dominio explicitos e evite `any` para payloads financeiros/Supabase.
-- Muitos arquivos usam ponto-e-virgula omitido; siga o estilo local do arquivo tocado em vez de reformatar em massa.
+- `biome.jsonc` e a fonte de verdade para formato, imports e lint geral: 2 espacos, LF, largura 100, aspas duplas e ponto-e-virgula apenas quando necessario. Nao formate manualmente em outro estilo.
+- O ESLint permanece como camada complementar para regras especificas do framework; nao duplique regras de estilo nele.
+- Use `import type` quando o simbolo existir apenas no sistema de tipos; `verbatimModuleSyntax` esta habilitado.
 - Client Components precisam declarar `"use client"`; hooks, `window`, `toast`, router client-side e Supabase browser ficam apenas neles.
 - Server Components/Route Handlers devem usar `createSupabaseServer()`; nao use cliente browser no servidor.
 - Ao adicionar CRUD financeiro, atualize em conjunto: schema Zod, tipo de dominio, mapper Supabase, store, UI e migration/schema SQL.
 - Preserve filtros por `user_id` nas queries/mutations financeiras alem das policies RLS.
+- Evite arquivos de UI monoliticos. Separe orquestracao, secoes, dialogos e componentes de apresentacao quando uma mudanca aumentar responsabilidade ou acoplamento do arquivo.
 
 ## Testes
 
@@ -85,7 +96,18 @@
 
 ## Verificacao Antes De Entregar
 
-- Para mudancas de UI/client simples: rode `pnpm lint` e, se tipos foram tocados, `pnpm exec tsc --noEmit`.
+- Para mudancas de UI/client simples: rode `pnpm check`, `pnpm lint:eslint` e `pnpm typecheck`.
 - Para funcionalidades novas/alteradas: rode ou adicione testes Vitest relevantes e informe o comando executado.
-- Para mudancas em build, rotas server, env ou Supabase: rode `pnpm build` quando as variaveis de ambiente necessarias estiverem disponiveis.
+- Para mudancas em build, rotas server ou env: rode `pnpm verify` quando as variaveis de ambiente necessarias estiverem disponiveis.
 - Para mudancas de banco: rode `pnpm supabase:reset` com Docker/Supabase local disponivel e confirme que migrations aplicam limpas.
+- Antes de entregar, rode `git diff --check` e revise `git status`; nao inclua `.env.local`, artefatos de build, credenciais ou metadados locais.
+
+## Agentes E Skills Do Projeto
+
+- `CLAUDE.md` e um symlink para este arquivo; mantenha uma unica fonte de verdade.
+- Skills compartilhadas vivem em `.agents/skills`; `.claude/skills` aponta para esse diretorio.
+- Agentes Claude vivem canonicamente em `.agents/agents`; `.claude/agents` aponta para esse diretorio.
+- Agentes Codex usam o formato oficial TOML separado em `.codex/agents`; os formatos de Claude e Codex nao sao intercambiaveis.
+- Use a skill `valion-supabase` para schema, migrations, RLS, auth, exclusao de conta e fluxo de deploy do banco.
+- Use a skill `valion-finance-feature` para mudancas verticais de funcionalidades financeiras.
+- Delegue para agentes especializados apenas quando a tarefa for realmente independente ou gerar muito ruido; a sessao principal continua responsavel por integrar e validar o resultado.

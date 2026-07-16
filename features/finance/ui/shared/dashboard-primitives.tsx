@@ -1,21 +1,18 @@
-import { CheckCircle2Icon, Edit3Icon, PlusIcon, Trash2Icon, TrendingDownIcon, TrendingUpIcon } from "lucide-react"
+import {
+  CheckCircle2Icon,
+  Edit3Icon,
+  PlusIcon,
+  Trash2Icon,
+  TrendingDownIcon,
+  TrendingUpIcon,
+} from "lucide-react"
 import type { ReactNode } from "react"
 import type { UseFormRegisterReturn } from "react-hook-form"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldLabel,
-} from "@/components/ui/field"
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -60,9 +57,7 @@ export function SectionHeader({
     <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
       <div>
         <h2 className="font-heading text-2xl font-semibold tracking-tight">{title}</h2>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-          {description}
-        </p>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">{description}</p>
       </div>
       {actionLabel && onAction ? (
         <Button className={cn("w-full sm:w-auto", actionClassName)} onClick={onAction}>
@@ -135,7 +130,13 @@ export function PaginationControls({
   )
 }
 
-export function TableActions({ onDelete, onEdit }: { onDelete: () => Promise<void> | void; onEdit: () => void }) {
+export function TableActions({
+  onDelete,
+  onEdit,
+}: {
+  onDelete: () => Promise<void> | void
+  onEdit: () => void
+}) {
   return (
     <div className="flex justify-end gap-1">
       <Button aria-label="Editar" onClick={onEdit} size="icon-sm" variant="ghost">
@@ -264,7 +265,8 @@ export function GoalStatusBadge({
 export function getInvestmentInsight(status: "above" | "below" | "on-track") {
   if (status === "above") {
     return {
-      description: "Você investiu acima do planejado. Ótimo momento para revisar se ainda há reserva para despesas variáveis.",
+      description:
+        "Você investiu acima do planejado. Ótimo momento para revisar se ainda há reserva para despesas variáveis.",
       icon: TrendingUpIcon,
       title: "Acima do planejado",
     }
@@ -272,14 +274,16 @@ export function getInvestmentInsight(status: "above" | "below" | "on-track") {
 
   if (status === "below") {
     return {
-      description: "Você investiu abaixo do planejado. Avalie despesas flexíveis ou ajuste a meta para manter consistência.",
+      description:
+        "Você investiu abaixo do planejado. Avalie despesas flexíveis ou ajuste a meta para manter consistência.",
       icon: TrendingDownIcon,
       title: "Abaixo do planejado",
     }
   }
 
   return {
-    description: "Você investiu exatamente o esperado para o mês. A rotina está alinhada ao plano definido.",
+    description:
+      "Você investiu exatamente o esperado para o mês. A rotina está alinhada ao plano definido.",
     icon: CheckCircle2Icon,
     title: "Dentro do esperado",
   }

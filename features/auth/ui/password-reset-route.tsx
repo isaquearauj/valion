@@ -1,10 +1,9 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-
-import { PasswordResetScreen } from "@/features/auth/ui/password-reset-screen"
+import { useEffect, useState } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
+import { PasswordResetScreen } from "@/features/auth/ui/password-reset-screen"
 import { createSupabaseBrowser } from "@/lib/supabase/client"
 
 export function PasswordResetRoute() {

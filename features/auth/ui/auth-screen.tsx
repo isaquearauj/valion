@@ -1,6 +1,5 @@
 "use client"
 
-import { FormEvent, useMemo, useState } from "react"
 import {
   ArrowRightIcon,
   ChartNoAxesCombinedIcon,
@@ -8,24 +7,13 @@ import {
   ShieldCheckIcon,
   WalletCardsIcon,
 } from "lucide-react"
+import { type FormEvent, useMemo, useState } from "react"
 import { toast } from "sonner"
 
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { getAppUserFromSupabaseUser } from "@/features/auth/supabase-user"
@@ -168,7 +156,11 @@ export function AuthScreen({ mode, onAuthenticate, onModeChange }: AuthScreenPro
 
     if (signInError || !data.user) {
       const message = signInError?.message.toLowerCase() ?? ""
-      setError(message.includes("confirm") ? "Confirme seu e-mail antes de entrar." : "E-mail ou senha inválidos.")
+      setError(
+        message.includes("confirm")
+          ? "Confirme seu e-mail antes de entrar."
+          : "E-mail ou senha inválidos.",
+      )
       return
     }
 
@@ -208,7 +200,8 @@ export function AuthScreen({ mode, onAuthenticate, onModeChange }: AuthScreenPro
                 Controle financeiro pessoal com clareza de produto SaaS.
               </h1>
               <p className="mt-5 max-w-2xl text-pretty text-base leading-7 text-muted-foreground sm:text-lg">
-                Organize receitas, despesas fixas, parcelamentos e investimentos em uma plataforma moderna, responsiva e preparada para produção.
+                Organize receitas, despesas fixas, parcelamentos e investimentos em uma plataforma
+                moderna, responsiva e preparada para produção.
               </p>
             </div>
 
@@ -269,7 +262,9 @@ export function AuthScreen({ mode, onAuthenticate, onModeChange }: AuthScreenPro
                     <Field data-invalid={Boolean(error)}>
                       <FieldLabel htmlFor="password">Senha</FieldLabel>
                       <Input
-                        autoComplete={activeMode === "register" ? "new-password" : "current-password"}
+                        autoComplete={
+                          activeMode === "register" ? "new-password" : "current-password"
+                        }
                         id="password"
                         onChange={(event) => setPassword(event.target.value)}
                         type="password"

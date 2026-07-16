@@ -3,6 +3,7 @@
 import {
   BanknoteArrowUpIcon,
   BarChart3Icon,
+  ChevronRightIcon,
   CreditCardIcon,
   LineChartIcon,
   LogOutIcon,
@@ -10,9 +11,8 @@ import {
   PiggyBankIcon,
   SettingsIcon,
   TargetIcon,
-  ChevronRightIcon,
 } from "lucide-react"
-import { useState, type ComponentType } from "react"
+import { type ComponentType, useState } from "react"
 
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -27,8 +27,8 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import type { AppUser } from "@/features/auth/types"
-import type { AppSection } from "@/features/navigation/routes"
 import { getInitials } from "@/features/finance/presentation/dashboard-view-models"
+import type { AppSection } from "@/features/navigation/routes"
 import { cn } from "@/lib/utils"
 
 type SectionId = AppSection
@@ -74,7 +74,7 @@ export function AppSidebar({
             className={cn(
               "flex h-10 cursor-pointer items-center gap-3 rounded-xl px-3 text-sm font-medium text-muted-foreground transition hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
               activeSection === section.id &&
-                "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
+                "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm",
             )}
             disabled={isPending}
             key={section.id}

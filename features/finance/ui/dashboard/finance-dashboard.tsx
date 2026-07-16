@@ -1,18 +1,7 @@
 "use client"
 
-import {
-  CheckCircle2Icon,
-  Edit3Icon,
-  PlusIcon,
-  TargetIcon,
-  Trash2Icon,
-} from "lucide-react"
-import {
-  type ReactNode,
-  useMemo,
-  useState,
-  useTransition,
-} from "react"
+import { CheckCircle2Icon, Edit3Icon, PlusIcon, TargetIcon, Trash2Icon } from "lucide-react"
+import { type ReactNode, useMemo, useState, useTransition } from "react"
 import {
   Bar,
   BarChart,
@@ -31,17 +20,14 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
-  CardAction,
   CardTitle,
 } from "@/components/ui/card"
-import {
-  ChartContainer,
-  ChartTooltip,
-} from "@/components/ui/chart"
+import { ChartContainer, ChartTooltip } from "@/components/ui/chart"
 import { Progress } from "@/components/ui/progress"
 import {
   Table,
@@ -51,6 +37,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import type { AppUser } from "@/features/auth/types"
 import {
   calculateFinanceSummary,
   getExpenseDistribution,
@@ -58,6 +45,15 @@ import {
   getMonthlyHistory,
 } from "@/features/finance/domain/calculations"
 import { getCurrentDateKey } from "@/features/finance/domain/initial-data"
+import type {
+  ChargeReminder,
+  FixedExpense,
+  Goal,
+  GoalContribution,
+  Income,
+  InvestmentEntry,
+} from "@/features/finance/domain/types"
+import type { useFinanceStore } from "@/features/finance/hooks/use-finance-store"
 import {
   calculateGoalsSummary,
   formatGoalDeadline,
@@ -73,21 +69,10 @@ import {
   sortGoals,
 } from "@/features/finance/presentation/dashboard-view-models"
 import {
-  type ChargeReminder,
-  type FixedExpense,
-  type Goal,
-  type GoalContribution,
-  type Income,
-  type InvestmentEntry,
-} from "@/features/finance/domain/types"
-import type { AppUser } from "@/features/auth/types"
-import { useFinanceStore } from "@/features/finance/hooks/use-finance-store"
-import { AppSidebar, TopBar } from "@/features/finance/ui/shell/workspace-navigation"
-import {
-  CurrencyTooltip,
-  GoalTooltip,
-  OverviewSection,
-} from "@/features/finance/ui/dashboard/overview-section"
+  distributionChartConfig,
+  goalChartConfig,
+  historyChartConfig,
+} from "@/features/finance/ui/dashboard/chart-config"
 import {
   AccountDialog,
   ExpenseDialog,
@@ -98,15 +83,15 @@ import {
   ReminderDialog,
 } from "@/features/finance/ui/dashboard/finance-dialogs"
 import {
-  distributionChartConfig,
-  goalChartConfig,
-  historyChartConfig,
-} from "@/features/finance/ui/dashboard/chart-config"
+  CurrencyTooltip,
+  GoalTooltip,
+  OverviewSection,
+} from "@/features/finance/ui/dashboard/overview-section"
 import {
   ExpenseStatusBadge,
+  GoalStatusBadge,
   getActionErrorMessage,
   getInvestmentInsight,
-  GoalStatusBadge,
   MetricCard,
   PaginationControls,
   ReminderStatusBadge,
@@ -116,12 +101,13 @@ import {
   TABLE_PAGE_SIZE,
   TableActions,
 } from "@/features/finance/ui/shared/dashboard-primitives"
+import { AppSidebar, TopBar } from "@/features/finance/ui/shell/workspace-navigation"
 import type { AppSection } from "@/features/navigation/routes"
 import {
   formatCurrency,
-  formatDueDay,
   formatDateKey,
   formatDateKeyLong,
+  formatDueDay,
   formatMonth,
   formatMonthChip,
   formatPercent,
@@ -260,7 +246,7 @@ export function FinanceDashboard({
       () => finance.markReminderReceived(reminder.id),
       reminder.type === "Parcelado" && reminder.remainingInstallments <= 1
         ? "Lembrete concluído"
-        : "Cobrança marcada como recebida"
+        : "Cobrança marcada como recebida",
     )
   }
 
@@ -341,7 +327,7 @@ export function FinanceDashboard({
           onSubmit={async (values) => {
             await runFinanceAction(
               () => finance.upsertIncome(values, editingIncome?.id),
-              editingIncome ? "Receita atualizada" : "Receita adicionada"
+              editingIncome ? "Receita atualizada" : "Receita adicionada",
             )
           }}
           open={isIncomeDialogOpen}
@@ -355,7 +341,7 @@ export function FinanceDashboard({
           onSubmit={async (values) => {
             await runFinanceAction(
               () => finance.upsertExpense(values, editingExpense?.id),
-              editingExpense ? "Despesa atualizada" : "Despesa adicionada"
+              editingExpense ? "Despesa atualizada" : "Despesa adicionada",
             )
           }}
           open={isExpenseDialogOpen}
@@ -369,7 +355,7 @@ export function FinanceDashboard({
           onSubmit={async (values) => {
             await runFinanceAction(
               () => finance.upsertInvestment(values, editingInvestment?.id),
-              editingInvestment ? "Investimento atualizado" : "Investimento registrado"
+              editingInvestment ? "Investimento atualizado" : "Investimento registrado",
             )
           }}
           open={isInvestmentDialogOpen}
@@ -381,8 +367,9 @@ export function FinanceDashboard({
           onOpenChange={setIsReminderDialogOpen}
           onSubmit={async (values) => {
             await runFinanceAction(
-              () => finance.upsertReminder(normalizeReminderFormValues(values), editingReminder?.id),
-              editingReminder ? "Lembrete atualizado" : "Lembrete adicionado"
+              () =>
+                finance.upsertReminder(normalizeReminderFormValues(values), editingReminder?.id),
+              editingReminder ? "Lembrete atualizado" : "Lembrete adicionado",
             )
           }}
           open={isReminderDialogOpen}
@@ -433,7 +420,7 @@ function IncomesSection({
   const currentPage = Math.min(page, pageCount)
   const paginatedIncomes = useMemo(
     () => incomes.slice((currentPage - 1) * TABLE_PAGE_SIZE, currentPage * TABLE_PAGE_SIZE),
-    [currentPage, incomes]
+    [currentPage, incomes],
   )
 
   return (
@@ -453,7 +440,9 @@ function IncomesSection({
         <CardHeader>
           <div>
             <CardTitle>Receitas cadastradas</CardTitle>
-            <CardDescription>Valores semanais e quinzenais são normalizados para o mês.</CardDescription>
+            <CardDescription>
+              Valores semanais e quinzenais são normalizados para o mês.
+            </CardDescription>
           </div>
           <CardAction>
             <Button className={cn(newActionButtonClassName, incomeActionClassName)} onClick={onAdd}>
@@ -489,7 +478,10 @@ function IncomesSection({
                       {formatCurrency(income.amount)}
                     </TableCell>
                     <TableCell>
-                      <TableActions onDelete={() => onDelete(income)} onEdit={() => onEdit(income)} />
+                      <TableActions
+                        onDelete={() => onDelete(income)}
+                        onEdit={() => onEdit(income)}
+                      />
                     </TableCell>
                   </TableRow>
                 ))}
@@ -543,17 +535,14 @@ function RemindersCard({
 
         return a.nextDueDate.localeCompare(b.nextDueDate)
       }),
-    [reminders]
+    [reminders],
   )
   const pageCount = Math.max(Math.ceil(orderedReminders.length / TABLE_PAGE_SIZE), 1)
   const currentPage = Math.min(page, pageCount)
   const paginatedReminders = useMemo(
     () =>
-      orderedReminders.slice(
-        (currentPage - 1) * TABLE_PAGE_SIZE,
-        currentPage * TABLE_PAGE_SIZE
-      ),
-    [currentPage, orderedReminders]
+      orderedReminders.slice((currentPage - 1) * TABLE_PAGE_SIZE, currentPage * TABLE_PAGE_SIZE),
+    [currentPage, orderedReminders],
   )
 
   return (
@@ -599,9 +588,7 @@ function RemindersCard({
                     <TableCell>
                       <div className="flex flex-col gap-1">
                         <ReminderTypeBadge type={reminder.type} />
-                        <span className="text-xs text-muted-foreground">
-                          {reminder.frequency}
-                        </span>
+                        <span className="text-xs text-muted-foreground">{reminder.frequency}</span>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -618,7 +605,8 @@ function RemindersCard({
                       {reminder.type === "Parcelado" ? (
                         <div className="flex flex-col gap-1">
                           <span className="text-xs text-muted-foreground">
-                            {reminder.remainingInstallments} de {reminder.totalInstallments} restantes
+                            {reminder.remainingInstallments} de {reminder.totalInstallments}{" "}
+                            restantes
                           </span>
                           <Progress value={getReminderProgress(reminder)} />
                         </div>
@@ -654,7 +642,8 @@ function RemindersCard({
               ) : (
                 <TableRow>
                   <TableCell className="py-8 text-center text-sm text-muted-foreground" colSpan={7}>
-                    Nenhum lembrete cadastrado. Use esta área para cobrar valores sem lançar receita.
+                    Nenhum lembrete cadastrado. Use esta área para cobrar valores sem lançar
+                    receita.
                   </TableCell>
                 </TableRow>
               )}
@@ -691,7 +680,7 @@ function ExpensesSection({
   const currentPage = Math.min(page, pageCount)
   const paginatedExpenses = useMemo(
     () => expenses.slice((currentPage - 1) * TABLE_PAGE_SIZE, currentPage * TABLE_PAGE_SIZE),
-    [currentPage, expenses]
+    [currentPage, expenses],
   )
 
   return (
@@ -711,10 +700,15 @@ function ExpensesSection({
         <CardHeader>
           <div>
             <CardTitle>Compromissos recorrentes</CardTitle>
-            <CardDescription>Despesas fixas cadastradas para acompanhar recorrência, vencimentos e status.</CardDescription>
+            <CardDescription>
+              Despesas fixas cadastradas para acompanhar recorrência, vencimentos e status.
+            </CardDescription>
           </div>
           <CardAction>
-            <Button className={cn(newActionButtonClassName, expenseActionClassName)} onClick={onAdd}>
+            <Button
+              className={cn(newActionButtonClassName, expenseActionClassName)}
+              onClick={onAdd}
+            >
               <PlusIcon data-icon="inline-start" />
               Nova despesa
             </Button>
@@ -764,7 +758,10 @@ function ExpensesSection({
                       {formatCurrency(expense.monthlyAmount)}
                     </TableCell>
                     <TableCell>
-                      <TableActions onDelete={() => onDelete(expense)} onEdit={() => onEdit(expense)} />
+                      <TableActions
+                        onDelete={() => onDelete(expense)}
+                        onEdit={() => onEdit(expense)}
+                      />
                     </TableCell>
                   </TableRow>
                 ))}
@@ -810,7 +807,10 @@ function InvestmentsSection({
       <div className="grid gap-4 lg:grid-cols-[1fr_1fr_1fr]">
         <MetricCard label="Planejado" value={formatCurrency(summary.plannedInvestment)} />
         <MetricCard label="Realizado" value={formatCurrency(summary.investedAmount)} />
-        <MetricCard label="Orçamento após investimentos" value={formatCurrency(summary.budgetRemainingAfterInvestment)} />
+        <MetricCard
+          label="Orçamento após investimentos"
+          value={formatCurrency(summary.budgetRemainingAfterInvestment)}
+        />
       </div>
 
       <Alert>
@@ -888,7 +888,7 @@ function GoalsSection({ finance }: { finance: FinanceDashboardProps["finance"] }
   const { state } = finance
   const goals = useMemo(
     () => sortGoals(state.goals, state.goalContributions),
-    [state.goalContributions, state.goals]
+    [state.goalContributions, state.goals],
   )
   const contributions = state.goalContributions
   const [selectedGoalId, setSelectedGoalId] = useState<string>("")
@@ -913,23 +913,19 @@ function GoalsSection({ finance }: { finance: FinanceDashboardProps["finance"] }
 
   const goalsSummary = useMemo(
     () => calculateGoalsSummary(goals, contributions),
-    [contributions, goals]
+    [contributions, goals],
   )
   const selectedGoalProgress = useMemo(
     () => (selectedGoal ? getGoalProgress(selectedGoal, selectedGoalContributions) : null),
-    [selectedGoal, selectedGoalContributions]
+    [selectedGoal, selectedGoalContributions],
   )
   const selectedGoalCompleted = Boolean(selectedGoalProgress && selectedGoalProgress.percent >= 100)
   const selectedGoalTimeline = useMemo(
     () => (selectedGoal ? getGoalTimeline(selectedGoal, selectedGoalContributions) : []),
-    [selectedGoal, selectedGoalContributions]
+    [selectedGoal, selectedGoalContributions],
   )
   const chartMaxValue = selectedGoal
-    ? Math.max(
-        selectedGoal.targetAmount,
-        selectedGoalTimeline.at(-1)?.cumulativeAmount ?? 0,
-        1000
-      )
+    ? Math.max(selectedGoal.targetAmount, selectedGoalTimeline.at(-1)?.cumulativeAmount ?? 0, 1000)
     : 1000
   const goalDeadlineLabel = selectedGoal ? formatGoalDeadline(selectedGoal) : "Sem prazo"
 
@@ -975,7 +971,9 @@ function GoalsSection({ finance }: { finance: FinanceDashboardProps["finance"] }
   }
 
   async function handleDeleteGoal(goal: Goal) {
-    if (!window.confirm(`Excluir a meta ${goal.name}? Os aportes vinculados também serão removidos.`)) {
+    if (
+      !window.confirm(`Excluir a meta ${goal.name}? Os aportes vinculados também serão removidos.`)
+    ) {
       return
     }
 
@@ -1052,7 +1050,7 @@ function GoalsSection({ finance }: { finance: FinanceDashboardProps["finance"] }
                   <CardDescription className="mt-2 max-w-2xl">
                     {selectedGoal
                       ? `${goalDeadlineLabel} · ${formatCurrency(
-                          selectedGoalProgress?.currentAmount ?? 0
+                          selectedGoalProgress?.currentAmount ?? 0,
                         )} acumulados de ${formatCurrency(selectedGoal.targetAmount)}`
                       : "Escolha uma meta para acompanhar o progresso e os aportes vinculados."}
                   </CardDescription>
@@ -1093,7 +1091,7 @@ function GoalsSection({ finance }: { finance: FinanceDashboardProps["finance"] }
                     className={cn(
                       "shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
                       goal.id === selectedGoal?.id &&
-                        "border-primary bg-primary text-primary-foreground shadow-sm hover:bg-primary hover:text-primary-foreground"
+                        "border-primary bg-primary text-primary-foreground shadow-sm hover:bg-primary hover:text-primary-foreground",
                     )}
                     key={goal.id}
                     onClick={() => setSelectedGoalId(goal.id)}
@@ -1121,7 +1119,12 @@ function GoalsSection({ finance }: { finance: FinanceDashboardProps["finance"] }
                           margin={{ left: 24, right: 16, top: 12 }}
                         >
                           <CartesianGrid vertical={false} />
-                          <XAxis axisLine={false} dataKey="label" tickLine={false} tickMargin={10} />
+                          <XAxis
+                            axisLine={false}
+                            dataKey="label"
+                            tickLine={false}
+                            tickMargin={10}
+                          />
                           <YAxis
                             axisLine={false}
                             domain={[0, chartMaxValue + 1000]}
@@ -1211,9 +1214,7 @@ function GoalsSection({ finance }: { finance: FinanceDashboardProps["finance"] }
                         <div className="grid gap-3 text-sm text-muted-foreground sm:grid-cols-2">
                           <div>
                             <p className="text-xs uppercase tracking-wide">Prazo</p>
-                            <p className="mt-1 font-medium text-foreground">
-                              {goalDeadlineLabel}
-                            </p>
+                            <p className="mt-1 font-medium text-foreground">{goalDeadlineLabel}</p>
                           </div>
                           <div>
                             <p className="text-xs uppercase tracking-wide">Aportes</p>
@@ -1222,7 +1223,6 @@ function GoalsSection({ finance }: { finance: FinanceDashboardProps["finance"] }
                             </p>
                           </div>
                         </div>
-
                       </>
                     ) : (
                       <div className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
@@ -1320,7 +1320,7 @@ function GoalsSection({ finance }: { finance: FinanceDashboardProps["finance"] }
                     {goals.map((goal) => {
                       const progress = getGoalProgress(
                         goal,
-                        contributions.filter((item) => item.goalId === goal.id)
+                        contributions.filter((item) => item.goalId === goal.id),
                       )
                       const completed = progress.percent >= 100
 
@@ -1384,7 +1384,11 @@ function GoalsSection({ finance }: { finance: FinanceDashboardProps["finance"] }
       {isGoalDialogOpen ? (
         <GoalDialog
           goal={
-            editingGoal && isGoalCompleted(editingGoal, contributions.filter((item) => item.goalId === editingGoal.id))
+            editingGoal &&
+            isGoalCompleted(
+              editingGoal,
+              contributions.filter((item) => item.goalId === editingGoal.id),
+            )
               ? { ...editingGoal, status: "Concluída" }
               : editingGoal
           }
@@ -1393,16 +1397,14 @@ function GoalsSection({ finance }: { finance: FinanceDashboardProps["finance"] }
             const currentAmount = editingGoal
               ? getGoalProgress(
                   editingGoal,
-                  contributions.filter((item) => item.goalId === editingGoal.id)
+                  contributions.filter((item) => item.goalId === editingGoal.id),
                 ).currentAmount
               : 0
 
             await runGoalAction(
-              () => finance.upsertGoal(
-                normalizeGoalFormValues(values, currentAmount),
-                editingGoal?.id
-              ),
-              editingGoal ? "Meta atualizada" : "Meta criada"
+              () =>
+                finance.upsertGoal(normalizeGoalFormValues(values, currentAmount), editingGoal?.id),
+              editingGoal ? "Meta atualizada" : "Meta criada",
             )
           }}
           open={isGoalDialogOpen}
@@ -1423,7 +1425,7 @@ function GoalsSection({ finance }: { finance: FinanceDashboardProps["finance"] }
           onSubmit={async (values, id) => {
             await runGoalAction(
               () => finance.upsertGoalContribution(values, id),
-              editingContribution ? "Aporte atualizado" : "Aporte registrado"
+              editingContribution ? "Aporte atualizado" : "Aporte registrado",
             )
           }}
           open={isContributionDialogOpen}
@@ -1436,7 +1438,7 @@ function GoalsSection({ finance }: { finance: FinanceDashboardProps["finance"] }
 function HistorySection({ history }: { history: ReturnType<typeof getMonthlyHistory> }) {
   const orderedHistory = useMemo(
     () => history.toSorted((a, b) => a.month.localeCompare(b.month)),
-    [history]
+    [history],
   )
   const latestMonth = orderedHistory.at(-1)?.month ?? ""
   const [selectedMonthKey, setSelectedMonthKey] = useState(latestMonth)
@@ -1458,7 +1460,7 @@ function HistorySection({ history }: { history: ReturnType<typeof getMonthlyHist
           label: formatMonth(item.month),
         }
       }),
-    [orderedHistory]
+    [orderedHistory],
   )
   const selectableMonths = historyAnalysis.slice(-5)
   const referenceMonthKey = selectableMonths.some((item) => item.month === selectedMonthKey)
@@ -1536,7 +1538,8 @@ function HistorySection({ history }: { history: ReturnType<typeof getMonthlyHist
               <Badge variant="secondary">Mês de referência</Badge>
               <CardTitle className="mt-3 text-2xl">{formatMonth(selectedMonth.month)}</CardTitle>
               <CardDescription className="mt-2 max-w-2xl">
-                Análise aprofundada do mês selecionado, comparando contra o mês anterior e a média do histórico.
+                Análise aprofundada do mês selecionado, comparando contra o mês anterior e a média
+                do histórico.
               </CardDescription>
             </div>
             <div className="flex max-w-full gap-2 overflow-x-auto pb-1">
@@ -1546,7 +1549,7 @@ function HistorySection({ history }: { history: ReturnType<typeof getMonthlyHist
                   className={cn(
                     "shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
                     item.month === referenceMonthKey &&
-                      "border-primary bg-primary text-primary-foreground shadow-sm hover:bg-primary hover:text-primary-foreground"
+                      "border-primary bg-primary text-primary-foreground shadow-sm hover:bg-primary hover:text-primary-foreground",
                   )}
                   key={item.month}
                   onClick={() => setSelectedMonthKey(item.month)}
@@ -1587,7 +1590,11 @@ function HistorySection({ history }: { history: ReturnType<typeof getMonthlyHist
           </CardHeader>
           <CardContent className="overflow-hidden">
             <ChartContainer className="h-[320px] w-full" config={historyChartConfig}>
-              <LineChart accessibilityLayer data={historyAnalysis} margin={{ left: 24, right: 16, top: 12 }}>
+              <LineChart
+                accessibilityLayer
+                data={historyAnalysis}
+                margin={{ left: 24, right: 16, top: 12 }}
+              >
                 <CartesianGrid vertical={false} />
                 <XAxis axisLine={false} dataKey="label" tickLine={false} tickMargin={10} />
                 <YAxis
@@ -1598,10 +1605,34 @@ function HistorySection({ history }: { history: ReturnType<typeof getMonthlyHist
                   width={64}
                 />
                 <ChartTooltip content={<CurrencyTooltip />} />
-                <Line dataKey="income" dot={false} stroke="var(--color-income)" strokeWidth={2.5} type="monotone" />
-                <Line dataKey="expenses" dot={false} stroke="var(--color-expenses)" strokeWidth={2.5} type="monotone" />
-                <Line dataKey="plannedInvestment" dot={false} stroke="var(--color-plannedInvestment)" strokeWidth={2.5} type="monotone" />
-                <Line dataKey="investedAmount" dot={false} stroke="var(--color-investedAmount)" strokeWidth={2.5} type="monotone" />
+                <Line
+                  dataKey="income"
+                  dot={false}
+                  stroke="var(--color-income)"
+                  strokeWidth={2.5}
+                  type="monotone"
+                />
+                <Line
+                  dataKey="expenses"
+                  dot={false}
+                  stroke="var(--color-expenses)"
+                  strokeWidth={2.5}
+                  type="monotone"
+                />
+                <Line
+                  dataKey="plannedInvestment"
+                  dot={false}
+                  stroke="var(--color-plannedInvestment)"
+                  strokeWidth={2.5}
+                  type="monotone"
+                />
+                <Line
+                  dataKey="investedAmount"
+                  dot={false}
+                  stroke="var(--color-investedAmount)"
+                  strokeWidth={2.5}
+                  type="monotone"
+                />
               </LineChart>
             </ChartContainer>
             <div className="mt-3 flex flex-wrap items-center justify-center gap-4 text-xs">
@@ -1620,7 +1651,11 @@ function HistorySection({ history }: { history: ReturnType<typeof getMonthlyHist
           </CardHeader>
           <CardContent>
             <ChartContainer className="h-[320px] w-full" config={distributionChartConfig}>
-              <BarChart accessibilityLayer data={selectedMonthBreakdown} margin={{ left: 24, right: 16, top: 12 }}>
+              <BarChart
+                accessibilityLayer
+                data={selectedMonthBreakdown}
+                margin={{ left: 24, right: 16, top: 12 }}
+              >
                 <CartesianGrid vertical={false} />
                 <XAxis axisLine={false} dataKey="label" tickLine={false} tickMargin={10} />
                 <YAxis
@@ -1724,7 +1759,7 @@ function TrendDelta({
         "font-mono text-xs font-semibold tabular-nums",
         isNeutral && "text-muted-foreground",
         !isNeutral && isPositive && "text-emerald-600 dark:text-emerald-300",
-        !isNeutral && !isPositive && "text-rose-600 dark:text-rose-300"
+        !isNeutral && !isPositive && "text-rose-600 dark:text-rose-300",
       )}
     >
       {prefix}

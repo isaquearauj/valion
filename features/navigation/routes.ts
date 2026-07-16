@@ -1,10 +1,4 @@
-export type AppSection =
-  | "dashboard"
-  | "incomes"
-  | "expenses"
-  | "goals"
-  | "investments"
-  | "history"
+export type AppSection = "dashboard" | "incomes" | "expenses" | "goals" | "investments" | "history"
 
 export type AuthMode = "login" | "register" | "recover"
 
@@ -18,7 +12,7 @@ export const appSectionPaths: Record<AppSection, string> = {
 }
 
 const appSectionsByPath = Object.fromEntries(
-  Object.entries(appSectionPaths).map(([section, path]) => [path, section])
+  Object.entries(appSectionPaths).map(([section, path]) => [path, section]),
 ) as Record<string, AppSection>
 
 export const authPaths: Record<AuthMode, string> = {

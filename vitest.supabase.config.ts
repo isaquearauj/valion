@@ -1,7 +1,6 @@
-import { defineConfig } from "vitest/config"
-
 import { existsSync, readFileSync } from "node:fs"
 import { resolve } from "node:path"
+import { defineConfig } from "vitest/config"
 
 function loadEnvFile(filePath: string) {
   if (!existsSync(filePath)) {

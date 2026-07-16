@@ -1,8 +1,15 @@
 import { describe, expect, it, vi } from "vitest"
 
 import {
+  type ChargeReminderRow,
   createEmptyFinanceState,
+  type FixedExpenseRow,
+  type GoalContributionRow,
+  type GoalRow,
   getWorkspaceUpdatedAt,
+  type IncomeRow,
+  type InvestmentEntryRow,
+  type MonthlySnapshotRow,
   mapChargeReminder,
   mapFixedExpense,
   mapGoal,
@@ -11,13 +18,6 @@ import {
   mapInvestmentEntry,
   mapMonthlySnapshot,
   monthKeyToDate,
-  type ChargeReminderRow,
-  type FixedExpenseRow,
-  type GoalContributionRow,
-  type GoalRow,
-  type IncomeRow,
-  type InvestmentEntryRow,
-  type MonthlySnapshotRow,
 } from "@/features/finance/data/supabase-mappers"
 
 describe("Supabase finance mappers", () => {
@@ -116,7 +116,11 @@ describe("Supabase finance mappers", () => {
     }
 
     expect(mapGoal(goalRow)).toMatchObject({ notes: "", targetAmount: 10000, targetDate: null })
-    expect(mapGoalContribution(contributionRow)).toMatchObject({ amount: 500.25, goalId: "goal-1", notes: "" })
+    expect(mapGoalContribution(contributionRow)).toMatchObject({
+      amount: 500.25,
+      goalId: "goal-1",
+      notes: "",
+    })
   })
 
   it("maps month-based rows to month keys", () => {
@@ -137,7 +141,11 @@ describe("Supabase finance mappers", () => {
       planned_investment: "200",
     }
 
-    expect(mapInvestmentEntry(investmentRow)).toMatchObject({ investedAmount: 150, month: "2026-03", plannedAmount: 200 })
+    expect(mapInvestmentEntry(investmentRow)).toMatchObject({
+      investedAmount: 150,
+      month: "2026-03",
+      plannedAmount: 200,
+    })
     expect(mapMonthlySnapshot(snapshotRow)).toEqual({
       expenses: 800,
       id: "snapshot-1",
@@ -154,7 +162,7 @@ describe("Supabase finance mappers", () => {
       getWorkspaceUpdatedAt([
         [{ updated_at: "2026-01-02T00:00:00.000Z" }],
         [{ updated_at: "2026-01-03T00:00:00.000Z" }, {}],
-      ])
+      ]),
     ).toBe("2026-01-03T00:00:00.000Z")
   })
 

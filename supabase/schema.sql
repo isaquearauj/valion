@@ -338,3 +338,38 @@ for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 create policy "monthly_snapshots_delete_own" on public.monthly_snapshots
 for delete using (auth.uid() = user_id);
+
+revoke all privileges on table
+  public.profiles,
+  public.incomes,
+  public.charge_reminders,
+  public.fixed_expenses,
+  public.financial_goals,
+  public.goal_contributions,
+  public.investment_entries,
+  public.monthly_snapshots
+from anon;
+
+grant usage on schema public to authenticated, service_role;
+
+grant select, insert, update, delete on table
+  public.profiles,
+  public.incomes,
+  public.charge_reminders,
+  public.fixed_expenses,
+  public.financial_goals,
+  public.goal_contributions,
+  public.investment_entries,
+  public.monthly_snapshots
+to authenticated;
+
+grant all privileges on table
+  public.profiles,
+  public.incomes,
+  public.charge_reminders,
+  public.fixed_expenses,
+  public.financial_goals,
+  public.goal_contributions,
+  public.investment_entries,
+  public.monthly_snapshots
+to service_role;

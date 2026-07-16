@@ -1,5 +1,13 @@
 import { getCurrentDateKey, getCurrentMonthKey } from "@/features/finance/domain/initial-data"
 import type {
+  ChargeReminder,
+  FixedExpense,
+  Goal,
+  GoalContribution,
+  Income,
+  InvestmentEntry,
+} from "@/features/finance/domain/types"
+import type {
   ExpenseFormInput,
   GoalContributionFormInput,
   GoalFormInput,
@@ -9,21 +17,12 @@ import type {
   ReminderFormInput,
   ReminderFormValues,
 } from "@/features/finance/forms/schemas"
-import type {
-  ChargeReminder,
-  FixedExpense,
-  Goal,
-  GoalContribution,
-  Income,
-  InvestmentEntry,
-} from "@/features/finance/domain/types"
 import { formatCurrency, formatDateKey } from "@/lib/formatters"
 
 export function getBudgetCommitmentStatus(value: number) {
   if (value > 70) {
     return {
-      className:
-        "bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-200",
+      className: "bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-200",
       description:
         "Nível crítico: despesas fixas consomem grande parte da renda. Revise contratos, parcelas e compromissos recorrentes com prioridade.",
       label: "Crítico",
@@ -32,8 +31,7 @@ export function getBudgetCommitmentStatus(value: number) {
 
   if (value > 55) {
     return {
-      className:
-        "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-200",
+      className: "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-200",
       description:
         "Ponto de atenção: o orçamento começa a ficar pressionado. Avalie reduzir despesas fixas antes de assumir novos compromissos.",
       label: "Atenção",
@@ -42,8 +40,7 @@ export function getBudgetCommitmentStatus(value: number) {
 
   if (value > 40) {
     return {
-      className:
-        "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200",
+      className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200",
       description:
         "Faixa saudável: os compromissos fixos estão controlados, mas ainda vale acompanhar aumentos recorrentes.",
       label: "Saudável",
@@ -51,8 +48,7 @@ export function getBudgetCommitmentStatus(value: number) {
   }
 
   return {
-    className:
-      "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200",
+    className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200",
     description:
       "Margem confortável: há boa folga entre renda e despesas fixas para imprevistos, amortizações e investimentos.",
     label: "Confortável",
@@ -110,7 +106,7 @@ export function getReminderDefaults(reminder: ChargeReminder | null): ReminderFo
 }
 
 export function normalizeReminderFormValues(
-  values: ReminderFormValues
+  values: ReminderFormValues,
 ): Omit<ChargeReminder, "createdAt" | "id"> {
   if (values.type === "Recorrente") {
     return {
@@ -162,12 +158,21 @@ export function getInvestmentDefaults(investment: InvestmentEntry | null): Inves
 
 export function calculateGoalsSummary(goals: Goal[], contributions: GoalContribution[]) {
   const totalTarget = goals.reduce((total, goal) => total + goal.targetAmount, 0)
-  const totalContributed = contributions.reduce((total, contribution) => total + contribution.amount, 0)
+  const totalContributed = contributions.reduce(
+    (total, contribution) => total + contribution.amount,
+    0,
+  )
   const completedGoals = goals.filter((goal) =>
-    isGoalCompleted(goal, contributions.filter((item) => item.goalId === goal.id))
+    isGoalCompleted(
+      goal,
+      contributions.filter((item) => item.goalId === goal.id),
+    ),
   ).length
   const activeGoals = goals.filter((goal) => {
-    const progress = getGoalProgress(goal, contributions.filter((item) => item.goalId === goal.id))
+    const progress = getGoalProgress(
+      goal,
+      contributions.filter((item) => item.goalId === goal.id),
+    )
 
     return goal.status === "Ativa" && progress.percent < 100
   }).length
@@ -190,9 +195,13 @@ export function formatGoalDeadline(goal: Goal) {
 }
 
 export function getGoalProgress(goal: Goal, contributions: GoalContribution[]) {
-  const currentAmount = contributions.reduce((total, contribution) => total + contribution.amount, 0)
+  const currentAmount = contributions.reduce(
+    (total, contribution) => total + contribution.amount,
+    0,
+  )
   const remainingAmount = Math.max(goal.targetAmount - currentAmount, 0)
-  const percent = goal.targetAmount > 0 ? Math.min((currentAmount / goal.targetAmount) * 100, 100) : 0
+  const percent =
+    goal.targetAmount > 0 ? Math.min((currentAmount / goal.targetAmount) * 100, 100) : 0
 
   return {
     currentAmount,
@@ -274,7 +283,7 @@ export function getGoalDefaults(goal: Goal | null): GoalFormInput {
 
 export function normalizeGoalFormValues(
   values: GoalFormValues,
-  currentAmount: number
+  currentAmount: number,
 ): Omit<Goal, "createdAt" | "id"> {
   const targetAmount = values.targetAmount
   const completed = currentAmount >= targetAmount
@@ -301,7 +310,7 @@ export function normalizeGoalFormValues(
 export function getGoalContributionDefaults(
   defaultGoalId: string,
   goals: Goal[] = [],
-  contribution: GoalContribution | null = null
+  contribution: GoalContribution | null = null,
 ): GoalContributionFormInput {
   return {
     amount: contribution?.amount ?? "",

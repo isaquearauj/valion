@@ -87,9 +87,10 @@ function createSupabaseMock({
       return this
     }
 
+    // biome-ignore lint/suspicious/noThenProperty: Supabase query builders are intentionally thenable.
     then<TResult1 = QueryResult, TResult2 = never>(
       onfulfilled?: ((value: QueryResult) => TResult1 | PromiseLike<TResult1>) | null,
-      onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null
+      onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
     ) {
       return Promise.resolve(this.resolve()).then(onfulfilled, onrejected)
     }
@@ -110,8 +111,14 @@ function createSupabaseMock({
     private resolve(): QueryResult {
       if (this.operation.action === "select") {
         return {
-          data: this.operation.table === selectErrorTable ? null : tableRows[this.operation.table as keyof typeof emptyRows],
-          error: this.operation.table === selectErrorTable ? { message: "Falha ao carregar dados." } : null,
+          data:
+            this.operation.table === selectErrorTable
+              ? null
+              : tableRows[this.operation.table as keyof typeof emptyRows],
+          error:
+            this.operation.table === selectErrorTable
+              ? { message: "Falha ao carregar dados." }
+              : null,
         }
       }
 
@@ -226,7 +233,11 @@ describe("useFinanceStore", () => {
 
     await waitFor(() => expect(result.current.isReady).toBe(true))
 
-    expect(mock.operations.filter((operation) => operation.action === "select").map((operation) => operation.table)).toEqual([
+    expect(
+      mock.operations
+        .filter((operation) => operation.action === "select")
+        .map((operation) => operation.table),
+    ).toEqual([
       "incomes",
       "fixed_expenses",
       "charge_reminders",
@@ -235,10 +246,21 @@ describe("useFinanceStore", () => {
       "goal_contributions",
       "monthly_snapshots",
     ])
-    expect(mock.operations.every((operation) => operation.filters.some(([column, value]) => column === "user_id" && value === "user-1"))).toBe(true)
-    expect(result.current.state.incomes[0]).toMatchObject({ amount: 5000, id: "income-1", notes: "" })
+    expect(
+      mock.operations.every((operation) =>
+        operation.filters.some(([column, value]) => column === "user_id" && value === "user-1"),
+      ),
+    ).toBe(true)
+    expect(result.current.state.incomes[0]).toMatchObject({
+      amount: 5000,
+      id: "income-1",
+      notes: "",
+    })
     expect(result.current.state.expenses[0]).toMatchObject({ id: "expense-1", monthlyAmount: 1200 })
-    expect(result.current.state.investments[0]).toMatchObject({ id: "investment-1", month: "2026-01" })
+    expect(result.current.state.investments[0]).toMatchObject({
+      id: "investment-1",
+      month: "2026-01",
+    })
     expect(result.current.state.updatedAt).toBe("2026-01-04T00:00:00.000Z")
   })
 
@@ -256,7 +278,13 @@ describe("useFinanceStore", () => {
     const { mock, result } = await renderReadyStore()
 
     await act(async () => {
-      await result.current.upsertIncome({ amount: 1000, frequency: "Mensal", name: "Salário", notes: "", type: "Salário" })
+      await result.current.upsertIncome({
+        amount: 1000,
+        frequency: "Mensal",
+        name: "Salário",
+        notes: "",
+        type: "Salário",
+      })
     })
     expect(getLastOperation(mock.operations, "incomes", "insert").payload).toEqual({
       amount: 1000,
@@ -279,30 +307,60 @@ describe("useFinanceStore", () => {
           status: "Ativa",
           totalInstallments: 0,
         },
-        "expense-1"
+        "expense-1",
       )
     })
     const expenseUpdate = getLastOperation(mock.operations, "fixed_expenses", "update")
-    expect(expenseUpdate.payload).toMatchObject({ due_day: 5, monthly_amount: 50, user_id: "user-1" })
+    expect(expenseUpdate.payload).toMatchObject({
+      due_day: 5,
+      monthly_amount: 50,
+      user_id: "user-1",
+    })
     expect(expenseUpdate.filters).toEqual([
       ["id", "expense-1"],
       ["user_id", "user-1"],
     ])
 
     await act(async () => {
-      await result.current.upsertInvestment({ investedAmount: 100, month: "2026-02", notes: "", plannedAmount: 200 })
+      await result.current.upsertInvestment({
+        investedAmount: 100,
+        month: "2026-02",
+        notes: "",
+        plannedAmount: 200,
+      })
     })
     const investmentUpsert = getLastOperation(mock.operations, "investment_entries", "upsert")
-    expect(investmentUpsert.payload).toMatchObject({ invested_amount: 100, month: "2026-02-01", planned_amount: 200, user_id: "user-1" })
+    expect(investmentUpsert.payload).toMatchObject({
+      invested_amount: 100,
+      month: "2026-02-01",
+      planned_amount: 200,
+      user_id: "user-1",
+    })
     expect(investmentUpsert.upsertOptions).toEqual({ onConflict: "user_id,month" })
 
     await act(async () => {
-      await result.current.upsertGoal({ name: "Reserva", notes: "", status: "Ativa", targetAmount: 1000, targetDate: null })
-      await result.current.upsertGoalContribution({ amount: 100, date: "2026-01-10", goalId: "goal-1", notes: "" })
+      await result.current.upsertGoal({
+        name: "Reserva",
+        notes: "",
+        status: "Ativa",
+        targetAmount: 1000,
+        targetDate: null,
+      })
+      await result.current.upsertGoalContribution({
+        amount: 100,
+        date: "2026-01-10",
+        goalId: "goal-1",
+        notes: "",
+      })
       await result.current.deleteGoalContribution("contribution-1")
     })
-    expect(getLastOperation(mock.operations, "financial_goals", "insert").payload).toMatchObject({ target_amount: 1000, user_id: "user-1" })
-    expect(getLastOperation(mock.operations, "goal_contributions", "insert").payload).toMatchObject({ goal_id: "goal-1", user_id: "user-1" })
+    expect(getLastOperation(mock.operations, "financial_goals", "insert").payload).toMatchObject({
+      target_amount: 1000,
+      user_id: "user-1",
+    })
+    expect(getLastOperation(mock.operations, "goal_contributions", "insert").payload).toMatchObject(
+      { goal_id: "goal-1", user_id: "user-1" },
+    )
     expect(getLastOperation(mock.operations, "goal_contributions", "delete").filters).toEqual([
       ["id", "contribution-1"],
       ["user_id", "user-1"],
@@ -326,7 +384,11 @@ describe("useFinanceStore", () => {
       "charge_reminders",
       "incomes",
     ])
-    expect(deletes.every((operation) => operation.filters.some(([column, value]) => column === "user_id" && value === "user-1"))).toBe(true)
+    expect(
+      deletes.every((operation) =>
+        operation.filters.some(([column, value]) => column === "user_id" && value === "user-1"),
+      ),
+    ).toBe(true)
   })
 
   it("resets the workspace by clearing the same user-scoped tables", async () => {
@@ -337,7 +399,9 @@ describe("useFinanceStore", () => {
     })
 
     expect(mock.operations.filter((operation) => operation.action === "delete")).toHaveLength(7)
-    expect(mock.operations.filter((operation) => operation.action === "delete")[0]?.filters).toEqual([["user_id", "user-1"]])
+    expect(
+      mock.operations.filter((operation) => operation.action === "delete")[0]?.filters,
+    ).toEqual([["user_id", "user-1"]])
   })
 
   it("filters id-based reminder and finance mutations by user_id", async () => {
@@ -357,15 +421,15 @@ describe("useFinanceStore", () => {
           totalInstallments: 4,
           type: "Parcelado",
         },
-        "reminder-1"
+        "reminder-1",
       )
       await result.current.upsertGoalContribution(
         { amount: 150, date: "2026-01-11", goalId: "goal-1", notes: "aporte" },
-        "contribution-1"
+        "contribution-1",
       )
       await result.current.upsertInvestment(
         { investedAmount: 100, month: "2026-03", notes: "", plannedAmount: 200 },
-        "investment-1"
+        "investment-1",
       )
       await result.current.deleteIncome("income-1")
       await result.current.deleteReminder("reminder-1")
@@ -414,7 +478,10 @@ describe("useFinanceStore", () => {
   })
 
   it("sets mutation errors, clears saving state and rethrows", async () => {
-    const { result } = await renderReadyStore("user-1", createSupabaseMock({ mutationError: { message: "Falha ao salvar." } }))
+    const { result } = await renderReadyStore(
+      "user-1",
+      createSupabaseMock({ mutationError: { message: "Falha ao salvar." } }),
+    )
     let caughtError: unknown = null
 
     await act(async () => {
@@ -453,7 +520,7 @@ describe("useFinanceStore", () => {
             },
           ],
         },
-      })
+      }),
     )
 
     await act(async () => {
@@ -494,7 +561,7 @@ describe("useFinanceStore", () => {
             },
           ],
         },
-      })
+      }),
     )
 
     await act(async () => {
@@ -502,7 +569,11 @@ describe("useFinanceStore", () => {
       await result.current.markReminderReceived("reminder-1")
     })
 
-    expect(mock.operations.some((operation) => operation.table === "charge_reminders" && operation.action === "update")).toBe(false)
+    expect(
+      mock.operations.some(
+        (operation) => operation.table === "charge_reminders" && operation.action === "update",
+      ),
+    ).toBe(false)
   })
 
   it("marks parcelled reminders as completed when the last installment is received", async () => {
@@ -527,7 +598,7 @@ describe("useFinanceStore", () => {
             },
           ],
         },
-      })
+      }),
     )
 
     await act(async () => {

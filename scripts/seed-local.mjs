@@ -72,19 +72,22 @@ const url = process.env.NEXT_PUBLIC_SUPABASE_URL
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-assert(url && anonKey && serviceRoleKey, "Configure as variáveis locais do Supabase antes de executar o seed.")
+assert(
+  url && anonKey && serviceRoleKey,
+  "Configure as variáveis locais do Supabase antes de executar o seed.",
+)
 
 const parsedUrl = new URL(url)
 assert(
   parsedUrl.hostname === "localhost" || parsedUrl.hostname === "127.0.0.1",
-  "O seed local só pode ser executado contra localhost ou 127.0.0.1."
+  "O seed local só pode ser executado contra localhost ou 127.0.0.1.",
 )
 
 const admin = createSupabaseClient(url, serviceRoleKey)
 const anonymous = createSupabaseClient(url, anonKey)
 const users = await assertSupabaseSuccess(
   "listar usuários locais",
-  await admin.auth.admin.listUsers({ perPage: 1000 })
+  await admin.auth.admin.listUsers({ perPage: 1000 }),
 )
 let demoUser = users.users.find((user) => user.email === demoEmail)
 
@@ -96,7 +99,7 @@ if (!demoUser) {
       email_confirm: true,
       password: demoPassword,
       user_metadata: { full_name: demoName },
-    })
+    }),
   )
 } else {
   demoUser = await assertSupabaseSuccess(
@@ -105,13 +108,13 @@ if (!demoUser) {
       email_confirm: true,
       password: demoPassword,
       user_metadata: { full_name: demoName },
-    })
+    }),
   )
 }
 
 const signedIn = await assertSupabaseSuccess(
   "autenticar usuário demo",
-  await anonymous.auth.signInWithPassword({ email: demoEmail, password: demoPassword })
+  await anonymous.auth.signInWithPassword({ email: demoEmail, password: demoPassword }),
 )
 assert(signedIn.user, "O Supabase não retornou o usuário demo autenticado.")
 
@@ -123,8 +126,8 @@ await assertSupabaseSuccess(
       full_name: demoName,
       id: signedIn.user.id,
     },
-    { onConflict: "id" }
-  )
+    { onConflict: "id" },
+  ),
 )
 
 const rows = {
@@ -237,7 +240,7 @@ const rows = {
 for (const [table, values] of Object.entries(rows)) {
   await assertSupabaseSuccess(
     `salvar dados demo em ${table}`,
-    await anonymous.from(table).upsert(values, { onConflict: "id" })
+    await anonymous.from(table).upsert(values, { onConflict: "id" }),
   )
 }
 

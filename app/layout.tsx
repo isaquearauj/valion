@@ -1,7 +1,7 @@
-import type { Metadata } from "next";
-import { Toaster } from "@/components/ui/sonner";
-import { ThemeProvider } from "@/components/theme-provider";
-import "./globals.css";
+import type { Metadata } from "next"
+import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "@/components/ui/sonner"
+import "./globals.css"
 
 export const metadata: Metadata = {
   title: "Valion",
@@ -10,19 +10,15 @@ export const metadata: Metadata = {
   },
   description:
     "Sistema web moderno para receitas, despesas fixas, investimentos e histórico financeiro.",
-};
+}
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactNode
 }>) {
   return (
-    <html
-      lang="pt-BR"
-      className="h-full antialiased"
-      suppressHydrationWarning
-    >
+    <html lang="pt-BR" className="h-full antialiased" suppressHydrationWarning>
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
           {children}
@@ -30,5 +26,5 @@ export default function RootLayout({
         </ThemeProvider>
       </body>
     </html>
-  );
+  )
 }

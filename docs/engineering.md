@@ -10,15 +10,36 @@ ser novas migrations.
 O desenvolvimento usa Supabase local com Docker:
 
 ```bash
-supabase start
-supabase status
-supabase db reset --local
-pnpm test:integration
+pnpm supabase:start
+pnpm verify:supabase
 ```
 
-Neste repositório, o teste de integração equivalente disponível é
-`pnpm test:supabase`; confirme os scripts em `package.json` antes de executar
-comandos adicionais. Seeds são somente locais e nunca fazem parte do deploy.
+Seeds são somente locais e nunca fazem parte do deploy. O script de reset usa
+explicitamente `--local` para evitar que um projeto vinculado seja recriado por
+engano.
+
+## Qualidade de código
+
+O Biome é a fonte de verdade para formatação, imports e lint geral. O ESLint é
+mantido como camada complementar para regras específicas do Next.js e React.
+
+```bash
+pnpm check
+pnpm lint:eslint
+pnpm typecheck
+pnpm test
+pnpm build
+```
+
+Use `pnpm check:write` para correções seguras. Não rode `--unsafe` em massa:
+revise cada correção que puder alterar comportamento.
+
+O job `dependency-audit` de `.github/workflows/ci.yml` examina o
+`pnpm-lock.yaml` com OSV Scanner e bloqueia vulnerabilidades conhecidas. Não
+aprove scripts de instalação ignorados pelo pnpm sem revisar o pacote e a
+necessidade do script. Os scripts de `msw`, `sharp` e `unrs-resolver` são
+ignorados explicitamente: o projeto não usa um service worker do MSW, e os
+artefatos nativos publicados de Sharp/UNRS foram validados pelo build e lint.
 
 Produção só recebe migrations pelo workflow manual
 `.github/workflows/supabase-migrations.yml`, disparado em `workflow_dispatch`,

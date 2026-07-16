@@ -26,13 +26,10 @@ export function isExpenseCommitted(expense: FixedExpense) {
 export function calculateFinanceSummary(state: FinanceState): FinanceSummary {
   const monthlyIncome = state.incomes.reduce(
     (total, income) => total + normalizeMonthlyIncome(income),
-    0
+    0,
   )
   const activeExpenses = state.expenses.filter(isExpenseCommitted)
-  const fixedExpenses = activeExpenses.reduce(
-    (total, expense) => total + expense.monthlyAmount,
-    0
-  )
+  const fixedExpenses = activeExpenses.reduce((total, expense) => total + expense.monthlyAmount, 0)
   const currentInvestment = getCurrentInvestment(state)
   const plannedInvestment = currentInvestment?.plannedAmount ?? 0
   const investedAmount = currentInvestment?.investedAmount ?? 0
@@ -44,7 +41,7 @@ export function calculateFinanceSummary(state: FinanceState): FinanceSummary {
     investmentDelta > 0 ? "above" : investmentDelta < 0 ? "below" : "on-track"
   const debtInstallmentsRemaining = activeExpenses.reduce(
     (total, expense) => total + expense.remainingInstallments,
-    0
+    0,
   )
 
   return {
@@ -83,7 +80,7 @@ export function getExpenseDistribution(state: FinanceState) {
   }
 
   return Array.from(totals, ([category, value]) => ({ category, value })).toSorted(
-    (a, b) => b.value - a.value
+    (a, b) => b.value - a.value,
   )
 }
 
@@ -99,13 +96,9 @@ export function getMonthlyHistory(state: FinanceState): MonthlySnapshot[] {
     plannedInvestment: summary.plannedInvestment,
   }
 
-  const previousSnapshots = state.snapshots.filter(
-    (snapshot) => snapshot.month !== currentMonth
-  )
+  const previousSnapshots = state.snapshots.filter((snapshot) => snapshot.month !== currentMonth)
 
-  return [...previousSnapshots, currentSnapshot].toSorted((a, b) =>
-    a.month.localeCompare(b.month)
-  )
+  return [...previousSnapshots, currentSnapshot].toSorted((a, b) => a.month.localeCompare(b.month))
 }
 
 export function getInstallmentProgress(expense: FixedExpense) {

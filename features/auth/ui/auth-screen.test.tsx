@@ -1,11 +1,10 @@
 import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { beforeEach, describe, expect, it, vi } from "vitest"
-
-import { AuthScreen } from "@/features/auth/ui/auth-screen"
-import { getAppUserFromSupabaseUser } from "@/features/auth/supabase-user"
-import { createSupabaseBrowser } from "@/lib/supabase/client"
 import { toast } from "sonner"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+import { getAppUserFromSupabaseUser } from "@/features/auth/supabase-user"
+import { AuthScreen } from "@/features/auth/ui/auth-screen"
+import { createSupabaseBrowser } from "@/lib/supabase/client"
 
 type SupabaseAuthMock = ReturnType<typeof createSupabaseMock>
 
@@ -40,8 +39,13 @@ function createSupabaseMock() {
   return {
     auth: {
       resetPasswordForEmail: vi.fn().mockResolvedValue({ error: null }),
-      signInWithPassword: vi.fn().mockResolvedValue({ data: { user: { id: "user-1" } }, error: null }),
-      signUp: vi.fn().mockResolvedValue({ data: { session: { access_token: "token" }, user: { id: "user-1" } }, error: null }),
+      signInWithPassword: vi
+        .fn()
+        .mockResolvedValue({ data: { user: { id: "user-1" } }, error: null }),
+      signUp: vi.fn().mockResolvedValue({
+        data: { session: { access_token: "token" }, user: { id: "user-1" } },
+        error: null,
+      }),
     },
   }
 }
@@ -117,12 +121,16 @@ describe("AuthScreen", () => {
     await user.type(screen.getByLabelText("Senha"), "123456")
     await user.click(screen.getByRole("button", { name: /entrar no painel/i }))
 
-    await waitFor(() => expect(onAuthenticate).toHaveBeenCalledWith(expect.objectContaining({ id: "user-1" })))
+    await waitFor(() =>
+      expect(onAuthenticate).toHaveBeenCalledWith(expect.objectContaining({ id: "user-1" })),
+    )
     expect(supabase().auth.signInWithPassword).toHaveBeenCalledWith({
       email: "ana@example.com",
       password: "123456",
     })
-    expect(toastMock.success).toHaveBeenCalledWith("Sessão iniciada", { description: "Bem-vindo ao Valion." })
+    expect(toastMock.success).toHaveBeenCalledWith("Sessão iniciada", {
+      description: "Bem-vindo ao Valion.",
+    })
   })
 
   it("registers with an email-derived fallback name", async () => {
@@ -148,7 +156,10 @@ describe("AuthScreen", () => {
   it("handles sign-up that requires e-mail confirmation", async () => {
     const user = userEvent.setup()
     const onModeChange = vi.fn()
-    supabase().auth.signUp.mockResolvedValueOnce({ data: { session: null, user: { id: "user-1" } }, error: null })
+    supabase().auth.signUp.mockResolvedValueOnce({
+      data: { session: null, user: { id: "user-1" } },
+      error: null,
+    })
     render(<AuthScreen mode="register" onAuthenticate={vi.fn()} onModeChange={onModeChange} />)
 
     await user.type(screen.getByLabelText("Nome"), "Ana")
@@ -156,7 +167,9 @@ describe("AuthScreen", () => {
     await user.type(screen.getByLabelText("Senha"), "123456")
     await user.click(screen.getByRole("button", { name: /criar conta/i }))
 
-    await waitFor(() => expect(toastMock.success).toHaveBeenCalledWith("Conta criada", expect.any(Object)))
+    await waitFor(() =>
+      expect(toastMock.success).toHaveBeenCalledWith("Conta criada", expect.any(Object)),
+    )
     expect(onModeChange).toHaveBeenCalledWith("login")
   })
 

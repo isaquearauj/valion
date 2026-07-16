@@ -62,7 +62,11 @@ describe("proxy", () => {
     const response = await proxy(fakeRequest as never)
     const options = vi.mocked(createServerClient).mock.calls[0]?.[2] as unknown as CookieAdapter
 
-    expect(createServerClient).toHaveBeenCalledWith("https://supabase.example", "anon-key", expect.any(Object))
+    expect(createServerClient).toHaveBeenCalledWith(
+      "https://supabase.example",
+      "anon-key",
+      expect.any(Object),
+    )
     expect(getUser).toHaveBeenCalled()
     expect(options.cookies.getAll()).toEqual([])
     options.cookies.setAll([

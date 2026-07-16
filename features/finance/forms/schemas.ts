@@ -19,36 +19,38 @@ export const incomeSchema = z.object({
   type: z.enum(INCOME_TYPES),
 })
 
-export const expenseSchema = z.object({
-  category: z.enum(EXPENSE_CATEGORIES),
-  dueDay: z.coerce.number().int().min(1).max(31),
-  monthlyAmount: z.coerce.number().positive("Informe um valor maior que zero."),
-  name: z.string().min(2, "Informe um nome com pelo menos 2 caracteres."),
-  notes: z.string().max(300).optional().default(""),
-  remainingInstallments: z.coerce.number().int().min(0),
-  status: z.enum(EXPENSE_STATUSES),
-  totalInstallments: z.coerce.number().int().min(0),
-}).superRefine((values, context) => {
-  if (values.totalInstallments <= 0) {
-    if (values.remainingInstallments > 0) {
+export const expenseSchema = z
+  .object({
+    category: z.enum(EXPENSE_CATEGORIES),
+    dueDay: z.coerce.number().int().min(1).max(31),
+    monthlyAmount: z.coerce.number().positive("Informe um valor maior que zero."),
+    name: z.string().min(2, "Informe um nome com pelo menos 2 caracteres."),
+    notes: z.string().max(300).optional().default(""),
+    remainingInstallments: z.coerce.number().int().min(0),
+    status: z.enum(EXPENSE_STATUSES),
+    totalInstallments: z.coerce.number().int().min(0),
+  })
+  .superRefine((values, context) => {
+    if (values.totalInstallments <= 0) {
+      if (values.remainingInstallments > 0) {
+        context.addIssue({
+          code: "custom",
+          message: "Parcelas restantes devem ser zero quando a despesa não é parcelada.",
+          path: ["remainingInstallments"],
+        })
+      }
+
+      return
+    }
+
+    if (values.remainingInstallments > values.totalInstallments) {
       context.addIssue({
         code: "custom",
-        message: "Parcelas restantes devem ser zero quando a despesa não é parcelada.",
+        message: "Parcelas restantes não podem exceder o total.",
         path: ["remainingInstallments"],
       })
     }
-
-    return
-  }
-
-  if (values.remainingInstallments > values.totalInstallments) {
-    context.addIssue({
-      code: "custom",
-      message: "Parcelas restantes não podem exceder o total.",
-      path: ["remainingInstallments"],
-    })
-  }
-})
+  })
 
 export const reminderSchema = z
   .object({
@@ -100,26 +102,32 @@ export const investmentSchema = z.object({
   plannedAmount: z.coerce.number().min(0),
 })
 
-export const goalSchema = z.object({
-  deadlineEnabled: z.boolean(),
-  deadlineDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Informe uma data válida.").optional().or(z.literal("")),
-  name: z.string().min(2, "Informe um nome com pelo menos 2 caracteres."),
-  notes: z.string().max(300).optional().default(""),
-  status: z.enum(GOAL_STATUSES),
-  targetAmount: z.coerce.number().positive("Informe um valor maior que zero."),
-}).superRefine((values, context) => {
-  if (!values.deadlineEnabled) {
-    return
-  }
+export const goalSchema = z
+  .object({
+    deadlineEnabled: z.boolean(),
+    deadlineDate: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Informe uma data válida.")
+      .optional()
+      .or(z.literal("")),
+    name: z.string().min(2, "Informe um nome com pelo menos 2 caracteres."),
+    notes: z.string().max(300).optional().default(""),
+    status: z.enum(GOAL_STATUSES),
+    targetAmount: z.coerce.number().positive("Informe um valor maior que zero."),
+  })
+  .superRefine((values, context) => {
+    if (!values.deadlineEnabled) {
+      return
+    }
 
-  if (!values.deadlineDate) {
-    context.addIssue({
-      code: "custom",
-      message: "Escolha a data do prazo no calendário.",
-      path: ["deadlineDate"],
-    })
-  }
-})
+    if (!values.deadlineDate) {
+      context.addIssue({
+        code: "custom",
+        message: "Escolha a data do prazo no calendário.",
+        path: ["deadlineDate"],
+      })
+    }
+  })
 
 export const goalContributionSchema = z.object({
   amount: z.coerce.number().positive("Informe um valor maior que zero."),

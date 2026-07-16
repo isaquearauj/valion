@@ -1,8 +1,7 @@
-import type { ReactNode } from "react"
 import { redirect } from "next/navigation"
-
-import { FinanceRouteShell } from "@/features/finance/ui/shell/finance-route-shell"
+import type { ReactNode } from "react"
 import { getCurrentAppUser } from "@/features/auth/server"
+import { FinanceRouteShell } from "@/features/finance/ui/shell/finance-route-shell"
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const user = await getCurrentAppUser()

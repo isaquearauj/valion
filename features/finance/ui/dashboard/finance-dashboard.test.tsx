@@ -1,12 +1,11 @@
 import { render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import type { ComponentProps } from "react"
+import { toast } from "sonner"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-
-import { FinanceDashboard } from "@/features/finance/ui/dashboard/finance-dashboard"
 import type { AppUser } from "@/features/auth/types"
 import type { FinanceState } from "@/features/finance/domain/types"
-import { toast } from "sonner"
+import { FinanceDashboard } from "@/features/finance/ui/dashboard/finance-dashboard"
 
 vi.mock("next-themes", () => ({
   useTheme: () => ({ resolvedTheme: "light", setTheme: vi.fn() }),
@@ -161,7 +160,7 @@ function renderDashboard(props: Partial<FinanceDashboardProps> = {}) {
       onUpdateUser={vi.fn()}
       user={user}
       {...props}
-    />
+    />,
   )
 
   return { finance }
@@ -180,8 +179,9 @@ describe("FinanceDashboard", () => {
     ["investments", "Controle de investimentos"],
     ["goals", "Metas financeiras"],
     ["history", "Histórico financeiro"],
-  ] satisfies Array<[FinanceDashboardProps["activeSection"], string]>)
-  ("renders the %s section", (_section, expectedText) => {
+  ] satisfies Array<
+    [FinanceDashboardProps["activeSection"], string]
+  >)("renders the %s section", (_section, expectedText) => {
     renderDashboard({ activeSection: _section })
 
     expect(screen.getByText(expectedText)).toBeInTheDocument()
@@ -207,7 +207,12 @@ describe("FinanceDashboard", () => {
     await userEventInstance.type(within(dialog).getByLabelText("Valor"), "800")
     await userEventInstance.click(within(dialog).getByRole("button", { name: /Salvar receita/i }))
 
-    await waitFor(() => expect(finance.upsertIncome).toHaveBeenCalledWith(expect.objectContaining({ amount: 800, name: "Freela" }), undefined))
+    await waitFor(() =>
+      expect(finance.upsertIncome).toHaveBeenCalledWith(
+        expect.objectContaining({ amount: 800, name: "Freela" }),
+        undefined,
+      ),
+    )
     expect(toast.success).toHaveBeenCalledWith("Receita adicionada")
   })
 

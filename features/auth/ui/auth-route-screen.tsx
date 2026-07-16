@@ -1,10 +1,9 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-
-import { AuthScreen } from "@/features/auth/ui/auth-screen"
+import { useEffect, useState } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
+import { AuthScreen } from "@/features/auth/ui/auth-screen"
 import type { AuthMode } from "@/features/navigation/routes"
 import { authPaths } from "@/features/navigation/routes"
 import { createSupabaseBrowser } from "@/lib/supabase/client"
@@ -62,5 +61,7 @@ export function AuthRouteScreen({ mode }: { mode: AuthMode }) {
     )
   }
 
-  return <AuthScreen mode={mode} onAuthenticate={handleAuthenticate} onModeChange={handleModeChange} />
+  return (
+    <AuthScreen mode={mode} onAuthenticate={handleAuthenticate} onModeChange={handleModeChange} />
+  )
 }

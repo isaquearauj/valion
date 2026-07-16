@@ -22,7 +22,9 @@ describe("auth callback route", () => {
     const exchangeCodeForSession = vi.fn().mockResolvedValue({ error: null })
     createSupabaseServerMock.mockResolvedValue({ auth: { exchangeCodeForSession } } as never)
 
-    const response = await GET(request("https://valionapp.com/auth/callback?code=abc&next=/dashboard"))
+    const response = await GET(
+      request("https://valionapp.com/auth/callback?code=abc&next=/dashboard"),
+    )
 
     expect(exchangeCodeForSession).toHaveBeenCalledWith("abc")
     expect(response.headers.get("location")).toBe("https://valionapp.com/dashboard")
@@ -37,13 +39,17 @@ describe("auth callback route", () => {
 
   it("rejects external and unknown redirects", async () => {
     await expect(
-      GET(request("https://valionapp.com/auth/callback?next=https://evil.example/phish"))
+      GET(request("https://valionapp.com/auth/callback?next=https://evil.example/phish")),
     ).resolves.toMatchObject({ status: 307 })
     expect(
-      (await GET(request("https://valionapp.com/auth/callback?next=https://evil.example/phish"))).headers.get("location")
+      (
+        await GET(request("https://valionapp.com/auth/callback?next=https://evil.example/phish"))
+      ).headers.get("location"),
     ).toBe("https://valionapp.com/dashboard")
-    expect((await GET(request("https://valionapp.com/auth/callback?next=/admin"))).headers.get("location")).toBe(
-      "https://valionapp.com/dashboard"
-    )
+    expect(
+      (await GET(request("https://valionapp.com/auth/callback?next=/admin"))).headers.get(
+        "location",
+      ),
+    ).toBe("https://valionapp.com/dashboard")
   })
 })

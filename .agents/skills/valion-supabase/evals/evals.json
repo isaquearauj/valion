@@ -1,0 +1,42 @@
+{
+  "skill_name": "valion-supabase",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "No Valion, adicione uma coluna opcional de observacao interna nas metas financeiras e explique como validar e publicar a migration sem arriscar producao.",
+      "expected_output": "Plano vertical com migration nova, schema de referencia, tipos/mappers/store, testes locais e deploy apenas pelo workflow protegido.",
+      "files": [],
+      "expectations": [
+        "O plano exige criar uma migration nova e nao editar migrations ja aplicadas, mantendo supabase/schema.sql coerente.",
+        "O plano cobre o contrato vertical da coluna, incluindo tipos de dominio, row/mapper, schema Zod, store e UI quando aplicavel.",
+        "A validacao local cita pnpm supabase:reset e pnpm test:supabase e inclui pnpm verify porque a mudanca afeta a aplicacao.",
+        "A publicacao em producao e limitada ao workflow protegido .github/workflows/supabase-migrations.yml, sem db push direto em producao."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Uma conta de teste parece enxergar uma meta de outro usuario. Revise a seguranca do Supabase e indique a verificacao real que deve ser feita.",
+      "expected_output": "Revisao de RLS, filtros user_id, constraints compostas e teste local multiusuario sem exposicao de credenciais.",
+      "files": [],
+      "expectations": [
+        "A revisao cobre policies RLS por usuario e filtros explicitos por user_id na camada de acesso.",
+        "A revisao verifica constraints e relacionamentos compostos que impeçam referencias cruzadas entre usuarios.",
+        "A verificacao proposta usa dois usuarios reais no Supabase local e prova que leitura e escrita cruzadas sao negadas, sem substituir RLS por mocks.",
+        "O plano protege credenciais e restringe comandos destrutivos ao host local, sem imprimir chaves."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Quero testar de verdade a exclusao de conta no Valion local, incluindo Auth e os dados financeiros. Prepare um checklist seguro.",
+      "expected_output": "Checklist restrito a localhost, service role server-side, sessao validada, cascade verificada e nenhum segredo impresso.",
+      "files": [],
+      "expectations": [
+        "O checklist confirma que a URL e local (127.0.0.1 ou localhost na porta 55321) e manda parar se o alvo nao for local.",
+        "A service role permanece somente em .env.local e no servidor, sem ser impressa, commitada ou exposta ao cliente.",
+        "A rota valida a sessao com getUser() antes de criar ou usar o cliente admin e devolve respostas genericas.",
+        "O teste comprova no Supabase local a remocao do usuario em Auth e dos dados financeiros por cascade.",
+        "A preparacao e validacao citam pnpm supabase:reset e pnpm test:supabase, com pnpm verify para a rota da aplicacao."
+      ]
+    }
+  ]
+}

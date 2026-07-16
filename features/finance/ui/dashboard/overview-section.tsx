@@ -22,7 +22,14 @@ import {
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import {
   ChartContainer,
   ChartLegend,
@@ -32,8 +39,7 @@ import {
 } from "@/components/ui/chart"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
-import type { AppSection } from "@/features/navigation/routes"
-import {
+import type {
   calculateFinanceSummary,
   getMonthlyHistory,
 } from "@/features/finance/domain/calculations"
@@ -41,18 +47,15 @@ import {
   formatShortCurrency,
   getBudgetCommitmentStatus,
 } from "@/features/finance/presentation/dashboard-view-models"
-import { getInvestmentInsight } from "@/features/finance/ui/shared/dashboard-primitives"
 import {
   cashflowChartConfig,
   distributionChartConfig,
   investmentChartConfig,
   pieColors,
 } from "@/features/finance/ui/dashboard/chart-config"
-import {
-  formatCurrency,
-  formatMonth,
-  formatPercent,
-} from "@/lib/formatters"
+import { getInvestmentInsight } from "@/features/finance/ui/shared/dashboard-primitives"
+import type { AppSection } from "@/features/navigation/routes"
+import { formatCurrency, formatMonth, formatPercent } from "@/lib/formatters"
 
 type SectionId = AppSection
 
@@ -94,7 +97,8 @@ function HeroSummary({
               Seu orçamento está {formatPercent(summary.committedPercent)} comprometido.
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-              Receita, despesas fixas e investimentos planejados são consolidados automaticamente para mostrar quanto ainda pode ser usado com segurança.
+              Receita, despesas fixas e investimentos planejados são consolidados automaticamente
+              para mostrar quanto ainda pode ser usado com segurança.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -186,21 +190,20 @@ function SummaryCards({ summary }: { summary: ReturnType<typeof calculateFinance
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {cards.map((card) => (
-        <Card key={card.label} className="bg-card/90 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+        <Card
+          key={card.label}
+          className="bg-card/90 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+        >
           <CardHeader className="flex flex-row items-start justify-between gap-4">
             <div>
               <CardDescription>{card.label}</CardDescription>
-              <CardTitle className="mt-2 font-mono text-2xl tabular-nums">
-                {card.value}
-              </CardTitle>
+              <CardTitle className="mt-2 font-mono text-2xl tabular-nums">{card.value}</CardTitle>
             </div>
             <div className="flex size-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
               <card.icon />
             </div>
           </CardHeader>
-          <CardFooter className="pt-0 text-sm text-muted-foreground">
-            {card.description}
-          </CardFooter>
+          <CardFooter className="pt-0 text-sm text-muted-foreground">{card.description}</CardFooter>
         </Card>
       ))}
     </div>
@@ -228,7 +231,11 @@ function FinanceCharts({
         </CardHeader>
         <CardContent>
           <ChartContainer className="h-[280px] w-full" config={cashflowChartConfig}>
-            <BarChart accessibilityLayer data={chartHistory} margin={{ left: 24, right: 16, top: 12 }}>
+            <BarChart
+              accessibilityLayer
+              data={chartHistory}
+              margin={{ left: 24, right: 16, top: 12 }}
+            >
               <CartesianGrid vertical={false} />
               <XAxis axisLine={false} dataKey="label" tickLine={false} tickMargin={10} />
               <YAxis
@@ -254,7 +261,11 @@ function FinanceCharts({
         </CardHeader>
         <CardContent>
           <ChartContainer className="h-[280px] w-full" config={investmentChartConfig}>
-            <LineChart accessibilityLayer data={chartHistory} margin={{ left: 24, right: 16, top: 12 }}>
+            <LineChart
+              accessibilityLayer
+              data={chartHistory}
+              margin={{ left: 24, right: 16, top: 12 }}
+            >
               <CartesianGrid vertical={false} />
               <XAxis axisLine={false} dataKey="label" tickLine={false} tickMargin={10} />
               <YAxis
@@ -292,7 +303,11 @@ function FinanceCharts({
         </CardHeader>
         <CardContent>
           <ChartContainer className="h-[280px] w-full" config={cashflowChartConfig}>
-            <AreaChart accessibilityLayer data={chartHistory} margin={{ left: 24, right: 16, top: 12 }}>
+            <AreaChart
+              accessibilityLayer
+              data={chartHistory}
+              margin={{ left: 24, right: 16, top: 12 }}
+            >
               <CartesianGrid vertical={false} />
               <XAxis axisLine={false} dataKey="label" tickLine={false} tickMargin={10} />
               <YAxis
@@ -328,7 +343,10 @@ function FinanceCharts({
           <CardDescription>Distribuição das despesas fixas ativas.</CardDescription>
         </CardHeader>
         <CardContent className="grid items-center gap-4 md:grid-cols-[minmax(11rem,0.78fr)_minmax(0,1.22fr)]">
-          <ChartContainer className="mx-auto h-[240px] w-full max-w-[15rem]" config={distributionChartConfig}>
+          <ChartContainer
+            className="mx-auto h-[240px] w-full max-w-[15rem]"
+            config={distributionChartConfig}
+          >
             <PieChart accessibilityLayer>
               <ChartTooltip content={<CurrencyTooltip />} />
               <Pie
@@ -348,7 +366,10 @@ function FinanceCharts({
           <div className="flex min-w-0 flex-col justify-center gap-3 p-3 md:mr-2">
             {distribution.length ? (
               distribution.map((item, index) => (
-                <div className="flex min-w-0 items-center justify-between gap-3" key={item.category}>
+                <div
+                  className="flex min-w-0 items-center justify-between gap-3"
+                  key={item.category}
+                >
                   <div className="flex min-w-0 items-center gap-2">
                     <span
                       className="size-2.5 shrink-0 rounded-full"
@@ -362,7 +383,9 @@ function FinanceCharts({
                 </div>
               ))
             ) : (
-              <p className="text-sm text-muted-foreground">Cadastre despesas para ver a distribuição.</p>
+              <p className="text-sm text-muted-foreground">
+                Cadastre despesas para ver a distribuição.
+              </p>
             )}
           </div>
         </CardContent>

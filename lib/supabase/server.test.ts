@@ -51,7 +51,11 @@ describe("createSupabaseServer", () => {
     await expect(createSupabaseServer()).resolves.toEqual({ kind: "server-client" })
 
     const options = vi.mocked(createServerClient).mock.calls[0]?.[2] as CookieAdapter
-    expect(createServerClient).toHaveBeenCalledWith("https://supabase.example", "anon-key", expect.any(Object))
+    expect(createServerClient).toHaveBeenCalledWith(
+      "https://supabase.example",
+      "anon-key",
+      expect.any(Object),
+    )
     expect(options.cookies.getAll()).toEqual([{ name: "session", value: "abc" }])
 
     options.cookies.setAll([{ name: "next", value: "123", options: { httpOnly: true } }])

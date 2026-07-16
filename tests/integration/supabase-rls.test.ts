@@ -51,7 +51,7 @@ function getIntegrationConfig(): IntegrationConfig {
 
   if (!isLocal) {
     throw new Error(
-      "Supabase integration tests only run against localhost/127.0.0.1. Check NEXT_PUBLIC_SUPABASE_URL."
+      "Supabase integration tests only run against localhost/127.0.0.1. Check NEXT_PUBLIC_SUPABASE_URL.",
     )
   }
 
@@ -108,7 +108,7 @@ async function insertRow(client: SupabaseClient, table: string, payload: Record<
 async function expectConstraintFailure(
   client: SupabaseClient,
   table: string,
-  payload: Record<string, unknown>
+  payload: Record<string, unknown>,
 ) {
   const { error } = await client.from(table).insert(payload)
 
@@ -248,7 +248,11 @@ describe("Supabase RLS integration", () => {
     const suffixB = String(index + 2)
 
     const mine = await insertRow(admin, testCase.name, testCase.makePayload(userA.user.id, suffixA))
-    const theirs = await insertRow(admin, testCase.name, testCase.makePayload(userB.user.id, suffixB))
+    const theirs = await insertRow(
+      admin,
+      testCase.name,
+      testCase.makePayload(userB.user.id, suffixB),
+    )
 
     return { mine, theirs }
   }
@@ -262,6 +266,89 @@ describe("Supabase RLS integration", () => {
 
     expect(error).toBeNull()
     expect(data).toMatchObject({ id: userA.user.id, full_name: "Usuário a" })
+  })
+
+  it("deletes the auth user and cascades all local account data", async () => {
+    const disposableUser = await createConfirmedUser(admin, "account-deletion")
+    const disposableClient = await signInAs(config, disposableUser.email, disposableUser.password)
+    let userDeleted = false
+
+    try {
+      await insertRow(
+        disposableClient,
+        "incomes",
+        makeIncome(disposableUser.user.id, "account-deletion"),
+      )
+      await insertRow(
+        disposableClient,
+        "charge_reminders",
+        makeReminder(disposableUser.user.id, "account-deletion"),
+      )
+      await insertRow(
+        disposableClient,
+        "fixed_expenses",
+        makeExpense(disposableUser.user.id, "account-deletion"),
+      )
+      const goal = await insertRow(
+        disposableClient,
+        "financial_goals",
+        makeGoal(disposableUser.user.id, "account-deletion"),
+      )
+      await insertRow(disposableClient, "goal_contributions", {
+        amount: 100,
+        date: "2026-09-15",
+        goal_id: goal.id,
+        notes: "account-deletion",
+        user_id: disposableUser.user.id,
+      })
+      await insertRow(
+        disposableClient,
+        "investment_entries",
+        makeInvestment(disposableUser.user.id, "10"),
+      )
+      await insertRow(
+        disposableClient,
+        "monthly_snapshots",
+        makeSnapshot(disposableUser.user.id, "10"),
+      )
+
+      const { error: deleteError } = await admin.auth.admin.deleteUser(disposableUser.user.id)
+
+      expect(deleteError).toBeNull()
+      userDeleted = deleteError === null
+
+      const { data: profiles, error: profilesError } = await admin
+        .from("profiles")
+        .select("id")
+        .eq("id", disposableUser.user.id)
+
+      expect(profilesError).toBeNull()
+      expect(profiles).toEqual([])
+
+      const financeTables: FinanceTable[] = [
+        "charge_reminders",
+        "financial_goals",
+        "fixed_expenses",
+        "goal_contributions",
+        "incomes",
+        "investment_entries",
+        "monthly_snapshots",
+      ]
+
+      for (const table of financeTables) {
+        const { data, error } = await admin
+          .from(table)
+          .select("id")
+          .eq("user_id", disposableUser.user.id)
+
+        expect(error, table).toBeNull()
+        expect(data, table).toEqual([])
+      }
+    } finally {
+      if (!userDeleted) {
+        await admin.auth.admin.deleteUser(disposableUser.user.id)
+      }
+    }
   })
 
   it("keeps profiles isolated to the authenticated user", async () => {
@@ -354,7 +441,11 @@ describe("Supabase RLS integration", () => {
   })
 
   it("rejects goal contributions pointing to another user's goal", async () => {
-    const otherGoal = await insertRow(admin, "financial_goals", makeGoal(userB.user.id, "other-owner"))
+    const otherGoal = await insertRow(
+      admin,
+      "financial_goals",
+      makeGoal(userB.user.id, "other-owner"),
+    )
 
     await expectConstraintFailure(admin, "goal_contributions", {
       amount: 100,
@@ -394,7 +485,10 @@ describe("Supabase RLS integration", () => {
   })
 
   it("rejects negative values where database constraints require positive amounts", async () => {
-    await expectConstraintFailure(admin, "incomes", { ...makeIncome(userA.user.id, "negative"), amount: -1 })
+    await expectConstraintFailure(admin, "incomes", {
+      ...makeIncome(userA.user.id, "negative"),
+      amount: -1,
+    })
     await expectConstraintFailure(admin, "charge_reminders", {
       ...makeReminder(userA.user.id, "negative"),
       amount: -1,
@@ -410,7 +504,9 @@ describe("Supabase RLS integration", () => {
     await expectConstraintFailure(admin, "goal_contributions", {
       amount: -1,
       date: "2026-10-01",
-      goal_id: (await insertRow(admin, "financial_goals", makeGoal(userA.user.id, "negative-contrib"))).id,
+      goal_id: (
+        await insertRow(admin, "financial_goals", makeGoal(userA.user.id, "negative-contrib"))
+      ).id,
       notes: "",
       user_id: userA.user.id,
     })
@@ -449,7 +545,7 @@ describe("Supabase RLS integration", () => {
 
     expect(updateError).toBeNull()
     expect(new Date((updated as { updated_at: string }).updated_at).getTime()).toBeGreaterThan(
-      new Date((inserted as { updated_at: string }).updated_at).getTime()
+      new Date((inserted as { updated_at: string }).updated_at).getTime(),
     )
   })
 })

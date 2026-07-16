@@ -18,7 +18,10 @@ function getFallbackName(user: User) {
   return user.email?.split("@")[0]?.replace(/[._-]/g, " ") || "Usuário"
 }
 
-export async function getAppUserFromSupabaseUser(client: SupabaseClient, user: User): Promise<AppUser> {
+export async function getAppUserFromSupabaseUser(
+  client: SupabaseClient,
+  user: User,
+): Promise<AppUser> {
   const { data } = await client
     .from("profiles")
     .select("full_name, avatar_url, created_at")
@@ -35,7 +38,7 @@ export async function getAppUserFromSupabaseUser(client: SupabaseClient, user: U
         full_name: fallbackName,
         id: user.id,
       },
-      { onConflict: "id" }
+      { onConflict: "id" },
     )
 
     return {

@@ -1,13 +1,12 @@
 "use client"
 
-import { type ReactNode, useEffect, useMemo, useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
+import { type ReactNode, useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
-
-import { FinanceDashboard } from "@/features/finance/ui/dashboard/finance-dashboard"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { AppUser } from "@/features/auth/types"
 import { useFinanceStore } from "@/features/finance/hooks/use-finance-store"
+import { FinanceDashboard } from "@/features/finance/ui/dashboard/finance-dashboard"
 import type { AppSection } from "@/features/navigation/routes"
 import { getAppSectionFromPath, getAppSectionPath } from "@/features/navigation/routes"
 import { createSupabaseBrowser } from "@/lib/supabase/client"
@@ -16,7 +15,13 @@ function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Não foi possível concluir a ação."
 }
 
-export function FinanceRouteShell({ children, initialUser }: { children?: ReactNode; initialUser: AppUser }) {
+export function FinanceRouteShell({
+  children,
+  initialUser,
+}: {
+  children?: ReactNode
+  initialUser: AppUser
+}) {
   const pathname = usePathname()
   const routeSection = getAppSectionFromPath(pathname)
   const [activeSection, setActiveSection] = useState<AppSection>(routeSection ?? "dashboard")

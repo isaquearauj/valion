@@ -18,12 +18,7 @@ export const INCOME_TYPES = [
   "Outros",
 ] as const
 
-export const INCOME_FREQUENCIES = [
-  "Mensal",
-  "Quinzenal",
-  "Semanal",
-  "Única",
-] as const
+export const INCOME_FREQUENCIES = ["Mensal", "Quinzenal", "Semanal", "Única"] as const
 
 export const REMINDER_TYPES = ["Recorrente", "Parcelado"] as const
 
