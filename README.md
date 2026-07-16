@@ -48,7 +48,7 @@ escutar na interface de rede; use-os apenas em uma rede confiável e rode
 - `pnpm lint`: Biome + regras complementares de Next/React no ESLint.
 - `pnpm typecheck`: verificação TypeScript.
 - `pnpm test`: suíte Vitest padrão.
-- `pnpm test:coverage`: gera coverage sem threshold global bloqueante.
+- `pnpm test:coverage`: gera coverage e aplica thresholds globais que nunca devem ser reduzidos.
 - `pnpm test:supabase`: suíte opt-in de integração RLS/constraints contra Supabase local.
 - `pnpm quality`: Biome, ESLint, typecheck e testes unitários.
 - `pnpm verify`: quality gate e build de produção.
@@ -103,22 +103,26 @@ Configuração de Auth em produção:
 - `pnpm supabase:seed`: carrega dados demonstrativos no Supabase local.
 - `pnpm supabase:reset:seed`: recria banco e carrega dados demonstrativos.
 - `pnpm supabase:status`: mostra URLs e chaves locais.
+- `pnpm supabase:types`: regenera os tipos oficiais após aplicar migrations locais.
 
 Migrations de produção não são aplicadas pelo ambiente local. Depois de validar uma nova migration com `pnpm supabase:reset` e `pnpm test:supabase`, um agente autorizado pode disparar o workflow `Supabase migrations` via `gh workflow run --ref main`. Consulte `docs/supabase-setup.md` para o procedimento completo.
 
 ## Estrutura principal
 
 - `features/auth/ui`: telas e fluxos visuais de autenticação.
-- `features/finance/ui`: dashboard, CRUDs e telas do produto.
+- `features/finance/ui/routes`: seções e formulários carregados por rota do App Router.
 - `features/finance/domain`: tipos, estado inicial e cálculos financeiros.
 - `features/finance/forms`: schemas e validações de formulários.
 - `features/finance/data`: mapeadores e acesso aos dados financeiros.
-- `features/finance/hooks`: estado client-side e mutações financeiras.
+- `features/finance/data/repositories`: consultas e mutações Supabase tipadas por recurso.
+- `features/finance/providers`: provider compartilhado, status, retry e ações agrupadas.
 - `features/finance/presentation`: view models para a apresentação financeira.
 - `components/ui`: componentes shadcn/ui.
 - `lib/supabase`: clientes Supabase browser, server e admin.
+- `lib/supabase/database.types.ts`: contrato gerado pelo Supabase para Row/Insert/Update/RPC.
 - `supabase/schema.sql`: tabelas, constraints, triggers e políticas RLS.
 - `docs/architecture.md`: fronteiras, fluxo de dados e dívida arquitetural conhecida.
+- `docs/history.md`: semântica de snapshots e correções históricas.
 - `.agents/skills`: workflows reutilizáveis para agentes de código.
 
 ## Deploy

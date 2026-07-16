@@ -23,8 +23,19 @@ describe("finance schemas", () => {
       frequency: "Mensal",
       name: "Salário CLT",
       notes: "",
+      receivedOn: null,
       type: "Salário",
     })
+  })
+
+  it("requires a real received date only for one-time income", () => {
+    const oneTime = { amount: 500, frequency: "Única", name: "Bônus", type: "Renda extra" }
+
+    expect(incomeSchema.safeParse(oneTime).success).toBe(false)
+    expect(incomeSchema.parse({ ...oneTime, receivedOn: "2026-02-28" })).toMatchObject({
+      receivedOn: "2026-02-28",
+    })
+    expect(incomeSchema.safeParse({ ...oneTime, receivedOn: "2026-02-30" }).success).toBe(false)
   })
 
   it("rejects invalid income enums and non-positive amount", () => {
@@ -112,6 +123,9 @@ describe("finance schemas", () => {
     ).toBe(false)
     expect(
       reminderSchema.safeParse({ ...parcelledReminder, nextDueDate: "10/01/2026" }).success,
+    ).toBe(false)
+    expect(
+      reminderSchema.safeParse({ ...parcelledReminder, nextDueDate: "2026-02-30" }).success,
     ).toBe(false)
   })
 

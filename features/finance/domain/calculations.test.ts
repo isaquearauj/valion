@@ -26,7 +26,6 @@ function state(overrides: Partial<FinanceState> = {}): FinanceState {
     investments: [],
     reminders: [],
     snapshots: [],
-    updatedAt: "2026-01-01T00:00:00.000Z",
     ...overrides,
   }
 }
@@ -39,6 +38,7 @@ function income(overrides: Partial<Income> = {}): Income {
     id: "income-1",
     name: "Salário",
     notes: "",
+    receivedOn: null,
     type: "Salário",
     ...overrides,
   }
@@ -111,6 +111,18 @@ describe("finance calculations", () => {
       monthlyIncome: 6000,
       plannedInvestment: 700,
     })
+  })
+
+  it("includes one-time income only in its received month", () => {
+    const financeState = state({
+      incomes: [
+        income({ amount: 1000 }),
+        income({ amount: 250, frequency: "Única", receivedOn: "2026-02-15" }),
+      ],
+    })
+
+    expect(calculateFinanceSummary(financeState, "2026-02").monthlyIncome).toBe(1250)
+    expect(calculateFinanceSummary(financeState, "2026-03").monthlyIncome).toBe(1000)
   })
 
   it("keeps committed percent at zero when income is zero", () => {

@@ -164,6 +164,7 @@ describe("dashboard view models", () => {
       id: "income-1",
       name: "Freela",
       notes: "obs",
+      receivedOn: null,
       type: "Freelance",
     }
     const expense: FixedExpense = {

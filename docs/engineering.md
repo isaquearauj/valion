@@ -21,7 +21,10 @@ engano.
 ## Qualidade de código
 
 O Biome é a fonte de verdade para formatação, imports e lint geral. O ESLint é
-mantido como camada complementar para regras específicas do Next.js e React.
+mantido apenas como camada complementar para `core-web-vitals` e React Hooks.
+O preset TypeScript do ESLint é redundante com Biome + `tsc` e não é carregado.
+O comando usa cache em `node_modules/.cache/eslint` e limita a análise aos
+fontes da aplicação.
 
 ```bash
 pnpm check
@@ -30,6 +33,10 @@ pnpm typecheck
 pnpm test
 pnpm build
 ```
+
+O guard lê `.nvmrc` e exige Node `22.22.3`; execute `nvm use` quando ele falhar.
+O CI mantém OSV Scanner. `pnpm audit` não faz parte do gate porque o endpoint do
+registry não é confiável neste ambiente e duplicaria a auditoria independente.
 
 Use `pnpm check:write` para correções seguras. Não rode `--unsafe` em massa:
 revise cada correção que puder alterar comportamento.

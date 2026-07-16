@@ -1,177 +1,92 @@
-import { render, screen, waitFor } from "@testing-library/react"
+import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import type { ComponentProps } from "react"
-import { toast } from "sonner"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import type { AppUser } from "@/features/auth/types"
-import { useFinanceStore } from "@/features/finance/hooks/use-finance-store"
-import { FinanceDashboard } from "@/features/finance/ui/dashboard/finance-dashboard"
 import { FinanceRouteShell } from "@/features/finance/ui/shell/finance-route-shell"
 
-const router = vi.hoisted(() => ({
+const mocks = vi.hoisted(() => ({
+  auth: {
+    deleteAccount: vi.fn(),
+    logout: vi.fn(),
+    updateProfile: vi.fn(),
+    user: {
+      createdAt: "2026-01-01T00:00:00Z",
+      email: "ana@example.com",
+      id: "user-1",
+      name: "Ana",
+    },
+  },
+  finance: { status: "ready", retry: vi.fn(), state: {}, isPending: vi.fn() },
+  pathname: "/dashboard",
   push: vi.fn(),
-  refresh: vi.fn(),
   replace: vi.fn(),
+  refresh: vi.fn(),
 }))
-const routeState = vi.hoisted(() => ({ pathname: "/dashboard" }))
-const supabaseState = vi.hoisted(() => ({ client: null as SupabaseShellMock | null }))
-const financeState = vi.hoisted(() => ({ store: null as FinanceStoreMock | null }))
-
-type FinanceDashboardProps = ComponentProps<typeof FinanceDashboard>
-type FinanceStoreMock = ReturnType<typeof createFinanceStore>
-type SupabaseShellMock = ReturnType<typeof createSupabaseMock>
 
 vi.mock("next/navigation", () => ({
-  usePathname: () => routeState.pathname,
-  useRouter: () => router,
+  usePathname: () => mocks.pathname,
+  useRouter: () => ({ push: mocks.push, replace: mocks.replace, refresh: mocks.refresh }),
 }))
-
-vi.mock("@/features/finance/hooks/use-finance-store", () => ({
-  useFinanceStore: vi.fn(() => financeState.store),
+vi.mock("@/features/finance/providers/finance-provider", () => ({
+  useFinance: () => mocks.finance,
 }))
-
-vi.mock("@/lib/supabase/client", () => ({
-  createSupabaseBrowser: vi.fn(() => supabaseState.client),
+vi.mock("@/features/auth/providers/auth-session-provider", () => ({
+  useAuthSession: () => mocks.auth,
 }))
-
-vi.mock("sonner", () => ({
-  toast: {
-    error: vi.fn(),
-    success: vi.fn(),
-  },
+vi.mock("@/features/auth/ui/account-dialog", () => ({
+  AccountDialog: () => <div>Conta aberta</div>,
 }))
-
-vi.mock("@/features/finance/ui/dashboard/finance-dashboard", () => ({
-  FinanceDashboard: vi.fn((props: FinanceDashboardProps) => (
-    <div data-testid="finance-dashboard">
-      <span>{props.activeSection}</span>
-      <span>{props.user.name}</span>
-      <button onClick={() => props.onNavigateSection?.("expenses")} type="button">
-        Ir despesas
-      </button>
-      <button onClick={() => void props.onLogout()} type="button">
-        Sair
-      </button>
-      <button onClick={() => props.onRequestPasswordReset()} type="button">
-        Alterar senha
-      </button>
-      <button onClick={() => void props.onDeleteAccount()} type="button">
-        Excluir conta
-      </button>
-      <button
-        onClick={() =>
-          void props.onUpdateUser({
-            avatarUrl: "https://example.com/avatar.png",
-            createdAt: "2026-01-01T00:00:00.000Z",
-            email: "ana@example.com",
-            id: "user-1",
-            name: "Ana Atualizada",
-          })
-        }
-        type="button"
-      >
-        Atualizar perfil
-      </button>
-    </div>
-  )),
-}))
-
-function createFinanceStore() {
-  return {
-    isReady: true,
-    state: {},
-  }
-}
-
-function createSupabaseMock() {
-  const eq = vi.fn().mockResolvedValue({ error: null })
-  const update = vi.fn(() => ({ eq }))
-
-  return {
-    auth: {
-      signOut: vi.fn().mockResolvedValue({ error: null }),
-    },
-    eq,
-    from: vi.fn(() => ({ update })),
-    update,
-  }
-}
-
-const initialUser: AppUser = {
-  createdAt: "2026-01-01T00:00:00.000Z",
-  email: "ana@example.com",
-  id: "user-1",
-  name: "Ana Silva",
-}
+vi.mock("@/components/theme-toggle", () => ({ ThemeToggle: () => null }))
 
 describe("FinanceRouteShell", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    routeState.pathname = "/dashboard"
-    financeState.store = createFinanceStore()
-    supabaseState.client = createSupabaseMock()
-    window.history.replaceState(null, "", "/dashboard")
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue({ json: vi.fn().mockResolvedValue({ ok: true }), ok: true }),
+    mocks.pathname = "/dashboard"
+    mocks.finance.status = "ready"
+  })
+
+  it("renders the route slot and semantic navigation links", async () => {
+    render(
+      <FinanceRouteShell>
+        <h2>Conteúdo da rota</h2>
+      </FinanceRouteShell>,
+    )
+
+    expect(screen.getByRole("heading", { name: "Conteúdo da rota" })).toBeInTheDocument()
+    expect(screen.getAllByRole("link", { name: /Receitas/ })[0]).toHaveAttribute(
+      "href",
+      "/receitas",
+    )
+    expect(screen.getByRole("link", { name: /Dashboard/ })).toHaveAttribute("aria-current", "page")
+    await userEvent.click(screen.getByRole("button", { name: "Abrir menu" }))
+    expect(await screen.findByRole("link", { name: /Dashboard/ })).toHaveAttribute(
+      "aria-current",
+      "page",
     )
   })
 
-  it("renders children for routes outside the finance app", () => {
-    routeState.pathname = "/login"
+  it("renders a retryable error instead of an empty dashboard", async () => {
+    mocks.finance.status = "error"
+    render(
+      <FinanceRouteShell>
+        <div />
+      </FinanceRouteShell>,
+    )
 
-    render(<FinanceRouteShell initialUser={initialUser}>Conteúdo externo</FinanceRouteShell>)
-
-    expect(screen.getByText("Conteúdo externo")).toBeInTheDocument()
-    expect(FinanceDashboard).not.toHaveBeenCalled()
+    await userEvent.click(screen.getByRole("button", { name: "Tentar novamente" }))
+    expect(mocks.finance.retry).toHaveBeenCalledTimes(1)
   })
 
-  it("shows the loading shell while finance data is not ready", () => {
-    financeState.store = { isReady: false, state: {} }
+  it("does not render the finance shell for an authenticated utility route", () => {
+    mocks.pathname = "/alterar-senha"
+    render(
+      <FinanceRouteShell>
+        <h2>Alterar senha</h2>
+      </FinanceRouteShell>,
+    )
 
-    render(<FinanceRouteShell initialUser={initialUser} />)
-
-    expect(screen.queryByTestId("finance-dashboard")).not.toBeInTheDocument()
-    expect(useFinanceStore).toHaveBeenCalledWith("user-1")
-  })
-
-  it("handles navigation, password reset and logout", async () => {
-    const userEventInstance = userEvent.setup()
-    render(<FinanceRouteShell initialUser={initialUser} />)
-
-    await userEventInstance.click(screen.getByRole("button", { name: /Ir despesas/i }))
-    expect(window.location.pathname).toBe("/despesas")
-    expect(screen.getByText("expenses")).toBeInTheDocument()
-
-    await userEventInstance.click(screen.getByRole("button", { name: /Alterar senha/i }))
-    expect(router.push).toHaveBeenCalledWith("/alterar-senha")
-
-    await userEventInstance.click(screen.getByRole("button", { name: /Sair/i }))
-    await waitFor(() => expect(supabaseState.client?.auth.signOut).toHaveBeenCalled())
-    expect(router.replace).toHaveBeenCalledWith("/login")
-    expect(router.refresh).toHaveBeenCalled()
-    expect(toast.success).toHaveBeenCalledWith("Sessão encerrada")
-  })
-
-  it("updates profile and keeps service-role account deletion server-side", async () => {
-    const userEventInstance = userEvent.setup()
-    render(<FinanceRouteShell initialUser={initialUser} />)
-
-    await userEventInstance.click(screen.getByRole("button", { name: /Atualizar perfil/i }))
-    await waitFor(() => expect(supabaseState.client?.from).toHaveBeenCalledWith("profiles"))
-    expect(supabaseState.client?.update).toHaveBeenCalledWith({
-      avatar_url: "https://example.com/avatar.png",
-      full_name: "Ana Atualizada",
-    })
-    expect(supabaseState.client?.eq).toHaveBeenCalledWith("id", "user-1")
-    expect(await screen.findByText("Ana Atualizada")).toBeInTheDocument()
-
-    await userEventInstance.click(screen.getByRole("button", { name: /Excluir conta/i }))
-    await waitFor(() => expect(fetch).toHaveBeenCalledWith("/api/account", { method: "DELETE" }))
-    expect(supabaseState.client?.auth.signOut).toHaveBeenCalled()
-    expect(router.replace).toHaveBeenCalledWith("/login")
-    expect(toast.success).toHaveBeenCalledWith("Conta excluída", {
-      description: "Sua conta e seus dados foram removidos permanentemente.",
-    })
+    expect(screen.getByRole("heading", { name: "Alterar senha" })).toBeInTheDocument()
+    expect(
+      screen.queryByRole("navigation", { name: "Navegação principal" }),
+    ).not.toBeInTheDocument()
   })
 })

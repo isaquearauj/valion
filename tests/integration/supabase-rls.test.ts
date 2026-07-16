@@ -239,7 +239,6 @@ describe("Supabase RLS integration", () => {
         update: { notes: "alterado" },
       },
       { name: "investment_entries", makePayload: makeInvestment, update: { notes: "alterado" } },
-      { name: "monthly_snapshots", makePayload: makeSnapshot, update: { income: 1100 } },
     ]
   }
 
@@ -306,12 +305,6 @@ describe("Supabase RLS integration", () => {
         "investment_entries",
         makeInvestment(disposableUser.user.id, "10"),
       )
-      await insertRow(
-        disposableClient,
-        "monthly_snapshots",
-        makeSnapshot(disposableUser.user.id, "10"),
-      )
-
       const { error: deleteError } = await admin.auth.admin.deleteUser(disposableUser.user.id)
 
       expect(deleteError).toBeNull()
@@ -392,6 +385,31 @@ describe("Supabase RLS integration", () => {
       expect(error, testCase.name).toBeNull()
       expect(data, testCase.name).toEqual([{ id: pair.mine.id }])
     }
+  })
+
+  it("allows snapshot reads only for the owner and blocks direct writes", async () => {
+    const mine = await insertRow(admin, "monthly_snapshots", makeSnapshot(userA.user.id, "11"))
+    const theirs = await insertRow(admin, "monthly_snapshots", makeSnapshot(userB.user.id, "12"))
+
+    const { data, error } = await clientA
+      .from("monthly_snapshots")
+      .select("id")
+      .in("id", [mine.id, theirs.id])
+    expect(error).toBeNull()
+    expect(data).toEqual([{ id: mine.id }])
+
+    const insertResult = await clientA
+      .from("monthly_snapshots")
+      .insert(makeSnapshot(userA.user.id, "10"))
+    const updateResult = await clientA
+      .from("monthly_snapshots")
+      .update({ income: 9999 })
+      .eq("id", mine.id)
+    const deleteResult = await clientA.from("monthly_snapshots").delete().eq("id", mine.id)
+
+    expect(insertResult.error).not.toBeNull()
+    expect(updateResult.error).not.toBeNull()
+    expect(deleteResult.error).not.toBeNull()
   })
 
   it("prevents cross-user updates and deletes in all financial tables", async () => {
@@ -522,6 +540,254 @@ describe("Supabase RLS integration", () => {
 
     await insertRow(admin, "monthly_snapshots", makeSnapshot(userA.user.id, "09"))
     await expectConstraintFailure(admin, "monthly_snapshots", makeSnapshot(userA.user.id, "09"))
+  })
+
+  it("requires received_on only for one-time incomes", async () => {
+    await expectConstraintFailure(admin, "incomes", {
+      ...makeIncome(userA.user.id, "one-time-without-date"),
+      frequency: "Única",
+    })
+    await expectConstraintFailure(admin, "incomes", {
+      ...makeIncome(userA.user.id, "recurring-with-date"),
+      received_on: "2026-01-10",
+    })
+
+    const row = await insertRow(admin, "incomes", {
+      ...makeIncome(userA.user.id, "valid-one-time"),
+      frequency: "Única",
+      received_on: "2026-01-10",
+    })
+    expect(row.id).toBeTruthy()
+  })
+
+  it("ensures and isolates the current snapshot through an RPC without user_id", async () => {
+    const { data, error } = await clientA.rpc("ensure_current_month_snapshot")
+
+    expect(error).toBeNull()
+    expect(data?.user_id).toBe(userA.user.id)
+    expect(Object.keys(data ?? {})).not.toContain("target_user_id")
+
+    const anonymous = createSupabaseClient(config.url, config.anonKey)
+    const anonymousResult = await anonymous.rpc("ensure_current_month_snapshot")
+    expect(anonymousResult.error).not.toBeNull()
+
+    const internalHelper = await clientA.rpc("refresh_current_month_snapshot", {
+      target_user_id: userA.user.id,
+    })
+    expect(internalHelper.error).not.toBeNull()
+  })
+
+  it("does not recalculate historical snapshots after recurring changes", async () => {
+    const isolated = await createConfirmedUser(admin, "snapshot-recurring")
+    const client = await signInAs(config, isolated.email, isolated.password)
+
+    try {
+      await insertRow(admin, "monthly_snapshots", {
+        ...makeSnapshot(isolated.user.id, "05"),
+        expenses: 650,
+        income: 1750,
+        month: "2025-05-01",
+      })
+
+      await insertRow(client, "incomes", makeIncome(isolated.user.id, "recurring-snapshot"))
+      await insertRow(client, "fixed_expenses", makeExpense(isolated.user.id, "snapshot"))
+
+      const { data, error } = await client
+        .from("monthly_snapshots")
+        .select("income,expenses")
+        .eq("month", "2025-05-01")
+        .single()
+      expect(error).toBeNull()
+      expect({ expenses: Number(data?.expenses), income: Number(data?.income) }).toEqual({
+        expenses: 650,
+        income: 1750,
+      })
+    } finally {
+      await admin.auth.admin.deleteUser(isolated.user.id)
+    }
+  })
+
+  it("applies historical deltas without recalculating recurring values", async () => {
+    const isolated = await createConfirmedUser(admin, "snapshot-history")
+    const client = await signInAs(config, isolated.email, isolated.password)
+    const historicalDate = "2025-02-15"
+
+    try {
+      const { data: oneTime, error: insertError } = await client
+        .from("incomes")
+        .insert({
+          ...makeIncome(isolated.user.id, "historical"),
+          amount: 300,
+          frequency: "Única",
+          received_on: historicalDate,
+        })
+        .select("id")
+        .single()
+      expect(insertError).toBeNull()
+
+      await insertRow(client, "incomes", makeIncome(isolated.user.id, "recurring-current"))
+      const { data: before } = await client
+        .from("monthly_snapshots")
+        .select("income")
+        .eq("month", "2025-02-01")
+        .single()
+      expect(Number(before?.income)).toBe(300)
+
+      const { error: updateError } = await client
+        .from("incomes")
+        .update({ amount: 450 })
+        .eq("id", oneTime?.id ?? "")
+      expect(updateError).toBeNull()
+
+      const { data: after } = await client
+        .from("monthly_snapshots")
+        .select("income")
+        .eq("month", "2025-02-01")
+        .single()
+      expect(Number(after?.income)).toBe(450)
+
+      const { error: moveError } = await client
+        .from("incomes")
+        .update({ received_on: "2025-03-15" })
+        .eq("id", oneTime?.id ?? "")
+      expect(moveError).toBeNull()
+
+      const { data: movedSnapshots } = await client
+        .from("monthly_snapshots")
+        .select("month,income")
+        .in("month", ["2025-02-01", "2025-03-01"])
+        .order("month")
+      expect(movedSnapshots?.map((snapshot) => [snapshot.month, Number(snapshot.income)])).toEqual([
+        ["2025-02-01", 0],
+        ["2025-03-01", 450],
+      ])
+
+      const { error: deleteError } = await client
+        .from("incomes")
+        .delete()
+        .eq("id", oneTime?.id ?? "")
+      expect(deleteError).toBeNull()
+
+      const { data: deletedSnapshot } = await client
+        .from("monthly_snapshots")
+        .select("income")
+        .eq("month", "2025-03-01")
+        .single()
+      expect(Number(deletedSnapshot?.income)).toBe(0)
+    } finally {
+      await admin.auth.admin.deleteUser(isolated.user.id)
+    }
+  })
+
+  it("updates only investment fields in historical snapshots", async () => {
+    const isolated = await createConfirmedUser(admin, "snapshot-investment")
+    const client = await signInAs(config, isolated.email, isolated.password)
+
+    try {
+      await insertRow(admin, "monthly_snapshots", {
+        ...makeSnapshot(isolated.user.id, "03"),
+        expenses: 600,
+        income: 1200,
+        month: "2025-03-01",
+      })
+      await insertRow(admin, "monthly_snapshots", {
+        ...makeSnapshot(isolated.user.id, "04"),
+        expenses: 400,
+        income: 900,
+        month: "2025-04-01",
+      })
+
+      const { data: investment, error: insertError } = await client
+        .from("investment_entries")
+        .insert({
+          invested_amount: 100,
+          month: "2025-03-01",
+          notes: "",
+          planned_amount: 200,
+          user_id: isolated.user.id,
+        })
+        .select("id")
+        .single()
+      expect(insertError).toBeNull()
+
+      const { data: insertedSnapshot } = await client
+        .from("monthly_snapshots")
+        .select("income,expenses,planned_investment,invested_amount")
+        .eq("month", "2025-03-01")
+        .single()
+      expect({
+        expenses: Number(insertedSnapshot?.expenses),
+        income: Number(insertedSnapshot?.income),
+        invested: Number(insertedSnapshot?.invested_amount),
+        planned: Number(insertedSnapshot?.planned_investment),
+      }).toEqual({ expenses: 600, income: 1200, invested: 100, planned: 200 })
+
+      const { error: moveError } = await client
+        .from("investment_entries")
+        .update({ invested_amount: 250, month: "2025-04-01", planned_amount: 300 })
+        .eq("id", investment?.id ?? "")
+      expect(moveError).toBeNull()
+
+      const { data: movedSnapshots } = await client
+        .from("monthly_snapshots")
+        .select("month,income,expenses,planned_investment,invested_amount")
+        .in("month", ["2025-03-01", "2025-04-01"])
+        .order("month")
+      expect(
+        movedSnapshots?.map((snapshot) => ({
+          expenses: Number(snapshot.expenses),
+          income: Number(snapshot.income),
+          invested: Number(snapshot.invested_amount),
+          month: snapshot.month,
+          planned: Number(snapshot.planned_investment),
+        })),
+      ).toEqual([
+        { expenses: 600, income: 1200, invested: 0, month: "2025-03-01", planned: 0 },
+        { expenses: 400, income: 900, invested: 250, month: "2025-04-01", planned: 300 },
+      ])
+
+      const { error: deleteError } = await client
+        .from("investment_entries")
+        .delete()
+        .eq("id", investment?.id ?? "")
+      expect(deleteError).toBeNull()
+
+      const { data: deletedSnapshot } = await client
+        .from("monthly_snapshots")
+        .select("income,expenses,planned_investment,invested_amount")
+        .eq("month", "2025-04-01")
+        .single()
+      expect({
+        expenses: Number(deletedSnapshot?.expenses),
+        income: Number(deletedSnapshot?.income),
+        invested: Number(deletedSnapshot?.invested_amount),
+        planned: Number(deletedSnapshot?.planned_investment),
+      }).toEqual({ expenses: 400, income: 900, invested: 0, planned: 0 })
+    } finally {
+      await admin.auth.admin.deleteUser(isolated.user.id)
+    }
+  })
+
+  it("keeps private avatars inside the authenticated user's prefix", async () => {
+    const clientB = await signInAs(config, userB.email, userB.password)
+    const ownPath = `${userA.user.id}/avatar.png`
+    const png = new Blob([Uint8Array.from([0x89, 0x50, 0x4e, 0x47])], { type: "image/png" })
+
+    const upload = await clientA.storage.from("profile-avatars").upload(ownPath, png)
+    expect(upload.error).toBeNull()
+
+    const crossList = await clientB.storage.from("profile-avatars").list(userA.user.id)
+    expect(crossList.data).toEqual([])
+
+    const crossUpload = await clientA.storage
+      .from("profile-avatars")
+      .upload(`${userB.user.id}/forbidden.png`, png)
+    expect(crossUpload.error).not.toBeNull()
+
+    const invalidMime = await clientA.storage
+      .from("profile-avatars")
+      .upload(`${userA.user.id}/forbidden.gif`, new Blob(["gif"], { type: "image/gif" }))
+    expect(invalidMime.error).not.toBeNull()
   })
 
   it("updates updated_at through the database trigger", async () => {

@@ -3,39 +3,50 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "No Valion, adicione uma coluna opcional de observacao interna nas metas financeiras e explique como validar e publicar a migration sem arriscar producao.",
-      "expected_output": "Plano vertical com migration nova, schema de referencia, tipos/mappers/store, testes locais e deploy apenas pelo workflow protegido.",
+      "prompt": "No Valion, troque o avatar base64 por Storage privado. Aceite só JPEG, PNG e WebP até 2 MB e mantenha a foto inacessível entre usuários.",
+      "expected_output": "Migration de bucket/policies/avatar_path, URL assinada, migração legada segura e testes multiusuário.",
       "files": [],
-      "expectations": [
-        "O plano exige criar uma migration nova e nao editar migrations ja aplicadas, mantendo supabase/schema.sql coerente.",
-        "O plano cobre o contrato vertical da coluna, incluindo tipos de dominio, row/mapper, schema Zod, store e UI quando aplicavel.",
-        "A validacao local cita pnpm supabase:reset e pnpm test:supabase e inclui pnpm verify porque a mudanca afeta a aplicacao.",
-        "A publicacao em producao e limitada ao workflow protegido .github/workflows/supabase-migrations.yml, sem db push direto em producao."
+      "assertions": [
+        "Cria bucket privado com limite e MIME e policies para o prefixo do auth.uid().",
+        "Persiste apenas avatar_path e gera URL assinada; não cria base64 novo.",
+        "Migra base64 legado de forma idempotente validando MIME, assinatura e tamanho sem logar conteúdo.",
+        "Testa leitura/escrita cruzada, MIME inválido e fallback por iniciais no Supabase local."
       ]
     },
     {
       "id": 2,
-      "prompt": "Uma conta de teste parece enxergar uma meta de outro usuario. Revise a seguranca do Supabase e indique a verificacao real que deve ser feita.",
-      "expected_output": "Revisao de RLS, filtros user_id, constraints compostas e teste local multiusuario sem exposicao de credenciais.",
+      "prompt": "Os tipos do Supabase do Valion estão manuais e começaram a divergir depois de uma migration. Corrija o drift sem usar casts para esconder o erro.",
+      "expected_output": "Reset local, geração oficial de Database, clientes tipados e repos usando Row/Insert/Update.",
       "files": [],
-      "expectations": [
-        "A revisao cobre policies RLS por usuario e filtros explicitos por user_id na camada de acesso.",
-        "A revisao verifica constraints e relacionamentos compostos que impeçam referencias cruzadas entre usuarios.",
-        "A verificacao proposta usa dois usuarios reais no Supabase local e prova que leitura e escrita cruzadas sao negadas, sem substituir RLS por mocks.",
-        "O plano protege credenciais e restringe comandos destrutivos ao host local, sem imprimir chaves."
+      "assertions": [
+        "Aplica migrations localmente antes de gerar tipos e não usa projeto remoto sem autorização.",
+        "Versiona database.types.ts e tipa clientes browser, server e admin com Database.",
+        "Substitui rows manuais e casts por Tables, TablesInsert e TablesUpdate nos repositórios.",
+        "Executa typecheck, testes de mapper/repositório e verify:supabase."
       ]
     },
     {
       "id": 3,
-      "prompt": "Quero testar de verdade a exclusao de conta no Valion local, incluindo Auth e os dados financeiros. Prepare um checklist seguro.",
-      "expected_output": "Checklist restrito a localhost, service role server-side, sessao validada, cascade verificada e nenhum segredo impresso.",
+      "prompt": "Implemente snapshots mensais automáticos: recorrências só mexem no mês atual, renda única histórica aplica delta e investimento passado não pode alterar receita/despesa.",
+      "expected_output": "Funções/triggers seguras, RPC sem user_id, histórico preservado e testes de integridade/RLS.",
       "files": [],
-      "expectations": [
-        "O checklist confirma que a URL e local (127.0.0.1 ou localhost na porta 55321) e manda parar se o alvo nao for local.",
-        "A service role permanece somente em .env.local e no servidor, sem ser impressa, commitada ou exposta ao cliente.",
-        "A rota valida a sessao com getUser() antes de criar ou usar o cliente admin e devolve respostas genericas.",
-        "O teste comprova no Supabase local a remocao do usuario em Auth e dos dados financeiros por cascade.",
-        "A preparacao e validacao citam pnpm supabase:reset e pnpm test:supabase, com pnpm verify para a rota da aplicacao."
+      "assertions": [
+        "Usa funções security definer com search_path seguro e revoga helpers internos.",
+        "RPC autenticada deriva usuário de auth.uid() e não aceita user_id.",
+        "Preserva snapshots históricos recorrentes e isola campos de investimento passado.",
+        "Remove escrita direta de snapshots por authenticated e testa dois usuários reais."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Ao excluir a conta do Valion, remova também todos os avatares privados e proteja o DELETE contra requisições de outra origem.",
+      "expected_output": "Limpeza paginada do prefixo antes do Auth, validação de origem/sessão, erros genéricos e regressões.",
+      "files": [],
+      "assertions": [
+        "Valida origem e getUser antes de operações admin.",
+        "Lista e remove todos os objetos do prefixo antes de deleteUser.",
+        "Interrompe exclusão Auth se Storage falhar e não expõe detalhes internos.",
+        "Testa ordem da limpeza, origem inválida, falha de Storage e cascade local."
       ]
     }
   ]

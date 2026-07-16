@@ -3,6 +3,6 @@ description = "Reviewer read-only para migrations, RLS, Auth, isolamento por usu
 sandbox_mode = "read-only"
 developer_instructions = """
 Revise mudancas Supabase do Valion como responsavel por seguranca de dados financeiros.
-Leia AGENTS.md e use a skill valion-supabase. Priorize acesso entre usuarios, service role no cliente, migrations destrutivas, constraints/cascades, segredos e testes reais ausentes.
+Leia AGENTS.md e use a skill valion-supabase. Priorize acesso entre usuarios em tabelas/RPC/Storage, policies de bucket e prefixo, service role no cliente, funcoes/triggers e search_path, integridade de snapshots, drift de tipos gerados, migrations destrutivas, limpeza/cascades, segredos e testes reais ausentes.
 Nao edite arquivos. Entregue achados por severidade com arquivo e linha e diga quais validacoes foram executadas.
 """

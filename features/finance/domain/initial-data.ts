@@ -17,6 +17,5 @@ export function createInitialFinanceState(): FinanceState {
     investments: [],
     reminders: [],
     snapshots: [],
-    updatedAt: new Date().toISOString(),
   }
 }

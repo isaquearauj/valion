@@ -17,9 +17,11 @@
     }
   },
   "scripts": {
-    "dev": "next dev",
+    "check:node": "node scripts/check-node-version.mjs",
+    "preinstall": "node scripts/check-node-version.mjs",
+    "dev": "pnpm check:node && next dev",
     "dev:all": "pnpm supabase:start && pnpm dev",
-    "build": "next build",
+    "build": "pnpm check:node && next build",
     "start": "next start",
     "check": "biome check .",
     "check:write": "biome check --write .",
@@ -27,9 +29,9 @@
     "format:check": "biome format .",
     "lint": "pnpm lint:biome && pnpm lint:eslint",
     "lint:biome": "biome lint .",
-    "lint:eslint": "eslint . --max-warnings=0",
+    "lint:eslint": "eslint app components features lib tests scripts --cache --cache-location node_modules/.cache/eslint --max-warnings=0",
     "typecheck": "tsc --noEmit",
-    "quality": "pnpm check && pnpm lint:eslint && pnpm typecheck && pnpm test",
+    "quality": "pnpm check:node && pnpm check && pnpm lint:eslint && pnpm typecheck && pnpm test",
     "verify": "pnpm quality && pnpm build",
     "verify:supabase": "pnpm supabase:reset && pnpm test:supabase",
     "test": "vitest run",
@@ -41,7 +43,8 @@
     "supabase:reset": "supabase db reset --local",
     "supabase:seed": "node scripts/seed-local.mjs",
     "supabase:reset:seed": "pnpm supabase:reset && pnpm supabase:seed",
-    "supabase:status": "supabase status"
+    "supabase:status": "supabase status",
+    "supabase:types": "node scripts/generate-supabase-types.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

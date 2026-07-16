@@ -19,15 +19,21 @@ export function normalizeMonthlyIncome(income: Income) {
   return income.amount * frequencyMultiplier[income.frequency]
 }
 
+export function isIncomeInMonth(income: Income, monthKey: string) {
+  return income.frequency !== "Única" || income.receivedOn?.slice(0, 7) === monthKey
+}
+
 export function isExpenseCommitted(expense: FixedExpense) {
   return expense.status === "Ativa"
 }
 
-export function calculateFinanceSummary(state: FinanceState): FinanceSummary {
-  const monthlyIncome = state.incomes.reduce(
-    (total, income) => total + normalizeMonthlyIncome(income),
-    0,
-  )
+export function calculateFinanceSummary(
+  state: FinanceState,
+  monthKey = getCurrentMonthKey(),
+): FinanceSummary {
+  const monthlyIncome = state.incomes
+    .filter((income) => isIncomeInMonth(income, monthKey))
+    .reduce((total, income) => total + normalizeMonthlyIncome(income), 0)
   const activeExpenses = state.expenses.filter(isExpenseCommitted)
   const fixedExpenses = activeExpenses.reduce((total, expense) => total + expense.monthlyAmount, 0)
   const currentInvestment = getCurrentInvestment(state)

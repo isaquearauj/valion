@@ -26,6 +26,5 @@ describe("initial finance date helpers", () => {
       reminders: [],
       snapshots: [],
     })
-    expect(new Date(state.updatedAt).toString()).not.toBe("Invalid Date")
   })
 })
