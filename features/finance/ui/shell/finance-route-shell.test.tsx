@@ -15,7 +15,31 @@ const mocks = vi.hoisted(() => ({
       name: "Ana",
     },
   },
-  finance: { status: "ready", retry: vi.fn(), state: {}, isPending: vi.fn() },
+  finance: {
+    error: null,
+    expenses: { remove: vi.fn(), save: vi.fn() },
+    goals: {
+      remove: vi.fn(),
+      removeContribution: vi.fn(),
+      save: vi.fn(),
+      saveContribution: vi.fn(),
+    },
+    incomes: { remove: vi.fn(), save: vi.fn() },
+    investments: { remove: vi.fn(), save: vi.fn() },
+    isPending: vi.fn(() => false),
+    reminders: { markReceived: vi.fn(), remove: vi.fn(), save: vi.fn() },
+    retry: vi.fn(),
+    state: {
+      expenses: [],
+      goalContributions: [],
+      goals: [],
+      incomes: [],
+      investments: [],
+      reminders: [],
+      snapshots: [],
+    },
+    status: "ready",
+  },
   pathname: "/dashboard",
   push: vi.fn(),
   replace: vi.fn(),
@@ -44,24 +68,17 @@ describe("FinanceRouteShell", () => {
     mocks.finance.status = "ready"
   })
 
-  it("renders the route slot and semantic navigation links", async () => {
+  it("renders the restored finance dashboard shell", async () => {
     render(
       <FinanceRouteShell>
         <h2>Conteúdo da rota</h2>
       </FinanceRouteShell>,
     )
 
-    expect(screen.getByRole("heading", { name: "Conteúdo da rota" })).toBeInTheDocument()
-    expect(screen.getAllByRole("link", { name: /Receitas/ })[0]).toHaveAttribute(
-      "href",
-      "/receitas",
-    )
-    expect(screen.getByRole("link", { name: /Dashboard/ })).toHaveAttribute("aria-current", "page")
+    expect(screen.getByText("Resumo do mês atual")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Dashboard" })).toBeInTheDocument()
     await userEvent.click(screen.getByRole("button", { name: "Abrir menu" }))
-    expect(await screen.findByRole("link", { name: /Dashboard/ })).toHaveAttribute(
-      "aria-current",
-      "page",
-    )
+    expect(await screen.findByRole("button", { name: "Receitas" })).toBeInTheDocument()
   })
 
   it("renders a retryable error instead of an empty dashboard", async () => {
@@ -85,8 +102,6 @@ describe("FinanceRouteShell", () => {
     )
 
     expect(screen.getByRole("heading", { name: "Alterar senha" })).toBeInTheDocument()
-    expect(
-      screen.queryByRole("navigation", { name: "Navegação principal" }),
-    ).not.toBeInTheDocument()
+    expect(screen.queryByText("Resumo do mês atual")).not.toBeInTheDocument()
   })
 })

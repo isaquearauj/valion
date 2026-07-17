@@ -12,12 +12,11 @@ import {
   SettingsIcon,
   TargetIcon,
 } from "lucide-react"
-import Link from "next/link"
 import { type ComponentType, useState } from "react"
 
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import {
   Sheet,
   SheetContent,
@@ -30,7 +29,6 @@ import {
 import type { AppUser } from "@/features/auth/types"
 import { getInitials } from "@/features/finance/presentation/dashboard-view-models"
 import type { AppSection } from "@/features/navigation/routes"
-import { getAppSectionPath } from "@/features/navigation/routes"
 import { cn } from "@/lib/utils"
 
 type SectionId = AppSection
@@ -50,11 +48,15 @@ export const financeSections = [
 
 export function AppSidebar({
   activeSection,
+  isPending,
   onOpenAccount,
+  onSelectSection,
   user,
 }: {
   activeSection: SectionId
+  isPending: boolean
   onOpenAccount: () => void
+  onSelectSection: (section: SectionId) => void
   user: AppUser
 }) {
   return (
@@ -67,19 +69,21 @@ export function AppSidebar({
 
       <nav className="mt-7 flex flex-col gap-1" aria-label="Navegação principal">
         {financeSections.map((section) => (
-          <Link
+          <button
             aria-current={activeSection === section.id ? "page" : undefined}
             className={cn(
               "flex h-10 cursor-pointer items-center gap-3 rounded-xl px-3 text-sm font-medium text-muted-foreground transition hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
               activeSection === section.id &&
                 "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm",
             )}
-            href={getAppSectionPath(section.id)}
+            disabled={isPending}
             key={section.id}
+            onClick={() => onSelectSection(section.id)}
+            type="button"
           >
             <section.icon />
             {section.label}
-          </Link>
+          </button>
         ))}
       </nav>
 
@@ -109,14 +113,21 @@ export function TopBar({
   activeSection,
   onLogout,
   onOpenAccount,
+  onSelectSection,
   user,
 }: {
   activeSection: SectionId
   onLogout: () => Promise<void> | void
   onOpenAccount: () => void
+  onSelectSection: (section: SectionId) => void
   user: AppUser
 }) {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
+
+  function handleSelectSection(section: SectionId) {
+    setIsMobileNavOpen(false)
+    onSelectSection(section)
+  }
 
   function handleOpenAccount() {
     setIsMobileNavOpen(false)
@@ -139,19 +150,15 @@ export function TopBar({
               </SheetHeader>
               <nav className="flex flex-col gap-1 px-4" aria-label="Navegação mobile">
                 {financeSections.map((section) => (
-                  <Link
-                    aria-current={activeSection === section.id ? "page" : undefined}
-                    className={buttonVariants({
-                      className: "justify-start",
-                      variant: activeSection === section.id ? "secondary" : "ghost",
-                    })}
-                    href={getAppSectionPath(section.id)}
+                  <Button
+                    className="justify-start"
                     key={section.id}
-                    onClick={() => setIsMobileNavOpen(false)}
+                    onClick={() => handleSelectSection(section.id)}
+                    variant={activeSection === section.id ? "secondary" : "ghost"}
                   >
                     <section.icon data-icon="inline-start" />
                     {section.label}
-                  </Link>
+                  </Button>
                 ))}
               </nav>
               <SheetFooter>
