@@ -49,6 +49,24 @@ pnpm supabase:start
 pnpm supabase:status
 ```
 
+### Controle manual dos containers
+
+Os containers locais usam modo manual: abrir ou reiniciar o Docker Desktop não
+inicia os serviços automaticamente. O comando `pnpm supabase:start` sobe o
+ambiente do Valion e reaplica essa política aos containers existentes.
+
+Use estes comandos para controlar o ambiente:
+
+```bash
+pnpm supabase:start  # inicia o Supabase local
+pnpm supabase:stop   # para o Supabase local sem apagar os volumes
+pnpm docker:manual   # reaplica restart=no a todos os containers Docker atuais
+```
+
+Também é possível usar Start/Stop diretamente no Docker Desktop. Como os
+serviços do Supabase dependem uns dos outros, prefira iniciar e parar o projeto
+inteiro com os comandos acima em vez de ligar serviços individuais.
+
 Configure `.env.local` com os valores locais exibidos pelo CLI:
 
 ```env
