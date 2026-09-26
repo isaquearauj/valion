@@ -193,7 +193,7 @@ describe("FinanceDashboard", () => {
     const onNavigateSection = vi.fn()
     renderDashboard({ onNavigateSection })
 
-    await userEventInstance.click(screen.getAllByRole("button", { name: /Receitas/i })[0])
+    await userEventInstance.click(screen.getAllByRole("link", { name: /Receitas/i })[0])
 
     expect(onNavigateSection).toHaveBeenCalledWith("incomes")
   })

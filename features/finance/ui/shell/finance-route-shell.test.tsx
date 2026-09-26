@@ -75,10 +75,10 @@ describe("FinanceRouteShell", () => {
       </FinanceRouteShell>,
     )
 
-    expect(screen.getByText("Resumo do mês atual")).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "Dashboard" })).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Conteúdo da rota" })).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: "Dashboard" })).toBeInTheDocument()
     await userEvent.click(screen.getByRole("button", { name: "Abrir menu" }))
-    expect(await screen.findByRole("button", { name: "Receitas" })).toBeInTheDocument()
+    expect(await screen.findByRole("link", { name: "Receitas" })).toBeInTheDocument()
   })
 
   it("renders a retryable error instead of an empty dashboard", async () => {

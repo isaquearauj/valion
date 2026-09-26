@@ -163,6 +163,23 @@ export function useFinanceStore(userId: string | null = null): FinanceStore {
     [],
   )
 
+  const syncSnapshots = useCallback(
+    async (activeUserId: string) => {
+      try {
+        const snapshots = await listSnapshots(supabase, activeUserId)
+        if (activeUserId === userIdRef.current) {
+          setState((current) => ({
+            ...current,
+            snapshots,
+          }))
+        }
+      } catch {
+        // Falhas não-críticas de reconciliação de snapshots em background não interrompem a UX
+      }
+    },
+    [supabase],
+  )
+
   const store = useMemo<FinanceStore>(
     () => ({
       error,
@@ -170,26 +187,24 @@ export function useFinanceStore(userId: string | null = null): FinanceStore {
         remove: (id) =>
           runAction(`expense:remove:${id}`, async (activeUserId) => {
             await removeExpense(supabase, activeUserId, id)
-            const snapshots = await listSnapshots(supabase, activeUserId)
             if (activeUserId === userIdRef.current) {
               setState((current) => ({
                 ...current,
                 expenses: current.expenses.filter((item) => item.id !== id),
-                snapshots,
               }))
             }
+            void syncSnapshots(activeUserId)
           }),
         save: (values, id) =>
           runAction(`expense:save:${id ?? "new"}`, async (activeUserId) => {
             const item = await saveExpense(supabase, activeUserId, values, id)
-            const snapshots = await listSnapshots(supabase, activeUserId)
             if (activeUserId === userIdRef.current) {
               setState((current) => ({
                 ...current,
                 expenses: replaceOrPrepend(current.expenses, item),
-                snapshots,
               }))
             }
+            void syncSnapshots(activeUserId)
           }),
       },
       goals: {
@@ -239,52 +254,48 @@ export function useFinanceStore(userId: string | null = null): FinanceStore {
         remove: (id) =>
           runAction(`income:remove:${id}`, async (activeUserId) => {
             await removeIncome(supabase, activeUserId, id)
-            const snapshots = await listSnapshots(supabase, activeUserId)
             if (activeUserId === userIdRef.current) {
               setState((current) => ({
                 ...current,
                 incomes: current.incomes.filter((item) => item.id !== id),
-                snapshots,
               }))
             }
+            void syncSnapshots(activeUserId)
           }),
         save: (values, id) =>
           runAction(`income:save:${id ?? "new"}`, async (activeUserId) => {
             const item = await saveIncome(supabase, activeUserId, values, id)
-            const snapshots = await listSnapshots(supabase, activeUserId)
             if (activeUserId === userIdRef.current) {
               setState((current) => ({
                 ...current,
                 incomes: replaceOrPrepend(current.incomes, item),
-                snapshots,
               }))
             }
+            void syncSnapshots(activeUserId)
           }),
       },
       investments: {
         remove: (id) =>
           runAction(`investment:remove:${id}`, async (activeUserId) => {
             await removeInvestment(supabase, activeUserId, id)
-            const snapshots = await listSnapshots(supabase, activeUserId)
             if (activeUserId === userIdRef.current) {
               setState((current) => ({
                 ...current,
                 investments: current.investments.filter((item) => item.id !== id),
-                snapshots,
               }))
             }
+            void syncSnapshots(activeUserId)
           }),
         save: (values, id) =>
           runAction(`investment:save:${id ?? "new"}`, async (activeUserId) => {
             const item = await saveInvestment(supabase, activeUserId, values, id)
-            const snapshots = await listSnapshots(supabase, activeUserId)
             if (activeUserId === userIdRef.current) {
               setState((current) => ({
                 ...current,
                 investments: replaceOrPrepend(current.investments, item),
-                snapshots,
               }))
             }
+            void syncSnapshots(activeUserId)
           }),
       },
       isPending: (actionKey) =>
@@ -327,7 +338,7 @@ export function useFinanceStore(userId: string | null = null): FinanceStore {
       state,
       status,
     }),
-    [error, load, pendingKeys, runAction, state, status, supabase],
+    [error, load, pendingKeys, runAction, state, status, supabase, syncSnapshots],
   )
 
   return store

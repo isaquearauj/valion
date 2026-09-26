@@ -1,0 +1,6 @@
+export { DashboardView } from "./dashboard-view"
+export { ExpensesView } from "./expenses-view"
+export { GoalsView } from "./goals-view"
+export { HistoryView } from "./history-view"
+export { IncomesView } from "./incomes-view"
+export { InvestmentsView } from "./investments-view"

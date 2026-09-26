@@ -2,97 +2,76 @@
 
 ## Fluxo de desenvolvimento
 
-Mudanças relevantes seguem Spec Driven Development: descoberta do problema com
-Luis/Isaque, spec local com Definition of Done, implementação incremental e
-validação proporcional ao risco. Specs de trabalho não possuem diretório
-obrigatório, não são versionadas e nunca devem ser anexadas ao PR. O template
-versionado é `.agents/templates/spec.md`; decisões arquiteturais duráveis ficam
-em `docs/decisions/`.
+Mudanças relevantes seguem desenvolvimento orientado por requisitos claros: alinhamento do problema com Isaque (produto), escopo bem definido com Definition of Done verificável, implementação incremental e validação proporcional ao risco.
 
-Toda spec explicita o modelo de dados envolvido: entidades/tabelas, campos,
-relações, constraints, ownership/RLS, migration/backfill e impacto nos contratos.
-Quando não houver dados envolvidos, a spec registra “não se aplica” e a razão.
+Toda especificação deve explicitar o modelo de dados envolvido:
+- Entidades/tabelas, campos, relações, constraints e ownership/RLS;
+- Migrations/backfills e impacto nos contratos de tipagem TypeScript;
+- Quando não houver persistência envolvida, registre “não se aplica” e a razão.
 
-Comece pela menor implementação correta. Depois que o comportamento estiver
-comprovado, refatore para reduzir acoplamento, melhorar eficiência,
-manutenibilidade e segurança. O fluxo completo pode ser reduzido para tarefas
-realmente triviais, desde que o resultado esperado continue explícito.
+Comece pela menor implementação correta. Depois que o comportamento estiver comprovado e testado, refatore para reduzir acoplamento, melhorar legibilidade, manutenibilidade e segurança.
 
 ## Migrations Supabase
 
-As migrations são arquivos versionados em `supabase/migrations/`. Alterações
-de schema ou dados devem ser criadas como uma nova migration, preferindo SQL
-idempotente. Migrations já aplicadas não devem ser editadas; correções devem
-ser novas migrations.
+As migrations são arquivos versionados em `supabase/migrations/`. Alterações de schema ou dados devem ser criadas como uma nova migration, preferindo SQL idempotente. Migrations já aplicadas são imutáveis; correções devem ser novas migrations.
 
 O desenvolvimento usa Supabase local com Docker:
 
 ```bash
 pnpm supabase:start
-pnpm verify:supabase
+pnpm test:supabase
 ```
 
-Seeds são somente locais e nunca fazem parte do deploy. O script de reset usa
-explicitamente `--local` para evitar que um projeto vinculado seja recriado por
-engano.
-
-## Qualidade de código
-
-O Biome é a fonte de verdade para formatação, imports e lint geral. O ESLint é
-mantido apenas como camada complementar para `core-web-vitals` e React Hooks.
-O preset TypeScript do ESLint é redundante com Biome + `tsc` e não é carregado.
-O comando usa cache em `node_modules/.cache/eslint` e limita a análise aos
-fontes da aplicação.
+Para recriar o banco local do zero:
 
 ```bash
-pnpm check
-pnpm lint:eslint
-pnpm typecheck
-pnpm test
-pnpm verify:agents
-pnpm build
+pnpm supabase:reset
 ```
 
-O guard lê `.nvmrc`, exige a mesma major/minor e alerta quando o patch hospedado diverge da versão local preferida `22.22.3`.
-O CI mantém OSV Scanner. `pnpm audit` não faz parte do gate porque o endpoint do
-registry não é confiável neste ambiente e duplicaria a auditoria independente.
+O comando de reset usa explicitamente `--local` para evitar que qualquer projeto em nuvem seja afetado.
 
-Use `pnpm check:write` para correções seguras. Não rode `--unsafe` em massa:
-revise cada correção que puder alterar comportamento.
+## Qualidade de código e gates
 
-O job `dependency-audit` de `.github/workflows/ci.yml` examina o
-`pnpm-lock.yaml` com OSV Scanner e bloqueia vulnerabilidades conhecidas. Não
-aprove scripts de instalação ignorados pelo pnpm sem revisar o pacote e a
-necessidade do script. Os scripts de `msw`, `sharp` e `unrs-resolver` são
-ignorados explicitamente: o projeto não usa um service worker do MSW, e os
-artefatos nativos publicados de Sharp/UNRS foram validados pelo build e lint.
+O Biome é a fonte de verdade para formatação, organização de imports e lint geral. O ESLint é mantido apenas como camada complementar para regras específicas de React Hooks e Next.js (`core-web-vitals`).
 
-Produção recebe migrations por `.github/workflows/supabase-migrations.yml`
-depois que o workflow `CI` conclui com sucesso para um `push` na `main`. O
-checkout usa o SHA exato validado, tanto para merges de PR quanto para commits
-diretos. `workflow_dispatch` permanece como fallback operacional. O deploy usa
-o GitHub Environment `production`; não execute `supabase db push` diretamente
-contra produção.
+Comandos padrão de validação:
 
-Para inspeção autorizada do remoto, use `supabase login`,
-`supabase link --project-ref <project-ref>` e `supabase db diff --linked`. A
-senha é interativa e não deve ser enviada pelo chat ou commitada. A CLI pode
-guardar a sessão no armazenamento nativo da máquina; runners efêmeros devem
-usar secrets ou secret manager. Use `supabase logout` ao terminar.
+```bash
+pnpm check          # Biome lint e formatação
+pnpm check:write    # Aplicação de correções seguras do Biome
+pnpm lint           # Biome + ESLint
+pnpm typecheck      # Verificação estrita TypeScript (tsc)
+pnpm test           # Testes unitários com Vitest
+pnpm quality        # Suite completa (Biome + ESLint + Typecheck + Testes)
+pnpm verify         # Quality gate completo + Build de produção
+```
 
-## Agents, skills e QA de navegador
+O projeto requer **Node >= 22** e gerenciador **pnpm**.
 
-`AGENTS.md` é a fonte de verdade do workflow e `CLAUDE.md` aponta para ele. As
-skills compartilhadas ficam em `.agents/skills`; agentes Claude ficam em
-`.agents/agents` e seus equivalentes Codex em `.codex/agents`.
-`pnpm verify:agents` valida essa paridade, os contratos mínimos das skills e a
-proteção das pastas locais.
+### Dependências e segurança
 
-Mudanças de fluxo visual devem, sempre que possível, passar pela skill
-`valion-browser-qa`. Relatórios e screenshots ficam em `.context/qa-<slug>/`,
-organizados por execução e nunca versionados. Exclusão de conta exige
-confirmação humana imediatamente antes da ação, inclusive no ambiente local.
+- O CI executa auditoria de dependências com OSV Scanner para mitigar vulnerabilidades conhecidas no `pnpm-lock.yaml`.
+- Não aprove scripts de instalação arbitrários no pnpm sem revisar o pacote e a necessidade do script. Os pacotes `msw`, `sharp` e `unrs-resolver` estão declarados em `ignoredBuiltDependencies` no `package.json`.
 
-Quando o usuário autorizar push e abertura de PR, use a skill `create-pr`. O PR
-é aberto contra `main`, descreve problema, solução, Definition of Done,
-validações e riscos, mas não publica specs ou evidências locais.
+## Deploy e migrations de produção
+
+- **Vercel:** Aplicação Next.js hospedada com domínio principal `valionapp.com`.
+- **Supabase Cloud:** Produção recebe migrations automaticamente pelo workflow `.github/workflows/supabase-migrations.yml` após a conclusão bem-sucedida do pipeline de CI para um `push` na branch `main`.
+- O checkout usa o SHA exato validado no CI.
+- O deploy utiliza o GitHub Environment `production`. **Nunca execute `supabase db push` diretamente contra o banco de produção.**
+
+Para inspeção autorizada de um projeto remoto sem aplicar alterações:
+
+```bash
+supabase login
+supabase link --project-ref <project-ref>
+supabase db diff --linked
+```
+
+Use `supabase logout` ao terminar a sessão operacional.
+
+## Padrões de Git e Pull Requests
+
+- Branches devem ser descritivas (`feat/nome`, `fix/descricao`, `chore/ajuste`).
+- Commits seguem o padrão Conventional Commits em português (`feat: ...`, `fix: ...`, `chore: ...`).
+- PRs são abertos contra a branch `main`, descrevendo problema, solução adotada, Definition of Done atendida, validações realizadas e possíveis riscos.

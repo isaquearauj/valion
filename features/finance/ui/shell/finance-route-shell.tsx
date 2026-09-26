@@ -1,14 +1,26 @@
 "use client"
 
+import dynamic from "next/dynamic"
 import { usePathname, useRouter } from "next/navigation"
-import type { ReactNode } from "react"
+import { type ReactNode, useState, useTransition } from "react"
 import { toast } from "sonner"
+
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useAuthSession } from "@/features/auth/providers/auth-session-provider"
 import { useFinance } from "@/features/finance/providers/finance-provider"
-import { FinanceDashboard } from "@/features/finance/ui/dashboard/finance-dashboard"
-import { getAppSectionFromPath, getAppSectionPath } from "@/features/navigation/routes"
+
+const AccountDialog = dynamic(
+  () => import("@/features/auth/ui/account-dialog").then((mod) => mod.AccountDialog),
+  { ssr: false },
+)
+
+import { AppSidebar, TopBar } from "@/features/finance/ui/shell/workspace-navigation"
+import {
+  type AppSection,
+  getAppSectionFromPath,
+  getAppSectionPath,
+} from "@/features/navigation/routes"
 
 function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Não foi possível concluir a ação."
@@ -20,28 +32,10 @@ export function FinanceRouteShell({ children }: { children: ReactNode }) {
   const routeSection = getAppSectionFromPath(pathname)
   const finance = useFinance()
   const auth = useAuthSession()
+  const [isAccountDialogOpen, setIsAccountDialogOpen] = useState(false)
+  const [isPending, startTransition] = useTransition()
 
   if (!routeSection) return <>{children}</>
-
-  const legacyFinance = {
-    deleteExpense: finance.expenses.remove,
-    deleteGoal: finance.goals.remove,
-    deleteGoalContribution: finance.goals.removeContribution,
-    deleteIncome: finance.incomes.remove,
-    deleteInvestment: finance.investments.remove,
-    deleteReminder: finance.reminders.remove,
-    error: finance.error,
-    isReady: finance.status === "ready",
-    isSaving: finance.isPending("*"),
-    markReminderReceived: finance.reminders.markReceived,
-    state: finance.state,
-    upsertExpense: finance.expenses.save,
-    upsertGoal: finance.goals.save,
-    upsertGoalContribution: finance.goals.saveContribution,
-    upsertIncome: finance.incomes.save,
-    upsertInvestment: finance.investments.save,
-    upsertReminder: finance.reminders.save,
-  }
 
   async function handleLogout() {
     try {
@@ -58,6 +52,12 @@ export function FinanceRouteShell({ children }: { children: ReactNode }) {
       toast.error("Não foi possível excluir a conta", { description: getErrorMessage(error) })
       throw error
     }
+  }
+
+  function handleSelectSection(section: AppSection) {
+    startTransition(() => {
+      router.push(getAppSectionPath(section))
+    })
   }
 
   if (finance.status === "loading") {
@@ -95,15 +95,41 @@ export function FinanceRouteShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <FinanceDashboard
-      activeSection={routeSection}
-      finance={legacyFinance}
-      onDeleteAccount={handleDeleteAccount}
-      onLogout={handleLogout}
-      onNavigateSection={(section) => router.push(getAppSectionPath(section))}
-      onRequestPasswordReset={() => router.push("/alterar-senha")}
-      onUpdateUser={auth.updateProfile}
-      user={auth.user}
-    />
+    <main className="min-h-dvh bg-background text-foreground">
+      <div className="grid min-h-dvh lg:grid-cols-[17.5rem_1fr]">
+        <AppSidebar
+          activeSection={routeSection}
+          isPending={isPending}
+          onOpenAccount={() => setIsAccountDialogOpen(true)}
+          onSelectSection={handleSelectSection}
+          user={auth.user}
+        />
+
+        <section className="min-w-0 bg-[radial-gradient(circle_at_top_right,var(--brand-soft),transparent_34rem)]">
+          <TopBar
+            activeSection={routeSection}
+            onLogout={handleLogout}
+            onOpenAccount={() => setIsAccountDialogOpen(true)}
+            onSelectSection={handleSelectSection}
+            user={auth.user}
+          />
+          <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 pb-10 pt-4 sm:px-6 lg:px-8 lg:pt-8">
+            {children}
+          </div>
+        </section>
+      </div>
+
+      {isAccountDialogOpen ? (
+        <AccountDialog
+          onDeleteAccount={handleDeleteAccount}
+          onLogout={handleLogout}
+          onOpenChange={setIsAccountDialogOpen}
+          onRequestPasswordReset={() => router.push("/alterar-senha")}
+          onUpdateUser={auth.updateProfile}
+          open={isAccountDialogOpen}
+          user={auth.user}
+        />
+      ) : null}
+    </main>
   )
 }

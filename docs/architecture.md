@@ -6,12 +6,46 @@ Valion usa Next.js App Router, React, TypeScript e Supabase. O navegador acessa
 as tabelas financeiras diretamente com a sessão do usuário; políticas RLS e
 filtros explícitos por `user_id` protegem o isolamento entre contas.
 
-```text
-app/ rotas e layouts
-  -> features/auth autenticação e perfil
-  -> features/finance domínio, dados, estado e UI
-  -> lib/supabase clientes browser, server e admin
-  -> Supabase Auth + Postgres + RLS
+```mermaid
+flowchart TD
+    subgraph UI ["Camada de Apresentação e Rotas"]
+        AppRouter["App Router (app/(app)/layout.tsx)"]
+        Routes["Rotas (/dashboard, /receitas, /despesas, ...)"]
+        Components["Componentes UI / Dialogs"]
+    end
+
+    subgraph State ["Estado & Concorrência"]
+        Provider["FinanceProvider (features/finance/providers)"]
+        Store["useFinanceStore (features/finance/hooks)"]
+    end
+
+    subgraph Domain ["Regras Puras"]
+        DomainRules["Domain Calculations & Types (features/finance/domain)"]
+        Forms["Validações Zod (features/finance/forms)"]
+    end
+
+    subgraph Data ["Camada de Dados"]
+        Repos["Repositórios Tipados (features/finance/data/repositories)"]
+        Mappers["Mappers (supabase-mappers.ts)"]
+    end
+
+    subgraph Backend ["Supabase Backend"]
+        ClientBrowser["lib/supabase/client.ts"]
+        RLS["PostgreSQL com RLS (auth.uid() = user_id)"]
+        Snapshots["monthly_snapshots & RPCs"]
+    end
+
+    AppRouter --> Provider
+    Routes --> Components
+    Components --> Provider
+    Provider --> Store
+    Store --> Repos
+    Store --> DomainRules
+    Components --> Forms
+    Repos --> Mappers
+    Repos --> ClientBrowser
+    ClientBrowser --> RLS
+    RLS --> Snapshots
 ```
 
 ## Fronteiras
@@ -105,7 +139,3 @@ Comece pelo menor módulo que resolve o problema da spec. A separação em domai
 data, state, presentation e UI acontece quando responsabilidades reais surgem;
 ela não é um template obrigatório para qualquer feature. Cerca de 300 linhas é
 um sinal para revisar coesão, não um limite mecânico.
-
-Decisões duráveis ficam em `docs/decisions`. Specs de trabalho são locais, não
-possuem diretório obrigatório, não são versionadas e não substituem ADRs ou
-documentação de arquitetura.

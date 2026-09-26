@@ -24,8 +24,8 @@ distribuição em uso.
 nvm install
 nvm use
 corepack enable
-pnpm install --frozen-lockfile
-pnpm dev:all
+pnpm install
+pnpm dev
 ```
 
 Abra `http://localhost:3000`.
@@ -48,12 +48,12 @@ escutar na interface de rede; use-os apenas em uma rede confiável e rode
 - `pnpm lint`: Biome + regras complementares de Next/React no ESLint.
 - `pnpm typecheck`: verificação TypeScript.
 - `pnpm test`: suíte Vitest padrão.
+- `pnpm test:watch`: suíte Vitest em modo interativo.
 - `pnpm test:coverage`: gera coverage e aplica thresholds globais que nunca devem ser reduzidos.
-- `pnpm test:supabase`: suíte opt-in de integração RLS/constraints contra Supabase local.
+- `pnpm test:supabase`: suíte de integração RLS/constraints contra Supabase local.
 - `pnpm quality`: Biome, ESLint, typecheck e testes unitários.
 - `pnpm verify`: quality gate e build de produção.
 - `pnpm verify:supabase`: reset do banco local e testes reais de integração.
-- `pnpm verify:agents`: valida configuração, paridade e evals de agents/skills.
 
 ## Variáveis de ambiente da aplicação
 
@@ -85,27 +85,24 @@ Configuração de Auth em produção:
 
 ## Scripts
 
-- `pnpm dev`: ambiente de desenvolvimento.
-- `pnpm dev:all`: sobe o Supabase local e inicia o Next.js.
+- `pnpm dev`: inicia o servidor de desenvolvimento do Next.js.
 - `pnpm check`: valida formato, lint e imports com Biome.
-- `pnpm check:write`: corrige automaticamente o que for seguro.
+- `pnpm check:write`: corrige automaticamente o que for seguro via Biome.
 - `pnpm lint`: executa Biome e ESLint.
-- `pnpm test`: suíte padrão.
-- `pnpm test:coverage`: coverage da suíte padrão.
-- `pnpm test:supabase`: integração Supabase local.
-- `pnpm typecheck`: verificação TypeScript.
+- `pnpm test`: executa suíte padrão de testes com Vitest.
+- `pnpm test:watch`: executa testes em modo interativo.
+- `pnpm test:coverage`: relatório de cobertura de código.
+- `pnpm test:supabase`: testes de integração com Supabase local.
+- `pnpm typecheck`: verificação de tipagem estrita TypeScript.
 - `pnpm quality`: checks estáticos, typecheck e testes unitários.
-- `pnpm verify`: quality gate e build.
+- `pnpm verify`: quality gate completo e build.
 - `pnpm verify:supabase`: reset e testes do Supabase local.
-- `pnpm verify:agents`: valida agents, skills, evals e pastas locais protegidas.
-- `pnpm build`: build de produção.
-- `pnpm supabase:start`: sobe Supabase local.
-- `pnpm supabase:stop`: para Supabase local.
-- `pnpm supabase:reset`: recria banco local com migrations.
-- `pnpm supabase:seed`: carrega dados demonstrativos no Supabase local.
-- `pnpm supabase:reset:seed`: recria banco e carrega dados demonstrativos.
-- `pnpm supabase:status`: mostra URLs e chaves locais.
-- `pnpm supabase:types`: regenera os tipos oficiais após aplicar migrations locais.
+- `pnpm build`: build de produção do Next.js.
+- `pnpm supabase:start`: sobe os containers do Supabase local no Docker.
+- `pnpm supabase:stop`: para os containers locais do Supabase.
+- `pnpm supabase:reset`: recria banco local aplicando todas as migrations.
+- `pnpm supabase:status`: mostra URLs e chaves de desenvolvimento local.
+- `pnpm supabase:types`: regenera os tipos TypeScript a partir do banco local.
 
 Migrations de produção não são aplicadas pelo ambiente local. Depois de um `push` na `main`, o workflow `Supabase migrations` aplica as migrations somente quando o CI desse SHA termina com sucesso. O disparo manual permanece disponível para recuperação operacional. Consulte `docs/supabase-setup.md` para o procedimento completo.
 
@@ -119,20 +116,16 @@ Migrations de produção não são aplicadas pelo ambiente local. Depois de um `
 - `features/finance/data/repositories`: consultas e mutações Supabase tipadas por recurso.
 - `features/finance/providers`: provider compartilhado, status, retry e ações agrupadas.
 - `features/finance/presentation`: view models para a apresentação financeira.
-- `components/ui`: componentes shadcn/ui.
+- `components/ui`: componentes de interface do design system (shadcn/base-ui).
 - `lib/supabase`: clientes Supabase browser, server e admin.
 - `lib/supabase/database.types.ts`: contrato gerado pelo Supabase para Row/Insert/Update/RPC.
 - `supabase/schema.sql`: tabelas, constraints, triggers e políticas RLS.
-- `docs/architecture.md`: fronteiras, fluxo de dados e dívida arquitetural conhecida.
-- `docs/history.md`: semântica de snapshots e correções históricas.
-- `.agents/skills`: workflows reutilizáveis para agentes de código.
-- `features/*/README.md`: contexto, fronteiras e invariantes dos módulos complexos.
-- `docs/decisions`: decisões arquiteturais duráveis (ADRs).
-
-O desenvolvimento relevante segue SDD com specs de trabalho locais e não versionadas. Não há um
-diretório obrigatório; use o template `.agents/templates/spec.md`. Toda spec explicita o modelo de
-dados envolvido ou registra que ele não se aplica. O PR leva somente contexto, decisões, Definition
-of Done e validações necessárias para revisão.
+- `docs/architecture.md`: fronteiras, fluxo de dados e diagrama de arquitetura.
+- `docs/history.md`: semântica de snapshots e integridade do histórico mensal.
+- `docs/engineering.md`: workflow de engenharia, qualidade e CI/CD.
+- `docs/testing.md`: estratégia de testes e thresholds de cobertura.
+- `docs/supabase-setup.md`: setup local e de produção do Supabase.
+- `docs/security.md`: regras de segurança e proteção de dados.
 
 ## Deploy
 
