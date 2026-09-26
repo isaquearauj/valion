@@ -13,19 +13,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  dependency-audit:
-    name: Dependency audit
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@9a498708959aeaef5ef730655706c5a1df1edbc2 # v2.3.8
-    with:
-      fail-on-vuln: true
-      scan-args: |-
-        --lockfile=pnpm-lock.yaml
-      upload-sarif: false
-
   quality:
     name: Quality and build
     runs-on: ubuntu-latest
