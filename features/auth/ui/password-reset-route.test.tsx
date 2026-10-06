@@ -6,6 +6,7 @@ import { PasswordResetRoute } from "@/features/auth/ui/password-reset-route"
 
 type SupabaseResetRouteMock = {
   auth: {
+    getClaims?: ReturnType<typeof vi.fn>
     getUser: ReturnType<typeof vi.fn>
     updateUser: ReturnType<typeof vi.fn>
   }
@@ -69,5 +70,27 @@ describe("PasswordResetRoute", () => {
     await user.click(screen.getByRole("button", { name: /voltar/i }))
 
     expect(router.push).toHaveBeenCalledWith("/dashboard")
+  })
+
+  it("asks for the current password outside a recovery session", async () => {
+    render(<PasswordResetRoute />)
+
+    await screen.findByText("Redefinir senha")
+    expect(screen.getByLabelText("Senha atual")).toBeInTheDocument()
+  })
+
+  it("skips the current password when the session comes from a recovery link", async () => {
+    if (supabaseState.client) {
+      supabaseState.client.auth.getClaims = vi.fn().mockResolvedValue({
+        data: { claims: { amr: [{ method: "recovery", timestamp: 1 }] } },
+      })
+    }
+
+    render(<PasswordResetRoute />)
+
+    expect(
+      await screen.findByText("Defina uma nova senha para recuperar o acesso à sua conta."),
+    ).toBeInTheDocument()
+    expect(screen.queryByLabelText("Senha atual")).not.toBeInTheDocument()
   })
 })

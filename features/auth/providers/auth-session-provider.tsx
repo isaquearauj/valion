@@ -11,6 +11,8 @@ type AuthSession = {
   user: AppUser
   deleteAccount: () => Promise<void>
   logout: () => Promise<void>
+  updateEmail: (newEmail: string) => Promise<void>
+  updatePassword: (currentPassword: string, newPassword: string) => Promise<void>
   updateProfile: (update: ProfileUpdate) => Promise<void>
 }
 
@@ -39,6 +41,34 @@ export function AuthSessionProvider({
     setUser(await persistProfile(supabase, user, update))
   }
 
+  async function updateEmail(newEmail: string) {
+    const { data, error } = await supabase.auth.updateUser(
+      { email: newEmail },
+      { emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard` },
+    )
+    if (error) throw new Error(error.message)
+    if (data.user?.email && data.user.email === newEmail) {
+      setUser((prev) => ({ ...prev, email: newEmail }))
+    }
+  }
+
+  async function updatePassword(currentPassword: string, newPassword: string) {
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: currentPassword,
+    })
+    if (signInError) {
+      throw new Error("A senha atual está incorreta.")
+    }
+
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: newPassword,
+    })
+    if (updateError) {
+      throw new Error(updateError.message)
+    }
+  }
+
   async function deleteAccount() {
     const response = await fetch("/api/account", { method: "DELETE" })
     if (!response.ok) throw new Error("Não foi possível excluir a conta.")
@@ -50,7 +80,14 @@ export function AuthSessionProvider({
     })
   }
 
-  const value = { deleteAccount, logout, updateProfile, user }
+  const value = {
+    deleteAccount,
+    logout,
+    updateEmail,
+    updatePassword,
+    updateProfile,
+    user,
+  }
 
   return <AuthSessionContext value={value}>{children}</AuthSessionContext>
 }

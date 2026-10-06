@@ -3,13 +3,12 @@
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
-import { PasswordResetScreen } from "@/features/auth/ui/password-reset-screen"
+import { EmailChangeScreen } from "@/features/auth/ui/email-change-screen"
 import { createSupabaseBrowser } from "@/lib/supabase/client"
 
-export function PasswordResetRoute() {
+export function EmailChangeRoute() {
   const router = useRouter()
   const [email, setEmail] = useState("")
-  const [isRecovery, setIsRecovery] = useState(false)
   const [isReady, setIsReady] = useState(false)
 
   useEffect(() => {
@@ -30,17 +29,7 @@ export function PasswordResetRoute() {
         return
       }
 
-      let recoveryMode = false
-      if (typeof supabase.auth.getClaims === "function") {
-        const { data } = await supabase.auth.getClaims()
-        const amr = data?.claims.amr ?? []
-        recoveryMode = amr.some(
-          (entry) => (typeof entry === "string" ? entry : entry.method) === "recovery",
-        )
-      }
-
       setEmail(user.email)
-      setIsRecovery(recoveryMode)
       setIsReady(true)
     }
 
@@ -64,11 +53,5 @@ export function PasswordResetRoute() {
     )
   }
 
-  return (
-    <PasswordResetScreen
-      email={email}
-      isRecovery={isRecovery}
-      onBack={() => router.push("/dashboard")}
-    />
-  )
+  return <EmailChangeScreen currentEmail={email} onBack={() => router.push("/dashboard")} />
 }

@@ -1,7 +1,11 @@
 import type { Metadata } from "next"
-import { ThemeProvider } from "@/components/theme-provider"
+import { DM_Sans, Manrope } from "next/font/google"
 import { Toaster } from "@/components/ui/sonner"
+import { AuthLinkNotice } from "@/features/auth/ui/auth-link-notice"
 import "./globals.css"
+
+const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans", display: "swap" })
+const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope", display: "swap" })
 
 export const metadata: Metadata = {
   title: "Valion",
@@ -18,12 +22,11 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="pt-BR" className="h-full antialiased" suppressHydrationWarning>
+    <html lang="pt-BR" className={`${dmSans.variable} ${manrope.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
-        <ThemeProvider>
-          {children}
-          <Toaster richColors position="top-right" />
-        </ThemeProvider>
+        {children}
+        <Toaster richColors position="top-right" />
+        <AuthLinkNotice />
       </body>
     </html>
   )

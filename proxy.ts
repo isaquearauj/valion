@@ -42,6 +42,7 @@ export const config = {
     "/metas",
     "/historico",
     "/alterar-senha",
+    "/alterar-email",
     "/api/account",
   ],
 }

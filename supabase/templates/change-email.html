@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confirmação de alteração de e-mail • Valion</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #0f172a;">
+  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f1f5f9; padding: 40px 16px;">
+    <tr>
+      <td align="center">
+        <!-- Container Principal -->
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 520px; background-color: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);">
+          
+          <!-- Cabeçalho com Brand -->
+          <tr>
+            <td style="padding: 32px 32px 24px 32px; text-align: center; border-bottom: 1px solid #f1f5f9;">
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" align="center">
+                <tr>
+                  <td style="background-color: #10b981; border-radius: 12px; width: 40px; height: 40px; text-align: center; vertical-align: middle;">
+                    <span style="font-family: 'Segoe UI', sans-serif; font-size: 20px; font-weight: 800; color: #ffffff;">V</span>
+                  </td>
+                  <td style="padding-left: 12px; text-align: left;">
+                    <span style="font-size: 22px; font-weight: 800; letter-spacing: -0.5px; color: #0f172a;">Valion</span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Conteúdo -->
+          <tr>
+            <td style="padding: 36px 32px;">
+              <h1 style="margin: 0 0 16px 0; font-size: 22px; font-weight: 700; color: #0f172a; line-height: 1.3;">
+                Confirmação de alteração de e-mail
+              </h1>
+              <p style="margin: 0 0 20px 0; font-size: 15px; line-height: 1.6; color: #475569;">
+                Recebemos uma solicitação para alterar o e-mail de acesso da sua conta no Valion para este novo endereço.
+              </p>
+              <p style="margin: 0 0 24px 0; font-size: 15px; line-height: 1.6; color: #475569;">
+                Para confirmar a alteração e validar que este endereço pertence a você, clique no botão abaixo:
+              </p>
+
+              <!-- Botão CTA -->
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 32px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="{{ .ConfirmationURL }}" target="_blank" style="display: inline-block; padding: 14px 32px; background-color: #10b981; color: #ffffff; text-decoration: none; font-size: 15px; font-weight: 600; border-radius: 10px; box-shadow: 0 2px 6px rgba(16, 185, 129, 0.35);">
+                      Confirmar novo e-mail
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin: 24px 0 0 0; font-size: 13px; line-height: 1.5; color: #64748b;">
+                Se preferir, você também pode copiar e colar o link abaixo em seu navegador:
+              </p>
+              <p style="margin: 8px 0 0 0; font-size: 12px; line-height: 1.4; word-break: break-all;">
+                <a href="{{ .ConfirmationURL }}" style="color: #0f766e; text-decoration: underline;">{{ .ConfirmationURL }}</a>
+              </p>
+
+              <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 32px 0 24px 0;" />
+
+              <p style="margin: 0; font-size: 12px; line-height: 1.5; color: #94a3b8;">
+                <strong>Atenção:</strong> Se você não solicitou esta alteração, não clique no link acima e acerte sua senha de acesso imediatamente.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Rodapé -->
+          <tr>
+            <td style="padding: 20px 32px; background-color: #f8fafc; border-top: 1px solid #f1f5f9; text-align: center;">
+              <p style="margin: 0; font-size: 12px; color: #94a3b8;">
+                Valion • Segurança e transparência financeira
+              </p>
+              <p style="margin: 4px 0 0 0; font-size: 11px; color: #cbd5e1;">
+                <a href="https://valionapp.com" style="color: #94a3b8; text-decoration: none;">valionapp.com</a>
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
