@@ -1,6 +1,5 @@
 "use client"
 
-import dynamic from "next/dynamic"
 import { useMemo, useState } from "react"
 import { toast } from "sonner"
 
@@ -8,13 +7,9 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { calculateFinanceSummary } from "@/features/finance/domain/calculations"
 import type { FixedExpense } from "@/features/finance/domain/types"
 import { useFinance } from "@/features/finance/providers/finance-provider"
+import { ExpenseDialog } from "@/features/finance/ui/dialogs"
 import { ExpensesSection } from "@/features/finance/ui/sections"
 import { getActionErrorMessage } from "@/features/finance/ui/shared/dashboard-primitives"
-
-const ExpenseDialog = dynamic(
-  () => import("@/features/finance/ui/dialogs/expense-dialog").then((mod) => mod.ExpenseDialog),
-  { ssr: false },
-)
 
 export function ExpensesView() {
   const finance = useFinance()
@@ -50,19 +45,17 @@ export function ExpensesView() {
         summary={summary}
       />
 
-      {isExpenseDialogOpen ? (
-        <ExpenseDialog
-          expense={editingExpense}
-          onOpenChange={setIsExpenseDialogOpen}
-          onSubmit={async (values) => {
-            await runAction(
-              () => finance.expenses.save(values, editingExpense?.id),
-              editingExpense ? "Despesa atualizada" : "Despesa adicionada",
-            )
-          }}
-          open={isExpenseDialogOpen}
-        />
-      ) : null}
+      <ExpenseDialog
+        expense={editingExpense}
+        onOpenChange={setIsExpenseDialogOpen}
+        onSubmit={async (values) => {
+          await runAction(
+            () => finance.expenses.save(values, editingExpense?.id),
+            editingExpense ? "Despesa atualizada" : "Despesa adicionada",
+          )
+        }}
+        open={isExpenseDialogOpen}
+      />
 
       <ConfirmDialog
         confirmText="Excluir despesa"

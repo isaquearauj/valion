@@ -1,6 +1,5 @@
 "use client"
 
-import dynamic from "next/dynamic"
 import { usePathname, useRouter } from "next/navigation"
 import { type ReactNode, useState, useTransition } from "react"
 import { toast } from "sonner"
@@ -8,13 +7,8 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useAuthSession } from "@/features/auth/providers/auth-session-provider"
+import { AccountDialog } from "@/features/auth/ui/account-dialog"
 import { useFinance } from "@/features/finance/providers/finance-provider"
-
-const AccountDialog = dynamic(
-  () => import("@/features/auth/ui/account-dialog").then((mod) => mod.AccountDialog),
-  { ssr: false },
-)
-
 import { AppSidebar, TopBar } from "@/features/finance/ui/shell/workspace-navigation"
 import {
   type AppSection,

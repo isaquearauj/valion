@@ -1,6 +1,5 @@
 "use client"
 
-import dynamic from "next/dynamic"
 import { useMemo, useState } from "react"
 import { toast } from "sonner"
 
@@ -8,15 +7,10 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { calculateFinanceSummary } from "@/features/finance/domain/calculations"
 import type { InvestmentEntry } from "@/features/finance/domain/types"
 import { useFinance } from "@/features/finance/providers/finance-provider"
+import { InvestmentDialog } from "@/features/finance/ui/dialogs"
 import { InvestmentsSection } from "@/features/finance/ui/sections"
 import { getActionErrorMessage } from "@/features/finance/ui/shared/dashboard-primitives"
 import { formatMonth } from "@/lib/formatters"
-
-const InvestmentDialog = dynamic(
-  () =>
-    import("@/features/finance/ui/dialogs/investment-dialog").then((mod) => mod.InvestmentDialog),
-  { ssr: false },
-)
 
 export function InvestmentsView() {
   const finance = useFinance()
@@ -52,19 +46,17 @@ export function InvestmentsView() {
         summary={summary}
       />
 
-      {isInvestmentDialogOpen ? (
-        <InvestmentDialog
-          investment={editingInvestment}
-          onOpenChange={setIsInvestmentDialogOpen}
-          onSubmit={async (values) => {
-            await runAction(
-              () => finance.investments.save(values, editingInvestment?.id),
-              editingInvestment ? "Investimento atualizado" : "Investimento registrado",
-            )
-          }}
-          open={isInvestmentDialogOpen}
-        />
-      ) : null}
+      <InvestmentDialog
+        investment={editingInvestment}
+        onOpenChange={setIsInvestmentDialogOpen}
+        onSubmit={async (values) => {
+          await runAction(
+            () => finance.investments.save(values, editingInvestment?.id),
+            editingInvestment ? "Investimento atualizado" : "Investimento registrado",
+          )
+        }}
+        open={isInvestmentDialogOpen}
+      />
 
       <ConfirmDialog
         confirmText="Excluir investimento"

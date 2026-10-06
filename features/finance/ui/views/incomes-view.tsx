@@ -1,6 +1,5 @@
 "use client"
 
-import dynamic from "next/dynamic"
 import { useMemo, useState } from "react"
 import { toast } from "sonner"
 
@@ -9,18 +8,9 @@ import { calculateFinanceSummary } from "@/features/finance/domain/calculations"
 import type { ChargeReminder, Income } from "@/features/finance/domain/types"
 import { normalizeReminderFormValues } from "@/features/finance/presentation/dashboard-view-models"
 import { useFinance } from "@/features/finance/providers/finance-provider"
+import { IncomeDialog, ReminderDialog } from "@/features/finance/ui/dialogs"
 import { IncomesSection } from "@/features/finance/ui/sections"
 import { getActionErrorMessage } from "@/features/finance/ui/shared/dashboard-primitives"
-
-const IncomeDialog = dynamic(
-  () => import("@/features/finance/ui/dialogs/income-dialog").then((mod) => mod.IncomeDialog),
-  { ssr: false },
-)
-
-const ReminderDialog = dynamic(
-  () => import("@/features/finance/ui/dialogs/reminder-dialog").then((mod) => mod.ReminderDialog),
-  { ssr: false },
-)
 
 export function IncomesView() {
   const finance = useFinance()
@@ -79,34 +69,29 @@ export function IncomesView() {
         summary={summary}
       />
 
-      {isIncomeDialogOpen ? (
-        <IncomeDialog
-          income={editingIncome}
-          onOpenChange={setIsIncomeDialogOpen}
-          onSubmit={async (values) => {
-            await runAction(
-              () => finance.incomes.save(values, editingIncome?.id),
-              editingIncome ? "Receita atualizada" : "Receita adicionada",
-            )
-          }}
-          open={isIncomeDialogOpen}
-        />
-      ) : null}
+      <IncomeDialog
+        income={editingIncome}
+        onOpenChange={setIsIncomeDialogOpen}
+        onSubmit={async (values) => {
+          await runAction(
+            () => finance.incomes.save(values, editingIncome?.id),
+            editingIncome ? "Receita atualizada" : "Receita adicionada",
+          )
+        }}
+        open={isIncomeDialogOpen}
+      />
 
-      {isReminderDialogOpen ? (
-        <ReminderDialog
-          onOpenChange={setIsReminderDialogOpen}
-          onSubmit={async (values) => {
-            await runAction(
-              () =>
-                finance.reminders.save(normalizeReminderFormValues(values), editingReminder?.id),
-              editingReminder ? "Lembrete atualizado" : "Lembrete adicionado",
-            )
-          }}
-          open={isReminderDialogOpen}
-          reminder={editingReminder}
-        />
-      ) : null}
+      <ReminderDialog
+        onOpenChange={setIsReminderDialogOpen}
+        onSubmit={async (values) => {
+          await runAction(
+            () => finance.reminders.save(normalizeReminderFormValues(values), editingReminder?.id),
+            editingReminder ? "Lembrete atualizado" : "Lembrete adicionado",
+          )
+        }}
+        open={isReminderDialogOpen}
+        reminder={editingReminder}
+      />
 
       <ConfirmDialog
         confirmText="Excluir receita"
