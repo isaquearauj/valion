@@ -7,12 +7,12 @@ Produção: `https://valionapp.com`
 ## Funcionalidades implementadas
 
 - Autenticação real com Supabase Auth: cadastro, login, logout, recuperação de senha e exclusão de conta.
-- Dashboard com cards financeiros, resumo do mês, percentual comprometido e insights de investimentos.
+- Visão Geral com cards financeiros, resumo do mês, percentual comprometido e insights de investimentos.
 - CRUD de receitas, lembretes de cobrança, despesas fixas, investimentos e metas financeiras.
 - Persistência real no PostgreSQL do Supabase com RLS por usuário.
 - Gráficos interativos com Recharts e shadcn chart.
 - Histórico financeiro mensal.
-- Light mode, dark mode e layout responsivo.
+- Identidade visual light mode e layout responsivo.
 - Migrations Supabase versionadas com tabelas, triggers e políticas RLS.
 
 ## Rodando localmente
@@ -37,6 +37,8 @@ O ambiente local usa Supabase CLI + Docker:
 - Mailpit: `http://127.0.0.1:55324`
 
 E-mails de recuperação em desenvolvimento aparecem no Mailpit, sem consumir rate limit do Supabase Cloud.
+Para entrar com a conta local de desenvolvimento, rode `pnpm supabase:start` (ou `pnpm supabase:seed` se os serviços já estiverem ativos) e consulte o e-mail e a localização da senha em `docs/supabase-setup.md`.
+O seed também cria dados financeiros fictícios para explorar os gráficos, o histórico, as metas e as listagens, sem sobrescrever alterações existentes.
 Os serviços locais usam credenciais compartilhadas de desenvolvimento e podem
 escutar na interface de rede; use-os apenas em uma rede confiável e rode
 `pnpm supabase:stop` quando terminar.
@@ -82,6 +84,8 @@ Configuração de Auth em produção:
 - Site URL: `https://valionapp.com`
 - Redirect URLs: `https://valionapp.com/**`, `https://www.valionapp.com/**`, `http://localhost:3000/**`
 - Confirmação de e-mail: habilitada
+- Troca de e-mail: confirmação no endereço antigo e no novo (*Secure email change*)
+- E-mails: Resend via Custom SMTP, templates em `supabase/templates/` (detalhes em `docs/supabase-setup.md`)
 
 ## Scripts
 
@@ -126,6 +130,7 @@ Migrations de produção não são aplicadas pelo ambiente local. Depois de um `
 - `docs/testing.md`: estratégia de testes e thresholds de cobertura.
 - `docs/supabase-setup.md`: setup local e de produção do Supabase.
 - `docs/security.md`: regras de segurança e proteção de dados.
+- `docs/design-system.md`: identidade visual aprovada, tokens e padrões de interface.
 
 ## Deploy
 

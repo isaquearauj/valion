@@ -9,6 +9,17 @@ CLI são gerenciadas por `supabase login` no armazenamento nativo da máquina.
 Não é necessário `.env.supabase`; o arquivo continua ignorado para proteger
 contra criação acidental. Runners efêmeros usam secrets ou secret manager.
 
+Para leitura local da configuração de produção via Management API, use um
+Personal Access Token restrito ao projeto, exportado como
+`SUPABASE_ACCESS_TOKEN` apenas no ambiente do shell (nunca em arquivos do
+repositório). O uso é somente leitura; alterações em produção exigem
+autorização explícita. Respostas da API podem conter segredos (como a senha
+SMTP) e não devem ser registradas por completo. Detalhes em
+`docs/supabase-setup.md`, seção 7.1.
+
+A API key do Resend existe apenas no painel do Supabase (Custom SMTP); o app
+não a utiliza nem a armazena.
+
 Produção usa o GitHub Environment `production`. O workflow de migrations roda
 automaticamente apenas após o CI bem-sucedido de um `push` na `main`, faz
 checkout do SHA validado e usa somente `SUPABASE_ACCESS_TOKEN`,
