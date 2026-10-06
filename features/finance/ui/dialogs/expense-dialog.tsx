@@ -115,7 +115,7 @@ export function ExpenseDialog({
               />
               <TextInputField
                 error={form.formState.errors.dueDay}
-                label="Data de vencimento"
+                label="Dia do vencimento"
                 registration={form.register("dueDay")}
                 type="number"
               />

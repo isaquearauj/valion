@@ -4,6 +4,7 @@ import dynamic from "next/dynamic"
 import { useMemo, useState } from "react"
 import { toast } from "sonner"
 
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { calculateFinanceSummary } from "@/features/finance/domain/calculations"
 import type { InvestmentEntry } from "@/features/finance/domain/types"
 import { useFinance } from "@/features/finance/providers/finance-provider"
@@ -24,6 +25,7 @@ export function InvestmentsView() {
 
   const [isInvestmentDialogOpen, setIsInvestmentDialogOpen] = useState(false)
   const [editingInvestment, setEditingInvestment] = useState<InvestmentEntry | null>(null)
+  const [investmentToDelete, setInvestmentToDelete] = useState<InvestmentEntry | null>(null)
 
   async function runAction(action: () => Promise<unknown>, successMsg: string) {
     try {
@@ -40,17 +42,12 @@ export function InvestmentsView() {
     setIsInvestmentDialogOpen(true)
   }
 
-  async function handleDeleteInvestment(investment: InvestmentEntry) {
-    if (!window.confirm(`Excluir o registro de ${formatMonth(investment.month)}?`)) return
-    await runAction(() => finance.investments.remove(investment.id), "Investimento excluído")
-  }
-
   return (
     <>
       <InvestmentsSection
         investments={state.investments.toSorted((a, b) => b.month.localeCompare(a.month))}
         onAdd={() => openInvestmentDialog()}
-        onDelete={handleDeleteInvestment}
+        onDelete={(investment) => setInvestmentToDelete(investment)}
         onEdit={openInvestmentDialog}
         summary={summary}
       />
@@ -68,6 +65,26 @@ export function InvestmentsView() {
           open={isInvestmentDialogOpen}
         />
       ) : null}
+
+      <ConfirmDialog
+        confirmText="Excluir investimento"
+        destructive
+        onConfirm={async () => {
+          if (investmentToDelete) {
+            await runAction(
+              () => finance.investments.remove(investmentToDelete.id),
+              "Investimento excluído",
+            )
+          }
+        }}
+        onOpenChange={(open) => !open && setInvestmentToDelete(null)}
+        open={Boolean(investmentToDelete)}
+        title={
+          investmentToDelete
+            ? `Excluir o registro de ${formatMonth(investmentToDelete.month)}?`
+            : "Excluir investimento?"
+        }
+      />
     </>
   )
 }

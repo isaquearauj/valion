@@ -5,6 +5,7 @@ import {
   formatDate,
   formatDateKey,
   formatDateKeyLong,
+  formatDateKeyShort,
   formatDueDay,
   formatMonth,
   formatMonthChip,
@@ -34,6 +35,7 @@ describe("formatters", () => {
     expect(formatDate("2026-01-08T12:00:00.000Z")).toContain("2026")
     expect(formatDateKey("2026-01-08")).toContain("2026")
     expect(formatDateKeyLong("2026-01-08")).toContain("janeiro")
+    expect(formatDateKeyShort("2026-01-08")).toBe("08/01/2026")
   })
 
   it("formats due days with zero padding", () => {

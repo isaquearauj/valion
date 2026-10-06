@@ -4,6 +4,7 @@ import dynamic from "next/dynamic"
 import { useMemo, useState } from "react"
 import { toast } from "sonner"
 
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { calculateFinanceSummary } from "@/features/finance/domain/calculations"
 import type { ChargeReminder, Income } from "@/features/finance/domain/types"
 import { normalizeReminderFormValues } from "@/features/finance/presentation/dashboard-view-models"
@@ -31,6 +32,9 @@ export function IncomesView() {
   const [isReminderDialogOpen, setIsReminderDialogOpen] = useState(false)
   const [editingReminder, setEditingReminder] = useState<ChargeReminder | null>(null)
 
+  const [incomeToDelete, setIncomeToDelete] = useState<Income | null>(null)
+  const [reminderToDelete, setReminderToDelete] = useState<ChargeReminder | null>(null)
+
   async function runAction(action: () => Promise<unknown>, successMsg: string) {
     try {
       await action()
@@ -51,16 +55,6 @@ export function IncomesView() {
     setIsReminderDialogOpen(true)
   }
 
-  async function handleDeleteIncome(income: Income) {
-    if (!window.confirm(`Excluir a receita "${income.name}"?`)) return
-    await runAction(() => finance.incomes.remove(income.id), "Receita excluída")
-  }
-
-  async function handleDeleteReminder(reminder: ChargeReminder) {
-    if (!window.confirm(`Excluir o lembrete "${reminder.name}"?`)) return
-    await runAction(() => finance.reminders.remove(reminder.id), "Lembrete excluído")
-  }
-
   async function handleMarkReminderReceived(reminder: ChargeReminder) {
     await runAction(
       () => finance.reminders.markReceived(reminder.id),
@@ -76,8 +70,8 @@ export function IncomesView() {
         incomes={state.incomes}
         onAdd={() => openIncomeDialog()}
         onAddReminder={() => openReminderDialog()}
-        onDelete={handleDeleteIncome}
-        onDeleteReminder={handleDeleteReminder}
+        onDelete={(income) => setIncomeToDelete(income)}
+        onDeleteReminder={(reminder) => setReminderToDelete(reminder)}
         onEdit={openIncomeDialog}
         onEditReminder={openReminderDialog}
         onMarkReminderReceived={handleMarkReminderReceived}
@@ -113,6 +107,35 @@ export function IncomesView() {
           reminder={editingReminder}
         />
       ) : null}
+
+      <ConfirmDialog
+        confirmText="Excluir receita"
+        destructive
+        onConfirm={async () => {
+          if (incomeToDelete) {
+            await runAction(() => finance.incomes.remove(incomeToDelete.id), "Receita excluída")
+          }
+        }}
+        onOpenChange={(open) => !open && setIncomeToDelete(null)}
+        open={Boolean(incomeToDelete)}
+        title={`Excluir a receita "${incomeToDelete?.name}"?`}
+      />
+
+      <ConfirmDialog
+        confirmText="Excluir lembrete"
+        destructive
+        onConfirm={async () => {
+          if (reminderToDelete) {
+            await runAction(
+              () => finance.reminders.remove(reminderToDelete.id),
+              "Lembrete excluído",
+            )
+          }
+        }}
+        onOpenChange={(open) => !open && setReminderToDelete(null)}
+        open={Boolean(reminderToDelete)}
+        title={`Excluir o lembrete "${reminderToDelete?.name}"?`}
+      />
     </>
   )
 }

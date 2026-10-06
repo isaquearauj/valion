@@ -70,7 +70,7 @@ export function ReminderDialog({
         <DialogHeader>
           <DialogTitle>{reminder ? "Editar lembrete" : "Novo lembrete"}</DialogTitle>
           <DialogDescription>
-            Registre cobranças a lembrar sem somar o valor nas receitas do dashboard.
+            Registre cobranças a lembrar sem somar o valor nas receitas da Visão Geral.
           </DialogDescription>
         </DialogHeader>
         <form className="flex flex-col gap-5" onSubmit={form.handleSubmit(submit)}>

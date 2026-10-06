@@ -6,7 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**"]
+    "includes": ["**", "!supabase/templates"]
   },
   "formatter": {
     "enabled": true,

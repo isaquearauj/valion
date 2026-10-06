@@ -35,9 +35,10 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:supabase": "vitest run --config vitest.supabase.config.ts",
-    "supabase:start": "supabase start",
+    "supabase:start": "supabase start && node scripts/seed-local.mjs",
     "supabase:stop": "supabase stop",
-    "supabase:reset": "supabase db reset --local",
+    "supabase:reset": "supabase db reset --local && node scripts/seed-local.mjs",
+    "supabase:seed": "node scripts/seed-local.mjs",
     "supabase:status": "supabase status",
     "supabase:types": "supabase gen types typescript --local --schema public > lib/supabase/database.types.ts"
   },

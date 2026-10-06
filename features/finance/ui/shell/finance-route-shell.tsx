@@ -96,7 +96,7 @@ export function FinanceRouteShell({ children }: { children: ReactNode }) {
 
   return (
     <main className="min-h-dvh bg-background text-foreground">
-      <div className="grid min-h-dvh lg:grid-cols-[17.5rem_1fr]">
+      <div className="grid min-h-dvh lg:grid-cols-[15rem_minmax(0,1fr)]">
         <AppSidebar
           activeSection={routeSection}
           isPending={isPending}
@@ -105,7 +105,7 @@ export function FinanceRouteShell({ children }: { children: ReactNode }) {
           user={auth.user}
         />
 
-        <section className="min-w-0 bg-[radial-gradient(circle_at_top_right,var(--brand-soft),transparent_34rem)]">
+        <section className="min-w-0">
           <TopBar
             activeSection={routeSection}
             onLogout={handleLogout}
@@ -113,7 +113,7 @@ export function FinanceRouteShell({ children }: { children: ReactNode }) {
             onSelectSection={handleSelectSection}
             user={auth.user}
           />
-          <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 pb-10 pt-4 sm:px-6 lg:px-8 lg:pt-8">
+          <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 pb-12 pt-6 sm:px-6 lg:gap-8 lg:px-8 lg:pt-8">
             {children}
           </div>
         </section>
@@ -124,7 +124,15 @@ export function FinanceRouteShell({ children }: { children: ReactNode }) {
           onDeleteAccount={handleDeleteAccount}
           onLogout={handleLogout}
           onOpenChange={setIsAccountDialogOpen}
-          onRequestPasswordReset={() => router.push("/alterar-senha")}
+          onRequestEmailChange={() => {
+            setIsAccountDialogOpen(false)
+            router.push("/alterar-email")
+          }}
+          onRequestPasswordReset={() => {
+            setIsAccountDialogOpen(false)
+            router.push("/alterar-senha")
+          }}
+          onUpdateEmail={auth.updateEmail}
           onUpdateUser={auth.updateProfile}
           open={isAccountDialogOpen}
           user={auth.user}

@@ -76,7 +76,7 @@ describe("FinanceRouteShell", () => {
     )
 
     expect(screen.getByRole("heading", { name: "Conteúdo da rota" })).toBeInTheDocument()
-    expect(screen.getByRole("link", { name: "Dashboard" })).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: "Visão Geral" })).toBeInTheDocument()
     await userEvent.click(screen.getByRole("button", { name: "Abrir menu" }))
     expect(await screen.findByRole("link", { name: "Receitas" })).toBeInTheDocument()
   })

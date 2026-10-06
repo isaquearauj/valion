@@ -1,17 +1,9 @@
 "use client"
 
-import { PlusIcon } from "lucide-react"
+import { BanknoteArrowUpIcon, WalletIcon } from "lucide-react"
 import { useMemo, useState } from "react"
 
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import {
   Table,
   TableBody,
@@ -21,21 +13,40 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { calculateFinanceSummary } from "@/features/finance/domain/calculations"
-import type { ChargeReminder, Income } from "@/features/finance/domain/types"
+import {
+  type ChargeReminder,
+  INCOME_FREQUENCIES,
+  INCOME_TYPES,
+  type Income,
+  type IncomeFrequency,
+  type IncomeType,
+} from "@/features/finance/domain/types"
 import { RemindersCard } from "@/features/finance/ui/sections/reminders-card"
 import {
+  type ActiveCollectionFilter,
+  CollectionCardHeader,
+  CollectionEmpty,
+  type CollectionFilterOption,
+  CollectionFilterSelect,
+  CollectionToolbar,
   MetricCard,
-  PaginationControls,
   ResponsiveTable,
   SectionHeader,
-  TABLE_PAGE_SIZE,
   TableActions,
 } from "@/features/finance/ui/shared/dashboard-primitives"
 import { formatCurrency } from "@/lib/formatters"
-import { cn } from "@/lib/utils"
 
-const incomeActionClassName =
-  "border-emerald-500/30 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 focus-visible:ring-emerald-500/30 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-200 dark:hover:bg-emerald-500/20"
+type IncomeTypeFilter = IncomeType | "all"
+type IncomeFrequencyFilter = IncomeFrequency | "all"
+
+const incomeTypeFilterOptions: CollectionFilterOption[] = [
+  { label: "Todos", value: "all" },
+  ...INCOME_TYPES.map((value) => ({ label: value, value })),
+]
+const incomeFrequencyFilterOptions: CollectionFilterOption[] = [
+  { label: "Todas", value: "all" },
+  ...INCOME_FREQUENCIES.map((value) => ({ label: value, value })),
+]
 
 export function IncomesSection({
   incomes,
@@ -60,13 +71,39 @@ export function IncomesSection({
   reminders: ChargeReminder[]
   summary: ReturnType<typeof calculateFinanceSummary>
 }) {
-  const [page, setPage] = useState(1)
-  const pageCount = Math.max(Math.ceil(incomes.length / TABLE_PAGE_SIZE), 1)
-  const currentPage = Math.min(page, pageCount)
-  const paginatedIncomes = useMemo(
-    () => incomes.slice((currentPage - 1) * TABLE_PAGE_SIZE, currentPage * TABLE_PAGE_SIZE),
-    [currentPage, incomes],
-  )
+  const [query, setQuery] = useState("")
+  const [typeFilter, setTypeFilter] = useState<IncomeTypeFilter>("all")
+  const [frequencyFilter, setFrequencyFilter] = useState<IncomeFrequencyFilter>("all")
+  const filteredIncomes = useMemo(() => {
+    const normalizedQuery = query.trim().toLocaleLowerCase("pt-BR")
+
+    return incomes.filter((income) => {
+      const matchesQuery = `${income.name} ${income.type} ${income.notes}`
+        .toLocaleLowerCase("pt-BR")
+        .includes(normalizedQuery)
+
+      return (
+        matchesQuery &&
+        (typeFilter === "all" || income.type === typeFilter) &&
+        (frequencyFilter === "all" || income.frequency === frequencyFilter)
+      )
+    })
+  }, [frequencyFilter, incomes, query, typeFilter])
+  const activeFilters: ActiveCollectionFilter[] = []
+  if (typeFilter !== "all") {
+    activeFilters.push({
+      key: "type",
+      label: `Tipo: ${typeFilter}`,
+      onRemove: () => setTypeFilter("all"),
+    })
+  }
+  if (frequencyFilter !== "all") {
+    activeFilters.push({
+      key: "frequency",
+      label: `Frequência: ${frequencyFilter}`,
+      onRemove: () => setFrequencyFilter("all"),
+    })
+  }
 
   return (
     <div className="flex flex-col gap-5">
@@ -76,70 +113,140 @@ export function IncomesSection({
       />
 
       <div className="grid gap-4 md:grid-cols-3">
-        <MetricCard label="Receita mensal" value={formatCurrency(summary.monthlyIncome)} />
-        <MetricCard label="Total comprometido" value={formatCurrency(summary.fixedExpenses)} />
-        <MetricCard label="Orçamento livre" value={formatCurrency(summary.budgetAvailable)} />
+        <MetricCard
+          hint={`${incomes.length} fonte(s) cadastrada(s)`}
+          icon={BanknoteArrowUpIcon}
+          label="Receita mensal"
+          tone="income"
+          value={formatCurrency(summary.monthlyIncome)}
+        />
+        <MetricCard
+          label="Total comprometido"
+          tone="expense"
+          value={formatCurrency(summary.fixedExpenses)}
+        />
+        <MetricCard
+          icon={WalletIcon}
+          label="Orçamento livre"
+          value={formatCurrency(summary.budgetAvailable)}
+        />
       </div>
 
       <Card>
-        <CardHeader>
-          <div>
-            <CardTitle>Receitas cadastradas</CardTitle>
-            <CardDescription>
-              Valores semanais e quinzenais são normalizados para o mês.
-            </CardDescription>
-          </div>
-          <CardAction>
-            <Button className={cn("min-w-[9.5rem]", incomeActionClassName)} onClick={onAdd}>
-              <PlusIcon data-icon="inline-start" />
-              Nova receita
-            </Button>
-          </CardAction>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveTable>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Categoria</TableHead>
-                  <TableHead>Frequência</TableHead>
-                  <TableHead className="text-right">Valor</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedIncomes.map((income) => (
-                  <TableRow key={income.id}>
-                    <TableCell>
-                      <div className="font-medium">{income.name}</div>
-                      <div className="max-w-xs truncate text-xs text-muted-foreground">
-                        {income.notes || "Sem observações"}
+        <CollectionCardHeader
+          actionLabel="Nova receita"
+          description="Valores semanais e quinzenais são normalizados para o mês."
+          onAction={onAdd}
+          title="Receitas cadastradas"
+        />
+        <CardContent className="space-y-4">
+          <CollectionToolbar
+            activeFilters={activeFilters}
+            itemLabel="receitas"
+            onClearFilters={() => {
+              setQuery("")
+              setTypeFilter("all")
+              setFrequencyFilter("all")
+            }}
+            onQueryChange={setQuery}
+            query={query}
+            searchLabel="Buscar receitas"
+            totalItems={incomes.length}
+            visibleItems={filteredIncomes.length}
+          >
+            <CollectionFilterSelect
+              label="Categoria"
+              onChange={(value) => setTypeFilter(value as IncomeTypeFilter)}
+              options={incomeTypeFilterOptions}
+              value={typeFilter}
+            />
+            <CollectionFilterSelect
+              label="Frequência"
+              onChange={(value) => setFrequencyFilter(value as IncomeFrequencyFilter)}
+              options={incomeFrequencyFilterOptions}
+              value={frequencyFilter}
+            />
+          </CollectionToolbar>
+          {filteredIncomes.length ? (
+            <>
+              <ResponsiveTable desktopOnly>
+                <Table containerClassName="max-h-[28rem] overflow-auto">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Categoria</TableHead>
+                      <TableHead>Frequência</TableHead>
+                      <TableHead className="text-right">Valor</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredIncomes.map((income) => (
+                      <TableRow key={income.id}>
+                        <TableCell>
+                          <div className="font-medium">{income.name}</div>
+                          <div className="max-w-xs truncate text-xs text-muted-foreground">
+                            {income.notes || "Sem observações"}
+                          </div>
+                        </TableCell>
+                        <TableCell>{income.type}</TableCell>
+                        <TableCell>{income.frequency}</TableCell>
+                        <TableCell className="text-right font-mono tabular-nums">
+                          {formatCurrency(income.amount)}
+                        </TableCell>
+                        <TableCell>
+                          <TableActions
+                            onDelete={() => onDelete(income)}
+                            onEdit={() => onEdit(income)}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </ResponsiveTable>
+              <div className="flex max-h-[28rem] flex-col gap-3 overflow-y-auto pr-1 md:hidden">
+                {filteredIncomes.map((income) => (
+                  <article
+                    className="rounded-xl border border-border bg-background p-4"
+                    key={income.id}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold">{income.name}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {income.type} · {income.frequency}
+                        </p>
                       </div>
-                    </TableCell>
-                    <TableCell>{income.type}</TableCell>
-                    <TableCell>{income.frequency}</TableCell>
-                    <TableCell className="text-right font-mono tabular-nums">
-                      {formatCurrency(income.amount)}
-                    </TableCell>
-                    <TableCell>
+                      <p className="shrink-0 font-heading font-bold tabular-nums text-finance-income">
+                        {formatCurrency(income.amount)}
+                      </p>
+                    </div>
+                    {income.notes ? (
+                      <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">
+                        {income.notes}
+                      </p>
+                    ) : null}
+                    <div className="mt-3 flex justify-end border-t border-border/70 pt-2">
                       <TableActions
                         onDelete={() => onDelete(income)}
                         onEdit={() => onEdit(income)}
                       />
-                    </TableCell>
-                  </TableRow>
+                    </div>
+                  </article>
                 ))}
-              </TableBody>
-            </Table>
-          </ResponsiveTable>
-          <PaginationControls
-            currentPage={currentPage}
-            itemLabel="receitas"
-            onPageChange={setPage}
-            pageCount={pageCount}
-            totalItems={incomes.length}
-          />
+              </div>
+            </>
+          ) : (
+            <CollectionEmpty
+              description={
+                incomes.length
+                  ? "Tente outro nome ou categoria."
+                  : "Cadastre sua primeira entrada para acompanhar o orçamento com clareza."
+              }
+              title={incomes.length ? "Nenhuma receita encontrada" : "Nenhuma receita cadastrada"}
+            />
+          )}
         </CardContent>
       </Card>
 

@@ -65,5 +65,6 @@ export const pieColors = [
   "var(--chart-3)",
   "var(--chart-5)",
   "var(--primary)",
-  "oklch(0.64 0.16 10)",
+  "var(--finance-expense)",
+  "var(--chart-6)",
 ]

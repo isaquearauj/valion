@@ -74,7 +74,9 @@ export type FinanceDashboardProps = {
   onDeleteAccount: () => Promise<void> | void
   onLogout: () => Promise<void> | void
   onNavigateSection?: (section: AppSection) => void
+  onRequestEmailChange?: () => void
   onRequestPasswordReset: () => void
+  onUpdateEmail?: (newEmail: string) => Promise<void>
   onUpdateUser: (update: ProfileUpdate) => Promise<void> | void
   user: AppUser
 }
@@ -87,7 +89,9 @@ export function FinanceDashboard({
   onDeleteAccount,
   onLogout,
   onNavigateSection,
+  onRequestEmailChange,
   onRequestPasswordReset,
+  onUpdateEmail,
   onUpdateUser,
   user,
 }: FinanceDashboardProps) {
@@ -197,6 +201,18 @@ export function FinanceDashboard({
     dashboard: (
       <OverviewSection
         distribution={distribution}
+        hasFinancialData={Boolean(
+          state.incomes.length ||
+            state.expenses.length ||
+            state.investments.length ||
+            state.snapshots.some(
+              (snapshot) =>
+                snapshot.income ||
+                snapshot.expenses ||
+                snapshot.plannedInvestment ||
+                snapshot.investedAmount,
+            ),
+        )}
         history={history}
         onNavigateSection={selectSection}
         summary={summary}
@@ -334,7 +350,9 @@ export function FinanceDashboard({
           onDeleteAccount={onDeleteAccount}
           onLogout={onLogout}
           onOpenChange={setIsAccountDialogOpen}
+          onRequestEmailChange={onRequestEmailChange}
           onRequestPasswordReset={onRequestPasswordReset}
+          onUpdateEmail={onUpdateEmail}
           onUpdateUser={onUpdateUser}
           open={isAccountDialogOpen}
           user={user}

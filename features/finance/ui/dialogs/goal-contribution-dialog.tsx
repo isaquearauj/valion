@@ -35,6 +35,7 @@ export function GoalContributionDialog({
   contribution,
   defaultGoalId,
   goals,
+  hideGoalSelect = false,
   onOpenChange,
   onSubmit,
   open,
@@ -42,6 +43,7 @@ export function GoalContributionDialog({
   contribution: GoalContribution | null
   defaultGoalId: string
   goals: Goal[]
+  hideGoalSelect?: boolean
   onOpenChange: (open: boolean) => void
   onSubmit: (values: GoalContributionFormValues, id?: string) => Promise<void> | void
   open: boolean
@@ -51,6 +53,8 @@ export function GoalContributionDialog({
     resolver: zodResolver(goalContributionSchema),
   })
   const selectedGoalId = useWatch({ control: form.control, name: "goalId" })
+
+  const currentGoal = goals.find((goal) => goal.id === (selectedGoalId || defaultGoalId))
 
   useEffect(() => {
     form.reset(getGoalContributionDefaults(defaultGoalId, goals, contribution))
@@ -67,40 +71,44 @@ export function GoalContributionDialog({
         <DialogHeader>
           <DialogTitle>{contribution ? "Editar aporte" : "Registrar aporte"}</DialogTitle>
           <DialogDescription>
-            Lance o valor aportado para atualizar a evolução da meta.
+            {hideGoalSelect && currentGoal
+              ? `Aporte vinculado à meta "${currentGoal.name}".`
+              : "Lance o valor aportado para atualizar a evolução da meta."}
           </DialogDescription>
         </DialogHeader>
         <form className="flex flex-col gap-5" onSubmit={form.handleSubmit(submit)}>
           <FieldGroup>
-            <Field data-invalid={Boolean(form.formState.errors.goalId)}>
-              <FieldLabel>Meta</FieldLabel>
-              <Select
-                items={goals.map((goal) => ({ label: goal.name, value: goal.id }))}
-                onValueChange={(value) => {
-                  if (value !== null) {
-                    form.setValue("goalId", value, { shouldDirty: true, shouldValidate: true })
-                  }
-                }}
-                value={selectedGoalId ?? ""}
-              >
-                <SelectTrigger
-                  aria-invalid={Boolean(form.formState.errors.goalId)}
-                  aria-label="Meta"
+            {!hideGoalSelect ? (
+              <Field data-invalid={Boolean(form.formState.errors.goalId)}>
+                <FieldLabel>Meta</FieldLabel>
+                <Select
+                  items={goals.map((goal) => ({ label: goal.name, value: goal.id }))}
+                  onValueChange={(value) => {
+                    if (value !== null) {
+                      form.setValue("goalId", value, { shouldDirty: true, shouldValidate: true })
+                    }
+                  }}
+                  value={selectedGoalId ?? ""}
                 >
-                  <SelectValue placeholder="Selecione uma meta" />
-                </SelectTrigger>
-                <SelectContent alignItemWithTrigger={false}>
-                  <SelectGroup>
-                    {goals.map((goal) => (
-                      <SelectItem key={goal.id} value={goal.id}>
-                        {goal.name}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-              <FieldError>{form.formState.errors.goalId?.message}</FieldError>
-            </Field>
+                  <SelectTrigger
+                    aria-invalid={Boolean(form.formState.errors.goalId)}
+                    aria-label="Meta"
+                  >
+                    <SelectValue placeholder="Selecione uma meta" />
+                  </SelectTrigger>
+                  <SelectContent alignItemWithTrigger={false}>
+                    <SelectGroup>
+                      {goals.map((goal) => (
+                        <SelectItem key={goal.id} value={goal.id}>
+                          {goal.name}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+                <FieldError>{form.formState.errors.goalId?.message}</FieldError>
+              </Field>
+            ) : null}
             <div className="grid gap-4 sm:grid-cols-2">
               <TextInputField
                 error={form.formState.errors.amount}

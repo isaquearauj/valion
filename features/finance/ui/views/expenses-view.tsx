@@ -4,6 +4,7 @@ import dynamic from "next/dynamic"
 import { useMemo, useState } from "react"
 import { toast } from "sonner"
 
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { calculateFinanceSummary } from "@/features/finance/domain/calculations"
 import type { FixedExpense } from "@/features/finance/domain/types"
 import { useFinance } from "@/features/finance/providers/finance-provider"
@@ -22,6 +23,7 @@ export function ExpensesView() {
 
   const [isExpenseDialogOpen, setIsExpenseDialogOpen] = useState(false)
   const [editingExpense, setEditingExpense] = useState<FixedExpense | null>(null)
+  const [expenseToDelete, setExpenseToDelete] = useState<FixedExpense | null>(null)
 
   async function runAction(action: () => Promise<unknown>, successMsg: string) {
     try {
@@ -38,17 +40,12 @@ export function ExpensesView() {
     setIsExpenseDialogOpen(true)
   }
 
-  async function handleDeleteExpense(expense: FixedExpense) {
-    if (!window.confirm(`Excluir a despesa "${expense.name}"?`)) return
-    await runAction(() => finance.expenses.remove(expense.id), "Despesa excluída")
-  }
-
   return (
     <>
       <ExpensesSection
         expenses={state.expenses}
         onAdd={() => openExpenseDialog()}
-        onDelete={handleDeleteExpense}
+        onDelete={(expense) => setExpenseToDelete(expense)}
         onEdit={openExpenseDialog}
         summary={summary}
       />
@@ -66,6 +63,19 @@ export function ExpensesView() {
           open={isExpenseDialogOpen}
         />
       ) : null}
+
+      <ConfirmDialog
+        confirmText="Excluir despesa"
+        destructive
+        onConfirm={async () => {
+          if (expenseToDelete) {
+            await runAction(() => finance.expenses.remove(expenseToDelete.id), "Despesa excluída")
+          }
+        }}
+        onOpenChange={(open) => !open && setExpenseToDelete(null)}
+        open={Boolean(expenseToDelete)}
+        title={`Excluir a despesa "${expenseToDelete?.name}"?`}
+      />
     </>
   )
 }

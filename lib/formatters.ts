@@ -64,6 +64,11 @@ export function formatDateKeyLong(dateKey: string) {
   }).format(date)
 }
 
+export function formatDateKeyShort(dateKey: string) {
+  const [year, month, day] = dateKey.split("-")
+  return `${day}/${month}/${year}`
+}
+
 export function formatDueDay(day: number) {
   return `Todo dia ${String(day).padStart(2, "0")}`
 }

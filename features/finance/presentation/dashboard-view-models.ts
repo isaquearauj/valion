@@ -22,7 +22,7 @@ import { formatCurrency, formatDateKey } from "@/lib/formatters"
 export function getBudgetCommitmentStatus(value: number) {
   if (value > 70) {
     return {
-      className: "bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-200",
+      className: "bg-finance-expense-soft text-finance-expense",
       description:
         "Nível crítico: despesas fixas consomem grande parte da renda. Revise contratos, parcelas e compromissos recorrentes com prioridade.",
       label: "Crítico",
@@ -31,7 +31,7 @@ export function getBudgetCommitmentStatus(value: number) {
 
   if (value > 55) {
     return {
-      className: "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-200",
+      className: "bg-finance-warning-soft text-finance-warning",
       description:
         "Ponto de atenção: o orçamento começa a ficar pressionado. Avalie reduzir despesas fixas antes de assumir novos compromissos.",
       label: "Atenção",
@@ -40,7 +40,7 @@ export function getBudgetCommitmentStatus(value: number) {
 
   if (value > 40) {
     return {
-      className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200",
+      className: "bg-finance-income-soft text-finance-income",
       description:
         "Faixa saudável: os compromissos fixos estão controlados, mas ainda vale acompanhar aumentos recorrentes.",
       label: "Saudável",
@@ -48,7 +48,7 @@ export function getBudgetCommitmentStatus(value: number) {
   }
 
   return {
-    className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200",
+    className: "bg-finance-income-soft text-finance-income",
     description:
       "Margem confortável: há boa folga entre renda e despesas fixas para imprevistos, amortizações e investimentos.",
     label: "Confortável",

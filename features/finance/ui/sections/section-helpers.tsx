@@ -21,8 +21,8 @@ export function TrendDelta({
       className={cn(
         "font-mono text-xs font-semibold tabular-nums",
         isNeutral && "text-muted-foreground",
-        !isNeutral && isPositive && "text-emerald-600 dark:text-emerald-300",
-        !isNeutral && !isPositive && "text-rose-600 dark:text-rose-300",
+        !isNeutral && isPositive && "text-finance-income",
+        !isNeutral && !isPositive && "text-finance-expense",
       )}
     >
       {prefix}

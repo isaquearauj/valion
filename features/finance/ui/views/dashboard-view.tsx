@@ -23,6 +23,18 @@ export function DashboardView() {
   return (
     <OverviewSection
       distribution={distribution}
+      hasFinancialData={Boolean(
+        state.incomes.length ||
+          state.expenses.length ||
+          state.investments.length ||
+          state.snapshots.some(
+            (snapshot) =>
+              snapshot.income ||
+              snapshot.expenses ||
+              snapshot.plannedInvestment ||
+              snapshot.investedAmount,
+          ),
+      )}
       history={history}
       onNavigateSection={(section) => router.push(getAppSectionPath(section))}
       summary={summary}
