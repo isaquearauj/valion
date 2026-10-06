@@ -196,7 +196,9 @@ export function RemindersCard({
                       <TableCell>
                         <div className="font-medium">{reminder.name}</div>
                         <div className="max-w-xs truncate text-xs text-muted-foreground">
-                          {reminder.person} · {reminder.notes || "Sem observações"}
+                          {reminder.notes
+                            ? `${reminder.person} · ${reminder.notes}`
+                            : reminder.person}
                         </div>
                       </TableCell>
                       <TableCell>

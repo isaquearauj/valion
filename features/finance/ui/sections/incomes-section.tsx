@@ -185,9 +185,11 @@ export function IncomesSection({
                       <TableRow key={income.id}>
                         <TableCell>
                           <div className="font-medium">{income.name}</div>
-                          <div className="max-w-xs truncate text-xs text-muted-foreground">
-                            {income.notes || "Sem observações"}
-                          </div>
+                          {income.notes ? (
+                            <div className="max-w-xs truncate text-xs text-muted-foreground">
+                              {income.notes}
+                            </div>
+                          ) : null}
                         </TableCell>
                         <TableCell>{income.type}</TableCell>
                         <TableCell>{income.frequency}</TableCell>

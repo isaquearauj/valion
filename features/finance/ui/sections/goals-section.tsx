@@ -344,14 +344,9 @@ export function GoalsSection({
                             onClick={() => setInspectedGoalId(goal.id)}
                           >
                             <TableCell>
-                              <div className="flex min-w-0 flex-col gap-0.5">
-                                <span className="font-semibold transition-colors group-hover:text-primary">
-                                  {goal.name}
-                                </span>
-                                <span className="text-xs text-muted-foreground">
-                                  {formatGoalDeadline(goal)}
-                                </span>
-                              </div>
+                              <span className="font-semibold transition-colors group-hover:text-primary">
+                                {goal.name}
+                              </span>
                             </TableCell>
                             <TableCell>
                               <div className="flex flex-col gap-1.5">

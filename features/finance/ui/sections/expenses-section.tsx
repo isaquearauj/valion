@@ -240,9 +240,11 @@ export function ExpensesSection({
                       <TableRow key={expense.id}>
                         <TableCell>
                           <div className="font-medium">{expense.name}</div>
-                          <div className="max-w-xs truncate text-xs text-muted-foreground">
-                            {expense.notes || "Sem observações"}
-                          </div>
+                          {expense.notes ? (
+                            <div className="max-w-xs truncate text-xs text-muted-foreground">
+                              {expense.notes}
+                            </div>
+                          ) : null}
                         </TableCell>
                         <TableCell>{expense.category}</TableCell>
                         <TableCell>{formatDueDay(expense.dueDay)}</TableCell>
