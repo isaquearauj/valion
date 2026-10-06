@@ -38,4 +38,57 @@ describe("AccountDialog", () => {
     expect(onUpdateUser).not.toHaveBeenCalled()
     expect(onOpenChange).not.toHaveBeenCalledWith(false)
   })
+
+  it("switches to the security tab and triggers onRequestEmailChange when Alterar e-mail is clicked", async () => {
+    const onRequestEmailChange = vi.fn()
+    const onOpenChange = vi.fn()
+
+    render(
+      <AccountDialog
+        onDeleteAccount={vi.fn()}
+        onLogout={vi.fn()}
+        onOpenChange={onOpenChange}
+        onRequestEmailChange={onRequestEmailChange}
+        onRequestPasswordReset={vi.fn()}
+        onUpdateUser={vi.fn()}
+        open
+        user={user}
+      />,
+    )
+
+    // Clica na aba Segurança
+    await userEvent.click(screen.getByRole("tab", { name: /segurança/i }))
+
+    // Clica no botão de alterar e-mail
+    await userEvent.click(screen.getByRole("button", { name: "Alterar e-mail" }))
+
+    expect(onOpenChange).toHaveBeenCalledWith(false)
+    expect(onRequestEmailChange).toHaveBeenCalledTimes(1)
+  })
+
+  it("triggers onRequestPasswordReset and closes dialog when Alterar senha is clicked", async () => {
+    const onRequestPasswordReset = vi.fn()
+    const onOpenChange = vi.fn()
+
+    render(
+      <AccountDialog
+        onDeleteAccount={vi.fn()}
+        onLogout={vi.fn()}
+        onOpenChange={onOpenChange}
+        onRequestPasswordReset={onRequestPasswordReset}
+        onUpdateUser={vi.fn()}
+        open
+        user={user}
+      />,
+    )
+
+    // Clica na aba Segurança
+    await userEvent.click(screen.getByRole("tab", { name: /segurança/i }))
+
+    // Clica no botão Alterar senha
+    await userEvent.click(screen.getByRole("button", { name: "Alterar senha" }))
+
+    expect(onOpenChange).toHaveBeenCalledWith(false)
+    expect(onRequestPasswordReset).toHaveBeenCalledTimes(1)
+  })
 })

@@ -1,21 +1,13 @@
 "use client"
 
-import {
-  ArrowRightIcon,
-  ChartNoAxesCombinedIcon,
-  LockKeyholeIcon,
-  ShieldCheckIcon,
-  WalletCardsIcon,
-} from "lucide-react"
+import { ArrowRightIcon } from "lucide-react"
 import { type FormEvent, useMemo, useState } from "react"
 import { toast } from "sonner"
 
-import { ThemeToggle } from "@/components/theme-toggle"
+import { Brand } from "@/components/brand"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Separator } from "@/components/ui/separator"
 import { getAppUserFromSupabaseUser } from "@/features/auth/supabase-user"
 import type { AppUser } from "@/features/auth/types"
 import type { AuthMode } from "@/features/navigation/routes"
@@ -27,29 +19,11 @@ type AuthScreenProps = {
   mode?: AuthMode
 }
 
-const benefits = [
-  {
-    description: "Receitas, compromissos e investimentos no mesmo painel.",
-    icon: WalletCardsIcon,
-    title: "Visão financeira única",
-  },
-  {
-    description: "Arquitetura preparada para autenticação, RLS e variáveis de ambiente.",
-    icon: ShieldCheckIcon,
-    title: "Pronto para produção",
-  },
-  {
-    description: "Gráficos, histórico mensal e indicadores de orçamento comprometido.",
-    icon: ChartNoAxesCombinedIcon,
-    title: "Decisão baseada em dados",
-  },
-]
-
 const authCopy = {
   login: {
     action: "Entrar no painel",
-    description: "Acesse sua central financeira com e-mail e senha.",
-    title: "Acesse sua central financeira",
+    description: "Entre para acompanhar seu dinheiro com clareza.",
+    title: "Bom ter você de volta",
   },
   recover: {
     action: "Enviar instruções",
@@ -173,137 +147,155 @@ export function AuthScreen({ mode, onAuthenticate, onModeChange }: AuthScreenPro
   }
 
   return (
-    <main className="relative min-h-dvh overflow-hidden bg-background text-foreground">
-      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,var(--brand-soft),transparent_32rem),linear-gradient(135deg,var(--background),var(--muted))]" />
-      <div className="mx-auto flex min-h-dvh w-full max-w-7xl flex-col px-4 py-4 sm:px-6 lg:px-8">
-        <header className="flex items-center justify-between py-3">
-          <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
-              <WalletCardsIcon />
-            </div>
-            <div>
-              <p className="font-heading text-base font-semibold">Valion</p>
-              <p className="text-xs text-muted-foreground">Finanças pessoais premium</p>
-            </div>
+    <main className="h-dvh w-full overflow-hidden bg-background text-foreground lg:grid lg:grid-cols-2">
+      {/* Coluna Esquerda: Institucional / Branding (apenas desktop) */}
+      <section className="relative hidden h-full flex-col justify-between overflow-hidden bg-primary p-8 text-primary-foreground lg:flex xl:p-12">
+        {/* Background sutil com círculos orgânicos suaves */}
+        <div className="pointer-events-none absolute -bottom-24 -left-24 size-96 rounded-full bg-white/[0.03] blur-2xl" />
+        <div className="pointer-events-none absolute -top-32 -right-32 size-[28rem] rounded-full bg-emerald-400/[0.06] blur-3xl" />
+
+        <div className="relative z-10">
+          <Brand className="[&>span:first-child]:bg-white/15 [&>span:first-child]:text-white" />
+        </div>
+
+        <div className="relative z-10 my-auto mx-auto max-w-md py-6 text-left">
+          <h1 className="font-heading text-3xl font-extrabold leading-snug tracking-tight text-white xl:text-[2.25rem]">
+            Clareza absoluta para o seu dinheiro.
+          </h1>
+
+          <p className="mt-4 text-sm leading-relaxed text-white/80 xl:text-base">
+            Decisões financeiras inteligentes começam com um controle descomplicado e transparente.
+          </p>
+        </div>
+
+        <div />
+      </section>
+
+      {/* Coluna Direita: Formulário de Autenticação */}
+      <section className="flex h-full flex-col justify-between overflow-y-auto px-6 py-6 sm:px-10 lg:px-12 xl:px-16">
+        <div className="flex items-center justify-between lg:justify-end">
+          <div className="lg:hidden">
+            <Brand />
           </div>
-          <ThemeToggle />
-        </header>
+        </div>
 
-        <section className="grid flex-1 items-center gap-8 py-8 lg:grid-cols-[1.08fr_0.92fr] lg:py-12">
-          <div className="flex flex-col gap-8">
-            <div className="max-w-3xl">
-              <div className="mb-5 inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1 text-sm text-muted-foreground shadow-sm">
-                <LockKeyholeIcon />
-                Plataforma financeira pronta para evoluir
-              </div>
-              <h1 className="max-w-3xl text-balance font-heading text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">
-                Controle financeiro pessoal com clareza de produto SaaS.
-              </h1>
-              <p className="mt-5 max-w-2xl text-pretty text-base leading-7 text-muted-foreground sm:text-lg">
-                Organize receitas, despesas fixas, parcelamentos e investimentos em uma plataforma
-                moderna, responsiva e preparada para produção.
-              </p>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-3">
-              {benefits.map((benefit) => (
-                <Card key={benefit.title} className="bg-card/80 shadow-sm backdrop-blur">
-                  <CardHeader className="gap-3">
-                    <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                      <benefit.icon />
-                    </div>
-                    <div>
-                      <CardTitle className="text-sm">{benefit.title}</CardTitle>
-                      <CardDescription className="mt-1 text-xs leading-5">
-                        {benefit.description}
-                      </CardDescription>
-                    </div>
-                  </CardHeader>
-                </Card>
-              ))}
-            </div>
+        <div className="mx-auto my-auto w-full max-w-sm py-4">
+          <div className="space-y-1.5 text-left">
+            <h2 className="font-heading text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+              {authCopy[activeMode].title}
+            </h2>
+            <p className="text-xs text-muted-foreground sm:text-sm">
+              {authCopy[activeMode].description}
+            </p>
           </div>
 
-          <Card className="mx-auto w-full max-w-md border-foreground/10 bg-card/95 shadow-2xl shadow-primary/10 backdrop-blur">
-            <CardHeader>
-              <CardTitle className="text-2xl">{authCopy[activeMode].title}</CardTitle>
-              <CardDescription>{authCopy[activeMode].description}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
-                <FieldGroup>
-                  {activeMode === "register" ? (
-                    <Field>
-                      <FieldLabel htmlFor="name">Nome</FieldLabel>
-                      <Input
-                        autoComplete="name"
-                        id="name"
-                        onChange={(event) => setName(event.target.value)}
-                        value={name}
-                      />
-                    </Field>
-                  ) : null}
+          <form className="mt-6 flex flex-col gap-4" onSubmit={handleSubmit}>
+            <FieldGroup className="gap-3.5">
+              {activeMode === "register" ? (
+                <Field className="gap-1.5">
+                  <FieldLabel className="text-xs font-medium" htmlFor="name">
+                    Nome
+                  </FieldLabel>
+                  <Input
+                    autoComplete="name"
+                    className="h-10 text-sm"
+                    id="name"
+                    onChange={(event) => setName(event.target.value)}
+                    placeholder="Como prefere ser chamado"
+                    value={name}
+                  />
+                </Field>
+              ) : null}
 
-                  <Field data-invalid={Boolean(error)}>
-                    <FieldLabel htmlFor="email">E-mail</FieldLabel>
-                    <Input
-                      autoComplete="email"
-                      id="email"
-                      inputMode="email"
-                      onChange={(event) => setEmail(event.target.value)}
-                      value={email}
-                    />
+              <Field className="gap-1.5" data-invalid={Boolean(error)}>
+                <FieldLabel className="text-xs font-medium" htmlFor="email">
+                  E-mail
+                </FieldLabel>
+                <Input
+                  autoComplete="email"
+                  className="h-10 text-sm"
+                  id="email"
+                  inputMode="email"
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="seu@email.com"
+                  value={email}
+                />
+              </Field>
+
+              {activeMode !== "recover" ? (
+                <Field className="gap-1.5" data-invalid={Boolean(error)}>
+                  <div className="flex items-center justify-between">
+                    <FieldLabel className="text-xs font-medium" htmlFor="password">
+                      Senha
+                    </FieldLabel>
                     {activeMode === "login" ? (
-                      <FieldDescription>Use seu e-mail para acessar o painel.</FieldDescription>
+                      <button
+                        className="cursor-pointer text-xs font-medium text-muted-foreground transition-colors hover:text-primary hover:underline"
+                        onClick={() => setActiveMode("recover")}
+                        type="button"
+                      >
+                        Esqueci minha senha
+                      </button>
                     ) : null}
-                  </Field>
+                  </div>
+                  <Input
+                    autoComplete={activeMode === "register" ? "new-password" : "current-password"}
+                    className="h-10 text-sm"
+                    id="password"
+                    onChange={(event) => setPassword(event.target.value)}
+                    placeholder="Mínimo de 6 caracteres"
+                    type="password"
+                    value={password}
+                  />
+                </Field>
+              ) : null}
 
-                  {activeMode !== "recover" ? (
-                    <Field data-invalid={Boolean(error)}>
-                      <FieldLabel htmlFor="password">Senha</FieldLabel>
-                      <Input
-                        autoComplete={
-                          activeMode === "register" ? "new-password" : "current-password"
-                        }
-                        id="password"
-                        onChange={(event) => setPassword(event.target.value)}
-                        type="password"
-                        value={password}
-                      />
-                    </Field>
-                  ) : null}
+              {error ? <FieldError className="text-xs">{error}</FieldError> : null}
+            </FieldGroup>
 
-                  <FieldError>{error}</FieldError>
-                </FieldGroup>
+            <Button
+              className="mt-2 h-10 w-full font-medium"
+              disabled={isSubmitting}
+              size="lg"
+              type="submit"
+            >
+              {isSubmitting ? "Aguarde..." : authCopy[activeMode].action}
+              <ArrowRightIcon className="size-4 ml-1.5" />
+            </Button>
+          </form>
 
-                <Button className="h-10" disabled={isSubmitting} type="submit">
-                  {isSubmitting ? "Aguarde..." : authCopy[activeMode].action}
-                  <ArrowRightIcon data-icon="inline-end" />
-                </Button>
-              </form>
+          {/* Rodapé Alternador de Modos */}
+          <div className="mt-6 border-t border-border/60 pt-4 text-center text-xs text-muted-foreground sm:text-sm">
+            {activeMode === "login" ? (
+              <p>
+                Ainda não tem conta?{" "}
+                <button
+                  className="cursor-pointer font-semibold text-primary underline-offset-4 hover:underline"
+                  onClick={() => setActiveMode("register")}
+                  type="button"
+                >
+                  Criar uma conta
+                </button>
+              </p>
+            ) : (
+              <p>
+                Já possui uma conta?{" "}
+                <button
+                  className="cursor-pointer font-semibold text-primary underline-offset-4 hover:underline"
+                  onClick={() => setActiveMode("login")}
+                  type="button"
+                >
+                  Entrar no painel
+                </button>
+              </p>
+            )}
+          </div>
+        </div>
 
-              <Separator className="my-5" />
-
-              <div className="flex flex-col gap-2 text-sm text-muted-foreground">
-                {activeMode !== "login" ? (
-                  <Button onClick={() => setActiveMode("login")} type="button" variant="link">
-                    Já tenho conta
-                  </Button>
-                ) : (
-                  <>
-                    <Button onClick={() => setActiveMode("register")} type="button" variant="link">
-                      Criar uma conta
-                    </Button>
-                    <Button onClick={() => setActiveMode("recover")} type="button" variant="link">
-                      Esqueci minha senha
-                    </Button>
-                  </>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-      </div>
+        <div className="text-center text-xs text-muted-foreground">
+          © {new Date().getFullYear()} Valion
+        </div>
+      </section>
     </main>
   )
 }
