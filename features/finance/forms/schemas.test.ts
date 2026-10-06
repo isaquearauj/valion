@@ -65,8 +65,11 @@ describe("finance schemas", () => {
     }
 
     expect(expenseSchema.parse(validExpense)).toMatchObject({ dueDay: 31, monthlyAmount: 1200 })
-    expect(expenseSchema.parse({ ...validExpense, category: "Consórcio" })).toMatchObject({
-      category: "Consórcio",
+    expect(expenseSchema.parse({ ...validExpense, category: "Consórcios" })).toMatchObject({
+      category: "Consórcios",
+    })
+    expect(expenseSchema.parse({ ...validExpense, category: "Seguros" })).toMatchObject({
+      category: "Seguros",
     })
     expect(expenseSchema.safeParse({ ...validExpense, dueDay: 0 }).success).toBe(false)
     expect(expenseSchema.safeParse({ ...validExpense, dueDay: 32 }).success).toBe(false)

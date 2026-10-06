@@ -216,17 +216,17 @@ describe("FinanceDashboard", () => {
             ...state.expenses,
             {
               ...state.expenses[0],
-              category: "Consórcio",
+              category: "Consórcios",
               id: "expense-2",
               monthlyAmount: 500,
-              name: "Consórcio",
+              name: "Consórcios",
             },
           ],
         }),
       }),
     })
 
-    const category = screen.getByRole("button", { name: /Consórcio/ })
+    const category = screen.getByRole("button", { name: /Consórcios/ })
     await userEventInstance.hover(category)
 
     expect(category).toHaveClass("bg-muted")
@@ -399,7 +399,7 @@ describe("FinanceDashboard", () => {
     const rent = createState().expenses[0]
     const consortium = {
       ...rent,
-      category: "Consórcio" as const,
+      category: "Consórcios" as const,
       id: "expense-consortium",
       name: "Consórcio de imóvel",
     }
@@ -418,7 +418,7 @@ describe("FinanceDashboard", () => {
 
     await userEventInstance.click(screen.getByRole("combobox", { name: "Categoria" }))
     expect(await screen.findByRole("option", { name: "Todas" })).toBeInTheDocument()
-    await userEventInstance.click(await screen.findByRole("option", { name: "Consórcio" }))
+    await userEventInstance.click(await screen.findByRole("option", { name: "Consórcios" }))
 
     expect(screen.getAllByText("Consórcio de imóvel").length).toBeGreaterThan(0)
     expect(screen.queryByText("Aluguel")).not.toBeInTheDocument()
