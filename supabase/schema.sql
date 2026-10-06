@@ -57,7 +57,7 @@ create table if not exists public.fixed_expenses (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
   name text not null,
-  category text not null check (category in ('Contas fixas', 'Assinaturas', 'Parcelamentos', 'Consórcios', 'Seguros', 'Empréstimos', 'Financiamentos', 'Outros')),
+  category text not null check (category in ('Contas fixas', 'Assinaturas', 'Parcelamentos', 'Consórcios', 'Seguros', 'Previdência', 'Empréstimos', 'Financiamentos', 'Outros')),
   monthly_amount numeric(12,2) not null check (monthly_amount >= 0),
   due_day integer not null check (due_day between 1 and 31),
   total_installments integer not null default 0 check (total_installments >= 0),
