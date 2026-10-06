@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useEffect, useState } from "react"
-import { Controller, useForm } from "react-hook-form"
+import { Controller, useForm, useWatch } from "react-hook-form"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -59,27 +59,75 @@ export function ExpenseDialog({
     form.reset(getExpenseDefaults(expense))
   }, [expense, form])
 
+  const remainingInstallments = useWatch({
+    control: form.control,
+    name: "remainingInstallments",
+  })
+
+  useEffect(() => {
+    if (!isInstallment) {
+      if (form.getValues("status") === "Quitada") {
+        form.setValue("status", "Ativa")
+      }
+      return
+    }
+
+    const remainingStr = String(remainingInstallments ?? "").trim()
+    if (remainingStr === "") return
+
+    const remainingNum = Number(remainingStr)
+    if (Number.isNaN(remainingNum)) return
+
+    const currentStatus = form.getValues("status")
+
+    if (remainingNum <= 0) {
+      if (currentStatus !== "Quitada") {
+        form.setValue("status", "Quitada")
+      }
+    } else {
+      if (currentStatus === "Quitada") {
+        form.setValue("status", "Ativa")
+      }
+    }
+  }, [form, isInstallment, remainingInstallments])
+
   function handleTypeChange(type: "recurring" | "installment") {
     if (type === "installment") {
       setIsInstallment(true)
-      if (!form.getValues("totalInstallments")) {
+      const currentTotal = form.getValues("totalInstallments")
+      if (!currentTotal || currentTotal === 0) {
         form.setValue("totalInstallments", 12)
         form.setValue("remainingInstallments", 12)
+      }
+      if (form.getValues("status") === "Quitada") {
+        form.setValue("status", "Ativa")
       }
     } else {
       setIsInstallment(false)
       form.setValue("totalInstallments", 0)
       form.setValue("remainingInstallments", 0)
       form.clearErrors(["totalInstallments", "remainingInstallments"])
+      if (form.getValues("status") === "Quitada") {
+        form.setValue("status", "Ativa")
+      }
     }
   }
 
   async function submit(values: ExpenseFormValues) {
     const finalValues: ExpenseFormValues = isInstallment
-      ? values
+      ? {
+          ...values,
+          status:
+            values.totalInstallments > 0 && values.remainingInstallments === 0
+              ? "Quitada"
+              : values.status === "Quitada" && values.remainingInstallments > 0
+                ? "Ativa"
+                : values.status,
+        }
       : {
           ...values,
           remainingInstallments: 0,
+          status: values.status === "Quitada" ? "Ativa" : values.status,
           totalInstallments: 0,
         }
 
@@ -114,7 +162,7 @@ export function ExpenseDialog({
               <span className="text-xs font-medium text-foreground">Tipo de despesa</span>
               <div className="grid grid-cols-2 gap-2 rounded-lg bg-muted p-1">
                 <button
-                  className={`flex h-8 items-center justify-center rounded-md text-xs font-semibold transition-all ${
+                  className={`flex h-8 items-center justify-center rounded-md text-xs font-semibold cursor-pointer transition-all ${
                     !isInstallment
                       ? "bg-background text-foreground shadow-2xs"
                       : "text-muted-foreground hover:text-foreground"
@@ -125,7 +173,7 @@ export function ExpenseDialog({
                   Recorrente / Contínua
                 </button>
                 <button
-                  className={`flex h-8 items-center justify-center rounded-md text-xs font-semibold transition-all ${
+                  className={`flex h-8 items-center justify-center rounded-md text-xs font-semibold cursor-pointer transition-all ${
                     isInstallment
                       ? "bg-background text-foreground shadow-2xs"
                       : "text-muted-foreground hover:text-foreground"
