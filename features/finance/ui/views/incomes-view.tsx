@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { toast } from "sonner"
 
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
@@ -25,7 +25,7 @@ export function IncomesView() {
   const [incomeToDelete, setIncomeToDelete] = useState<Income | null>(null)
   const [reminderToDelete, setReminderToDelete] = useState<ChargeReminder | null>(null)
 
-  async function runAction(action: () => Promise<unknown>, successMsg: string) {
+  const runAction = useCallback(async (action: () => Promise<unknown>, successMsg: string) => {
     try {
       await action()
       toast.success(successMsg)
@@ -33,35 +33,54 @@ export function IncomesView() {
       toast.error("Não foi possível salvar", { description: getActionErrorMessage(error) })
       throw error
     }
-  }
+  }, [])
 
-  function openIncomeDialog(income?: Income) {
+  const openIncomeDialog = useCallback((income?: Income) => {
     setEditingIncome(income ?? null)
     setIsIncomeDialogOpen(true)
-  }
+  }, [])
 
-  function openReminderDialog(reminder?: ChargeReminder) {
+  const handleAddIncome = useCallback(() => {
+    openIncomeDialog()
+  }, [openIncomeDialog])
+
+  const openReminderDialog = useCallback((reminder?: ChargeReminder) => {
     setEditingReminder(reminder ?? null)
     setIsReminderDialogOpen(true)
-  }
+  }, [])
 
-  async function handleMarkReminderReceived(reminder: ChargeReminder) {
-    await runAction(
-      () => finance.reminders.markReceived(reminder.id),
-      reminder.type === "Parcelado" && reminder.remainingInstallments <= 1
-        ? "Lembrete concluído"
-        : "Cobrança marcada como recebida",
-    )
-  }
+  const handleAddReminder = useCallback(() => {
+    openReminderDialog()
+  }, [openReminderDialog])
+
+  const handleDeleteIncome = useCallback((income: Income) => {
+    setIncomeToDelete(income)
+  }, [])
+
+  const handleDeleteReminder = useCallback((reminder: ChargeReminder) => {
+    setReminderToDelete(reminder)
+  }, [])
+
+  const handleMarkReminderReceived = useCallback(
+    async (reminder: ChargeReminder) => {
+      await runAction(
+        () => finance.reminders.markReceived(reminder.id),
+        reminder.type === "Parcelado" && reminder.remainingInstallments <= 1
+          ? "Lembrete concluído"
+          : "Cobrança marcada como recebida",
+      )
+    },
+    [finance.reminders, runAction],
+  )
 
   return (
     <>
       <IncomesSection
         incomes={state.incomes}
-        onAdd={() => openIncomeDialog()}
-        onAddReminder={() => openReminderDialog()}
-        onDelete={(income) => setIncomeToDelete(income)}
-        onDeleteReminder={(reminder) => setReminderToDelete(reminder)}
+        onAdd={handleAddIncome}
+        onAddReminder={handleAddReminder}
+        onDelete={handleDeleteIncome}
+        onDeleteReminder={handleDeleteReminder}
         onEdit={openIncomeDialog}
         onEditReminder={openReminderDialog}
         onMarkReminderReceived={handleMarkReminderReceived}
@@ -69,29 +88,34 @@ export function IncomesView() {
         summary={summary}
       />
 
-      <IncomeDialog
-        income={editingIncome}
-        onOpenChange={setIsIncomeDialogOpen}
-        onSubmit={async (values) => {
-          await runAction(
-            () => finance.incomes.save(values, editingIncome?.id),
-            editingIncome ? "Receita atualizada" : "Receita adicionada",
-          )
-        }}
-        open={isIncomeDialogOpen}
-      />
+      {isIncomeDialogOpen ? (
+        <IncomeDialog
+          income={editingIncome}
+          onOpenChange={setIsIncomeDialogOpen}
+          onSubmit={async (values) => {
+            await runAction(
+              () => finance.incomes.save(values, editingIncome?.id),
+              editingIncome ? "Receita atualizada" : "Receita adicionada",
+            )
+          }}
+          open={isIncomeDialogOpen}
+        />
+      ) : null}
 
-      <ReminderDialog
-        onOpenChange={setIsReminderDialogOpen}
-        onSubmit={async (values) => {
-          await runAction(
-            () => finance.reminders.save(normalizeReminderFormValues(values), editingReminder?.id),
-            editingReminder ? "Lembrete atualizado" : "Lembrete adicionado",
-          )
-        }}
-        open={isReminderDialogOpen}
-        reminder={editingReminder}
-      />
+      {isReminderDialogOpen ? (
+        <ReminderDialog
+          onOpenChange={setIsReminderDialogOpen}
+          onSubmit={async (values) => {
+            await runAction(
+              () =>
+                finance.reminders.save(normalizeReminderFormValues(values), editingReminder?.id),
+              editingReminder ? "Lembrete atualizado" : "Lembrete adicionado",
+            )
+          }}
+          open={isReminderDialogOpen}
+          reminder={editingReminder}
+        />
+      ) : null}
 
       <ConfirmDialog
         confirmText="Excluir receita"

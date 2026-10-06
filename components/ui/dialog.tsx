@@ -4,7 +4,6 @@ import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 import { XIcon } from "lucide-react"
 import type * as React from "react"
 import { Button } from "@/components/ui/button"
-import { AppTooltip } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 
 function Dialog({ ...props }: DialogPrimitive.Root.Props) {
@@ -28,7 +27,7 @@ function DialogOverlay({ className, ...props }: DialogPrimitive.Backdrop.Props) 
     <DialogPrimitive.Backdrop
       data-slot="dialog-overlay"
       className={cn(
-        "fixed inset-0 isolate z-50 bg-black/40 duration-100 supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+        "fixed inset-0 z-50 bg-black/50 transition-opacity duration-150 ease-out data-open:opacity-100 data-closed:opacity-0",
         className,
       )}
       {...props}
@@ -47,27 +46,28 @@ function DialogContent({
   return (
     <DialogPortal>
       <DialogOverlay />
-      <DialogPrimitive.Popup
-        data-slot="dialog-content"
-        className={cn(
-          "fixed top-1/2 left-1/2 z-50 grid max-h-[calc(100dvh-2rem)] w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-5 overflow-y-auto rounded-2xl bg-popover p-5 text-sm text-popover-foreground shadow-2xl shadow-foreground/10 ring-1 ring-border duration-100 outline-none sm:max-w-sm sm:p-6 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
-          className,
-        )}
-        {...props}
-      >
-        {children}
-        {showCloseButton && (
-          <AppTooltip content="Fechar (Esc)" side="left">
+      <DialogPrimitive.Viewport className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <DialogPrimitive.Popup
+          data-slot="dialog-content"
+          className={cn(
+            "relative z-50 grid max-h-[calc(100dvh-2rem)] w-full max-w-[calc(100%-2rem)] gap-5 overflow-y-auto rounded-2xl bg-popover p-5 text-sm text-popover-foreground shadow-2xl shadow-foreground/10 ring-1 ring-border outline-none transition-all duration-150 ease-out sm:max-w-sm sm:p-6 data-open:opacity-100 data-open:scale-100 data-closed:opacity-0 data-closed:scale-95",
+            className,
+          )}
+          {...props}
+        >
+          {children}
+          {showCloseButton && (
             <DialogPrimitive.Close
+              aria-label="Fechar (Esc)"
               data-slot="dialog-close"
               render={<Button variant="ghost" className="absolute top-2 right-2" size="icon-sm" />}
             >
               <XIcon />
               <span className="sr-only">Fechar</span>
             </DialogPrimitive.Close>
-          </AppTooltip>
-        )}
-      </DialogPrimitive.Popup>
+          )}
+        </DialogPrimitive.Popup>
+      </DialogPrimitive.Viewport>
     </DialogPortal>
   )
 }

@@ -44,6 +44,8 @@ export function InvestmentDialog({
 }) {
   const form = useForm<InvestmentFormInput, unknown, InvestmentFormValues>({
     defaultValues: getInvestmentDefaults(investment),
+    mode: "onBlur",
+    reValidateMode: "onBlur",
     resolver: zodResolver(investmentSchema),
   })
   const selectedMonth = useWatch({ control: form.control, name: "month" })

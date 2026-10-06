@@ -1,7 +1,7 @@
 "use client"
 
 import { BanknoteArrowUpIcon, WalletIcon } from "lucide-react"
-import { useMemo, useState } from "react"
+import { memo, useMemo, useState } from "react"
 
 import { Card, CardContent } from "@/components/ui/card"
 import {
@@ -48,7 +48,7 @@ const incomeFrequencyFilterOptions: CollectionFilterOption[] = [
   ...INCOME_FREQUENCIES.map((value) => ({ label: value, value })),
 ]
 
-export function IncomesSection({
+export const IncomesSection = memo(function IncomesSection({
   incomes,
   onAdd,
   onAddReminder,
@@ -251,4 +251,4 @@ export function IncomesSection({
       />
     </div>
   )
-}
+})

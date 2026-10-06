@@ -36,6 +36,8 @@ export function GoalDialog({
 }) {
   const form = useForm<GoalFormInput, unknown, GoalFormValues>({
     defaultValues: getGoalDefaults(goal),
+    mode: "onBlur",
+    reValidateMode: "onBlur",
     resolver: zodResolver(goalSchema),
   })
   const deadlineEnabled = useWatch({ control: form.control, name: "deadlineEnabled" })

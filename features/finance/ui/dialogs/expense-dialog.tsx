@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useEffect, useState } from "react"
-import { Controller, useForm, useWatch } from "react-hook-form"
+import { Controller, useForm } from "react-hook-form"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -42,6 +42,8 @@ export function ExpenseDialog({
 }) {
   const form = useForm<ExpenseFormInput, unknown, ExpenseFormValues>({
     defaultValues: getExpenseDefaults(expense),
+    mode: "onBlur",
+    reValidateMode: "onBlur",
     resolver: zodResolver(expenseSchema),
   })
 
@@ -59,37 +61,19 @@ export function ExpenseDialog({
     form.reset(getExpenseDefaults(expense))
   }, [expense, form])
 
-  const remainingInstallments = useWatch({
-    control: form.control,
-    name: "remainingInstallments",
-  })
-
-  useEffect(() => {
-    if (!isInstallment) {
-      if (form.getValues("status") === "Quitada") {
-        form.setValue("status", "Ativa")
-      }
-      return
-    }
-
-    const remainingStr = String(remainingInstallments ?? "").trim()
-    if (remainingStr === "") return
-
-    const remainingNum = Number(remainingStr)
-    if (Number.isNaN(remainingNum)) return
-
-    const currentStatus = form.getValues("status")
-
-    if (remainingNum <= 0) {
-      if (currentStatus !== "Quitada") {
-        form.setValue("status", "Quitada")
-      }
-    } else {
-      if (currentStatus === "Quitada") {
+  function handleRemainingChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const val = Number(e.target.value)
+    if (!Number.isNaN(val)) {
+      const current = form.getValues("status")
+      if (val <= 0) {
+        if (current !== "Quitada") {
+          form.setValue("status", "Quitada")
+        }
+      } else if (current === "Quitada") {
         form.setValue("status", "Ativa")
       }
     }
-  }, [form, isInstallment, remainingInstallments])
+  }
 
   function handleTypeChange(type: "recurring" | "installment") {
     if (type === "installment") {
@@ -250,7 +234,9 @@ export function ExpenseDialog({
                   error={form.formState.errors.remainingInstallments}
                   label="Parcelas restantes"
                   placeholder="Ex: 8"
-                  registration={form.register("remainingInstallments")}
+                  registration={form.register("remainingInstallments", {
+                    onChange: handleRemainingChange,
+                  })}
                   type="number"
                 />
               </div>

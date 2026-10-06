@@ -44,6 +44,8 @@ export function ReminderDialog({
 }) {
   const form = useForm<ReminderFormInput, unknown, ReminderFormValues>({
     defaultValues: getReminderDefaults(reminder),
+    mode: "onBlur",
+    reValidateMode: "onBlur",
     resolver: zodResolver(reminderSchema),
   })
   const reminderType = useWatch({ control: form.control, name: "type" })

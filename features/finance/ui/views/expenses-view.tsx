@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { toast } from "sonner"
 
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
@@ -30,32 +30,42 @@ export function ExpensesView() {
     }
   }
 
-  function openExpenseDialog(expense?: FixedExpense) {
+  const openExpenseDialog = useCallback((expense?: FixedExpense) => {
     setEditingExpense(expense ?? null)
     setIsExpenseDialogOpen(true)
-  }
+  }, [])
+
+  const handleAddExpense = useCallback(() => {
+    openExpenseDialog()
+  }, [openExpenseDialog])
+
+  const handleDeleteExpense = useCallback((expense: FixedExpense) => {
+    setExpenseToDelete(expense)
+  }, [])
 
   return (
     <>
       <ExpensesSection
         expenses={state.expenses}
-        onAdd={() => openExpenseDialog()}
-        onDelete={(expense) => setExpenseToDelete(expense)}
+        onAdd={handleAddExpense}
+        onDelete={handleDeleteExpense}
         onEdit={openExpenseDialog}
         summary={summary}
       />
 
-      <ExpenseDialog
-        expense={editingExpense}
-        onOpenChange={setIsExpenseDialogOpen}
-        onSubmit={async (values) => {
-          await runAction(
-            () => finance.expenses.save(values, editingExpense?.id),
-            editingExpense ? "Despesa atualizada" : "Despesa adicionada",
-          )
-        }}
-        open={isExpenseDialogOpen}
-      />
+      {isExpenseDialogOpen ? (
+        <ExpenseDialog
+          expense={editingExpense}
+          onOpenChange={setIsExpenseDialogOpen}
+          onSubmit={async (values) => {
+            await runAction(
+              () => finance.expenses.save(values, editingExpense?.id),
+              editingExpense ? "Despesa atualizada" : "Despesa adicionada",
+            )
+          }}
+          open={isExpenseDialogOpen}
+        />
+      ) : null}
 
       <ConfirmDialog
         confirmText="Excluir despesa"

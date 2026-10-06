@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { toast } from "sonner"
 
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
@@ -31,32 +31,47 @@ export function InvestmentsView() {
     }
   }
 
-  function openInvestmentDialog(investment?: InvestmentEntry) {
+  const openInvestmentDialog = useCallback((investment?: InvestmentEntry) => {
     setEditingInvestment(investment ?? null)
     setIsInvestmentDialogOpen(true)
-  }
+  }, [])
+
+  const handleAddInvestment = useCallback(() => {
+    openInvestmentDialog()
+  }, [openInvestmentDialog])
+
+  const handleDeleteInvestment = useCallback((investment: InvestmentEntry) => {
+    setInvestmentToDelete(investment)
+  }, [])
+
+  const sortedInvestments = useMemo(
+    () => state.investments.toSorted((a, b) => b.month.localeCompare(a.month)),
+    [state.investments],
+  )
 
   return (
     <>
       <InvestmentsSection
-        investments={state.investments.toSorted((a, b) => b.month.localeCompare(a.month))}
-        onAdd={() => openInvestmentDialog()}
-        onDelete={(investment) => setInvestmentToDelete(investment)}
+        investments={sortedInvestments}
+        onAdd={handleAddInvestment}
+        onDelete={handleDeleteInvestment}
         onEdit={openInvestmentDialog}
         summary={summary}
       />
 
-      <InvestmentDialog
-        investment={editingInvestment}
-        onOpenChange={setIsInvestmentDialogOpen}
-        onSubmit={async (values) => {
-          await runAction(
-            () => finance.investments.save(values, editingInvestment?.id),
-            editingInvestment ? "Investimento atualizado" : "Investimento registrado",
-          )
-        }}
-        open={isInvestmentDialogOpen}
-      />
+      {isInvestmentDialogOpen ? (
+        <InvestmentDialog
+          investment={editingInvestment}
+          onOpenChange={setIsInvestmentDialogOpen}
+          onSubmit={async (values) => {
+            await runAction(
+              () => finance.investments.save(values, editingInvestment?.id),
+              editingInvestment ? "Investimento atualizado" : "Investimento registrado",
+            )
+          }}
+          open={isInvestmentDialogOpen}
+        />
+      ) : null}
 
       <ConfirmDialog
         confirmText="Excluir investimento"

@@ -42,6 +42,8 @@ export function IncomeDialog({
 }) {
   const form = useForm<IncomeFormInput, unknown, IncomeFormValues>({
     defaultValues: getIncomeDefaults(income),
+    mode: "onBlur",
+    reValidateMode: "onBlur",
     resolver: zodResolver(incomeSchema),
   })
 
