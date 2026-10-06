@@ -84,7 +84,7 @@ export function ExpensesSection({
     const normalizedQuery = query.trim().toLocaleLowerCase("pt-BR")
 
     return expenses.filter((expense) => {
-      const matchesQuery = `${expense.name} ${expense.category} ${expense.status} ${expense.notes}`
+      const matchesQuery = `${expense.name} ${expense.category} ${expense.status}`
         .toLocaleLowerCase("pt-BR")
         .includes(normalizedQuery)
       const matchesInstallmentType =
@@ -240,11 +240,6 @@ export function ExpensesSection({
                       <TableRow key={expense.id}>
                         <TableCell>
                           <div className="font-medium">{expense.name}</div>
-                          {expense.notes ? (
-                            <div className="max-w-xs truncate text-xs text-muted-foreground">
-                              {expense.notes}
-                            </div>
-                          ) : null}
                         </TableCell>
                         <TableCell>{expense.category}</TableCell>
                         <TableCell>{formatDueDay(expense.dueDay)}</TableCell>
@@ -303,11 +298,6 @@ export function ExpensesSection({
                           : "Recorrente"}
                       </span>
                     </div>
-                    {expense.notes ? (
-                      <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">
-                        {expense.notes}
-                      </p>
-                    ) : null}
                     <div className="mt-3 flex justify-end border-t border-border/70 pt-2">
                       <TableActions
                         onDelete={() => onDelete(expense)}

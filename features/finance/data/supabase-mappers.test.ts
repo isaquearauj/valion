@@ -26,7 +26,6 @@ describe("Supabase finance mappers", () => {
         frequency: "Única",
         id: "income-1",
         name: "Bônus",
-        notes: "",
         received_on: "2026-01-15",
         type: "Renda extra",
       }),
@@ -42,7 +41,6 @@ describe("Supabase finance mappers", () => {
         id: "reminder-1",
         name: "Cobrança",
         next_due_date: "2026-01-15",
-        notes: "",
         person: "Ana",
         remaining_installments: 0,
         status: "Ativo",
@@ -58,7 +56,6 @@ describe("Supabase finance mappers", () => {
         id: "expense-1",
         monthly_amount: 99,
         name: "Streaming",
-        notes: "",
         remaining_installments: 0,
         status: "Ativa",
         total_installments: 0,
@@ -72,7 +69,6 @@ describe("Supabase finance mappers", () => {
         ...timestamps,
         id: "goal-1",
         name: "Reserva",
-        notes: "",
         status: "Ativa",
         target_amount: 10000,
         target_date: null,
@@ -85,7 +81,6 @@ describe("Supabase finance mappers", () => {
         date: "2026-01-02",
         goal_id: "goal-1",
         id: "contribution-1",
-        notes: "",
       }),
     ).toMatchObject({ amount: 500.25, goalId: "goal-1" })
   })
@@ -97,7 +92,6 @@ describe("Supabase finance mappers", () => {
         id: "investment-1",
         invested_amount: 150,
         month: "2026-03-01",
-        notes: "",
         planned_amount: 200,
       }),
     ).toMatchObject({ month: "2026-03", plannedAmount: 200 })

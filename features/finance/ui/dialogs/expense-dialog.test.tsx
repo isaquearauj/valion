@@ -13,7 +13,6 @@ describe("ExpenseDialog", () => {
     id: "exp-1",
     monthlyAmount: 250,
     name: "Smartphone",
-    notes: "",
     remainingInstallments: 5,
     status: "Ativa",
     totalInstallments: 10,

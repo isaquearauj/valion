@@ -48,7 +48,6 @@ export type FixedExpense = {
   totalInstallments: number
   remainingInstallments: number
   status: ExpenseStatus
-  notes: string
   createdAt: string
 }
 
@@ -58,7 +57,6 @@ export type Income = {
   type: IncomeType
   amount: number
   frequency: IncomeFrequency
-  notes: string
   receivedOn: string | null
   createdAt: string
 }
@@ -74,7 +72,6 @@ export type ChargeReminder = {
   totalInstallments: number
   remainingInstallments: number
   status: ReminderStatus
-  notes: string
   createdAt: string
 }
 
@@ -83,14 +80,12 @@ export type InvestmentEntry = {
   month: string
   plannedAmount: number
   investedAmount: number
-  notes: string
   createdAt: string
 }
 
 export type Goal = {
   id: string
   name: string
-  notes: string
   status: GoalStatus
   targetAmount: number
   targetDate: string | null
@@ -103,7 +98,6 @@ export type GoalContribution = {
   createdAt: string
   date: string
   goalId: string
-  notes: string
 }
 
 export type MonthlySnapshot = {

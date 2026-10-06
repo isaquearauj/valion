@@ -8,7 +8,6 @@ const row: IncomeRow = {
   frequency: "Mensal",
   id: "income-1",
   name: "Salário",
-  notes: "",
   received_on: null,
   type: "Salário",
   updated_at: "2026-01-01T00:00:00Z",
@@ -63,7 +62,6 @@ const recurring = {
   amount: 500,
   frequency: "Mensal",
   name: "Salário",
-  notes: "",
   receivedOn: null,
   type: "Salário",
 } as const

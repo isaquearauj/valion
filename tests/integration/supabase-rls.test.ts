@@ -120,7 +120,6 @@ function makeIncome(userId: string, suffix: string) {
     amount: 1000,
     frequency: "Mensal",
     name: `Renda ${suffix}`,
-    notes: "",
     type: "Salário",
     user_id: userId,
   }
@@ -132,7 +131,6 @@ function makeReminder(userId: string, suffix: string) {
     frequency: "Mensal",
     name: `Cobrança ${suffix}`,
     next_due_date: "2026-09-10",
-    notes: "",
     person: `Pessoa ${suffix}`,
     remaining_installments: 0,
     status: "Ativo",
@@ -148,7 +146,6 @@ function makeExpense(userId: string, suffix: string) {
     due_day: 10,
     monthly_amount: 500,
     name: `Despesa ${suffix}`,
-    notes: "",
     remaining_installments: 0,
     status: "Ativa",
     total_installments: 0,
@@ -159,7 +156,6 @@ function makeExpense(userId: string, suffix: string) {
 function makeGoal(userId: string, suffix: string) {
   return {
     name: `Meta ${suffix}`,
-    notes: "",
     status: "Ativa",
     target_amount: 5000,
     target_date: "2026-12-31",
@@ -174,7 +170,6 @@ function makeInvestment(userId: string, suffix: string) {
   return {
     invested_amount: 100,
     month: `2026-${month}-01`,
-    notes: "",
     planned_amount: 200,
     user_id: userId,
   }
@@ -223,22 +218,25 @@ describe("Supabase RLS integration", () => {
     const goalB = await insertRow(admin, "financial_goals", makeGoal(userB.user.id, "contrib-b"))
 
     return [
-      { name: "incomes", makePayload: makeIncome, update: { notes: "alterado" } },
-      { name: "charge_reminders", makePayload: makeReminder, update: { notes: "alterado" } },
-      { name: "fixed_expenses", makePayload: makeExpense, update: { notes: "alterado" } },
-      { name: "financial_goals", makePayload: makeGoal, update: { notes: "alterado" } },
+      { name: "incomes", makePayload: makeIncome, update: { name: "alterado" } },
+      { name: "charge_reminders", makePayload: makeReminder, update: { name: "alterado" } },
+      { name: "fixed_expenses", makePayload: makeExpense, update: { name: "alterado" } },
+      { name: "financial_goals", makePayload: makeGoal, update: { name: "alterado" } },
       {
         name: "goal_contributions",
-        makePayload: (userId, suffix) => ({
+        makePayload: (userId) => ({
           amount: 100,
           date: "2026-09-15",
           goal_id: userId === userA.user.id ? goalA.id : goalB.id,
-          notes: `aporte ${suffix}`,
           user_id: userId,
         }),
-        update: { notes: "alterado" },
+        update: { amount: 200 },
       },
-      { name: "investment_entries", makePayload: makeInvestment, update: { notes: "alterado" } },
+      {
+        name: "investment_entries",
+        makePayload: makeInvestment,
+        update: { planned_amount: 300 },
+      },
     ]
   }
 
@@ -297,7 +295,6 @@ describe("Supabase RLS integration", () => {
         amount: 100,
         date: "2026-09-15",
         goal_id: goal.id,
-        notes: "account-deletion",
         user_id: disposableUser.user.id,
       })
       await insertRow(
@@ -469,7 +466,6 @@ describe("Supabase RLS integration", () => {
       amount: 100,
       date: "2026-10-01",
       goal_id: otherGoal.id,
-      notes: "",
       user_id: userA.user.id,
     })
   })
@@ -525,7 +521,6 @@ describe("Supabase RLS integration", () => {
       goal_id: (
         await insertRow(admin, "financial_goals", makeGoal(userA.user.id, "negative-contrib"))
       ).id,
-      notes: "",
       user_id: userA.user.id,
     })
     await expectConstraintFailure(admin, "investment_entries", {
@@ -702,7 +697,6 @@ describe("Supabase RLS integration", () => {
         .insert({
           invested_amount: 100,
           month: "2025-03-01",
-          notes: "",
           planned_amount: 200,
           user_id: isolated.user.id,
         })
@@ -804,7 +798,7 @@ describe("Supabase RLS integration", () => {
 
     const { data: updated, error: updateError } = await admin
       .from("incomes")
-      .update({ notes: "trigger atualizado" })
+      .update({ name: "trigger atualizado" })
       .eq("id", (inserted as { id: string }).id)
       .select("updated_at")
       .single()

@@ -37,7 +37,6 @@ export function mapIncome(row: IncomeRow): Income {
     frequency: row.frequency as Income["frequency"],
     id: row.id,
     name: row.name,
-    notes: row.notes,
     receivedOn: row.received_on,
     type: row.type as Income["type"],
   }
@@ -51,7 +50,6 @@ export function mapChargeReminder(row: ChargeReminderRow): ChargeReminder {
     id: row.id,
     name: row.name,
     nextDueDate: row.next_due_date,
-    notes: row.notes,
     person: row.person,
     remainingInstallments: row.remaining_installments,
     status: row.status as ChargeReminder["status"],
@@ -68,7 +66,6 @@ export function mapFixedExpense(row: FixedExpenseRow): FixedExpense {
     id: row.id,
     monthlyAmount: toNumber(row.monthly_amount),
     name: row.name,
-    notes: row.notes,
     remainingInstallments: row.remaining_installments,
     status: row.status as FixedExpense["status"],
     totalInstallments: row.total_installments,
@@ -80,7 +77,6 @@ export function mapGoal(row: GoalRow): Goal {
     createdAt: row.created_at,
     id: row.id,
     name: row.name,
-    notes: row.notes,
     status: row.status as Goal["status"],
     targetAmount: toNumber(row.target_amount),
     targetDate: row.target_date,
@@ -94,7 +90,6 @@ export function mapGoalContribution(row: GoalContributionRow): GoalContribution 
     date: row.date,
     goalId: row.goal_id,
     id: row.id,
-    notes: row.notes,
   }
 }
 
@@ -104,7 +99,6 @@ export function mapInvestmentEntry(row: InvestmentEntryRow): InvestmentEntry {
     id: row.id,
     investedAmount: toNumber(row.invested_amount),
     month: toMonthKey(row.month),
-    notes: row.notes,
     plannedAmount: toNumber(row.planned_amount),
   }
 }

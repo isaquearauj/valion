@@ -10,7 +10,7 @@ import {
 } from "@/features/finance/forms/schemas"
 
 describe("finance schemas", () => {
-  it("parses valid income and applies notes default", () => {
+  it("parses valid income", () => {
     expect(
       incomeSchema.parse({
         amount: "4500.50",
@@ -22,7 +22,6 @@ describe("finance schemas", () => {
       amount: 4500.5,
       frequency: "Mensal",
       name: "Salário CLT",
-      notes: "",
       receivedOn: null,
       type: "Salário",
     })
@@ -142,7 +141,7 @@ describe("finance schemas", () => {
         month: "2026-01",
         plannedAmount: "250",
       }),
-    ).toEqual({ investedAmount: 100, month: "2026-01", notes: "", plannedAmount: 250 })
+    ).toEqual({ investedAmount: 100, month: "2026-01", plannedAmount: 250 })
     expect(
       investmentSchema.safeParse({ investedAmount: -1, month: "2026-01", plannedAmount: 0 })
         .success,
@@ -179,7 +178,7 @@ describe("finance schemas", () => {
         date: "2026-01-15",
         goalId: "goal-1",
       }),
-    ).toEqual({ amount: 150, date: "2026-01-15", goalId: "goal-1", notes: "" })
+    ).toEqual({ amount: 150, date: "2026-01-15", goalId: "goal-1" })
     expect(
       goalContributionSchema.safeParse({ amount: 0, date: "2026-01-15", goalId: "goal-1" }).success,
     ).toBe(false)

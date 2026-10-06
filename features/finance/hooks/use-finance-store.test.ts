@@ -58,7 +58,6 @@ function income(id: string, name = "Salário"): Income {
     frequency: "Mensal",
     id,
     name,
-    notes: "",
     receivedOn: null,
     type: "Salário",
   }
@@ -150,7 +149,6 @@ describe("useFinanceStore", () => {
       amount: 100,
       frequency: "Mensal",
       name: "Extra",
-      notes: "",
       receivedOn: null,
       type: "Renda extra",
     } as const

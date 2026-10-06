@@ -17,7 +17,6 @@ create table if not exists public.incomes (
   amount numeric(12,2) not null check (amount >= 0),
   frequency text not null check (frequency in ('Mensal', 'Quinzenal', 'Semanal', 'Única')),
   received_on date,
-  notes text not null default '',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint incomes_received_on_frequency_check check (
@@ -38,7 +37,6 @@ create table if not exists public.charge_reminders (
   total_installments integer not null default 0 check (total_installments >= 0),
   remaining_installments integer not null default 0 check (remaining_installments >= 0),
   status text not null check (status in ('Ativo', 'Pausado', 'Concluído')),
-  notes text not null default '',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint charge_reminders_installments_check check (
@@ -65,7 +63,6 @@ create table if not exists public.fixed_expenses (
   total_installments integer not null default 0 check (total_installments >= 0),
   remaining_installments integer not null default 0 check (remaining_installments >= 0),
   status text not null check (status in ('Ativa', 'Pausada', 'Quitada')),
-  notes text not null default '',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint fixed_expenses_installments_check check (
@@ -80,7 +77,6 @@ create table if not exists public.financial_goals (
   target_amount numeric(12,2) not null check (target_amount > 0),
   target_date date,
   status text not null check (status in ('Ativa', 'Pausada', 'Concluída')),
-  notes text not null default '',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -91,7 +87,6 @@ create table if not exists public.goal_contributions (
   goal_id uuid not null references public.financial_goals(id) on delete cascade,
   amount numeric(12,2) not null check (amount > 0),
   date date not null,
-  notes text not null default '',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -102,7 +97,6 @@ create table if not exists public.investment_entries (
   month date not null,
   planned_amount numeric(12,2) not null default 0 check (planned_amount >= 0),
   invested_amount numeric(12,2) not null default 0 check (invested_amount >= 0),
-  notes text not null default '',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (user_id, month)

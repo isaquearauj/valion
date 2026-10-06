@@ -11,7 +11,6 @@ export type Database = {
           id: string
           name: string
           next_due_date: string
-          notes: string
           person: string
           remaining_installments: number
           status: string
@@ -27,7 +26,6 @@ export type Database = {
           id?: string
           name: string
           next_due_date: string
-          notes?: string
           person: string
           remaining_installments?: number
           status: string
@@ -43,7 +41,6 @@ export type Database = {
           id?: string
           name?: string
           next_due_date?: string
-          notes?: string
           person?: string
           remaining_installments?: number
           status?: string
@@ -59,7 +56,6 @@ export type Database = {
           created_at: string
           id: string
           name: string
-          notes: string
           status: string
           target_amount: number
           target_date: string | null
@@ -70,7 +66,6 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
-          notes?: string
           status: string
           target_amount: number
           target_date?: string | null
@@ -81,7 +76,6 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
-          notes?: string
           status?: string
           target_amount?: number
           target_date?: string | null
@@ -98,7 +92,6 @@ export type Database = {
           id: string
           monthly_amount: number
           name: string
-          notes: string
           remaining_installments: number
           status: string
           total_installments: number
@@ -112,7 +105,6 @@ export type Database = {
           id?: string
           monthly_amount: number
           name: string
-          notes?: string
           remaining_installments?: number
           status: string
           total_installments?: number
@@ -126,7 +118,6 @@ export type Database = {
           id?: string
           monthly_amount?: number
           name?: string
-          notes?: string
           remaining_installments?: number
           status?: string
           total_installments?: number
@@ -142,7 +133,6 @@ export type Database = {
           date: string
           goal_id: string
           id: string
-          notes: string
           updated_at: string
           user_id: string
         }
@@ -152,7 +142,6 @@ export type Database = {
           date: string
           goal_id: string
           id?: string
-          notes?: string
           updated_at?: string
           user_id: string
         }
@@ -162,7 +151,6 @@ export type Database = {
           date?: string
           goal_id?: string
           id?: string
-          notes?: string
           updated_at?: string
           user_id?: string
         }
@@ -183,7 +171,6 @@ export type Database = {
           frequency: string
           id: string
           name: string
-          notes: string
           received_on: string | null
           type: string
           updated_at: string
@@ -195,7 +182,6 @@ export type Database = {
           frequency: string
           id?: string
           name: string
-          notes?: string
           received_on?: string | null
           type: string
           updated_at?: string
@@ -207,7 +193,6 @@ export type Database = {
           frequency?: string
           id?: string
           name?: string
-          notes?: string
           received_on?: string | null
           type?: string
           updated_at?: string
@@ -221,7 +206,6 @@ export type Database = {
           id: string
           invested_amount: number
           month: string
-          notes: string
           planned_amount: number
           updated_at: string
           user_id: string
@@ -231,7 +215,6 @@ export type Database = {
           id?: string
           invested_amount?: number
           month: string
-          notes?: string
           planned_amount?: number
           updated_at?: string
           user_id: string
@@ -241,7 +224,6 @@ export type Database = {
           id?: string
           invested_amount?: number
           month?: string
-          notes?: string
           planned_amount?: number
           updated_at?: string
           user_id?: string

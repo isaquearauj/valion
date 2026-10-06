@@ -85,7 +85,6 @@ export function getIncomeDefaults(income: Income | null): IncomeFormInput {
     amount: income?.amount ?? "",
     frequency: income?.frequency ?? "Mensal",
     name: income?.name ?? "",
-    notes: income?.notes ?? "",
     receivedOn: income?.receivedOn ?? getCurrentDateKey(),
     type: income?.type ?? "Salário",
   }
@@ -97,7 +96,6 @@ export function getReminderDefaults(reminder: ChargeReminder | null): ReminderFo
     frequency: reminder?.frequency ?? "Mensal",
     name: reminder?.name ?? "",
     nextDueDate: reminder?.nextDueDate ?? getCurrentDateKey(),
-    notes: reminder?.notes ?? "",
     person: reminder?.person ?? "",
     remainingInstallments: reminder?.remainingInstallments ?? "",
     status: reminder?.status ?? "Ativo",
@@ -141,7 +139,6 @@ export function getExpenseDefaults(expense: FixedExpense | null): ExpenseFormInp
     dueDay: expense?.dueDay ?? "",
     monthlyAmount: expense?.monthlyAmount ?? "",
     name: expense?.name ?? "",
-    notes: expense?.notes ?? "",
     remainingInstallments: expense?.remainingInstallments ?? "",
     status: expense?.status ?? "Ativa",
     totalInstallments: expense?.totalInstallments ?? "",
@@ -152,7 +149,6 @@ export function getInvestmentDefaults(investment: InvestmentEntry | null): Inves
   return {
     investedAmount: investment?.investedAmount ?? "",
     month: investment?.month ?? getCurrentMonthKey(),
-    notes: investment?.notes ?? "",
     plannedAmount: investment?.plannedAmount ?? "",
   }
 }
@@ -276,7 +272,6 @@ export function getGoalDefaults(goal: Goal | null): GoalFormInput {
     deadlineDate: goal?.targetDate ?? "",
     deadlineEnabled: Boolean(goal?.targetDate),
     name: goal?.name ?? "",
-    notes: goal?.notes ?? "",
     status: goal?.status ?? "Ativa",
     targetAmount: goal?.targetAmount ?? "",
   }
@@ -292,7 +287,6 @@ export function normalizeGoalFormValues(
   if (!values.deadlineEnabled) {
     return {
       name: values.name,
-      notes: values.notes,
       status: completed ? "Concluída" : values.status === "Pausada" ? "Pausada" : "Ativa",
       targetAmount,
       targetDate: null,
@@ -301,7 +295,6 @@ export function normalizeGoalFormValues(
 
   return {
     name: values.name,
-    notes: values.notes,
     status: completed ? "Concluída" : values.status === "Pausada" ? "Pausada" : "Ativa",
     targetAmount,
     targetDate: values.deadlineDate || null,
@@ -317,7 +310,6 @@ export function getGoalContributionDefaults(
     amount: contribution?.amount ?? "",
     date: contribution?.date ?? getCurrentDateKey(),
     goalId: contribution?.goalId ?? (defaultGoalId || goals[0]?.id || ""),
-    notes: contribution?.notes ?? "",
   }
 }
 

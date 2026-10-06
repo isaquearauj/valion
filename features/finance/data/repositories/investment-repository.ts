@@ -16,7 +16,6 @@ export async function saveInvestment(
   const payload: TablesInsert<"investment_entries"> = {
     invested_amount: values.investedAmount,
     month: monthKeyToDate(values.month),
-    notes: values.notes,
     planned_amount: values.plannedAmount,
     user_id: userId,
   }

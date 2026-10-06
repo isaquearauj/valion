@@ -36,7 +36,6 @@ export const incomeSchema = z
     amount: z.coerce.number().positive("Informe um valor maior que zero."),
     frequency: z.enum(INCOME_FREQUENCIES),
     name: z.string().min(2, "Informe um nome com pelo menos 2 caracteres."),
-    notes: z.string().max(300).optional().default(""),
     receivedOn: optionalDateKeySchema,
     type: z.enum(INCOME_TYPES),
   })
@@ -60,7 +59,6 @@ export const expenseSchema = z
     dueDay: z.coerce.number().int().min(1).max(31),
     monthlyAmount: z.coerce.number().positive("Informe um valor maior que zero."),
     name: z.string().min(2, "Informe um nome com pelo menos 2 caracteres."),
-    notes: z.string().max(300).optional().default(""),
     remainingInstallments: z.coerce.number().int().min(0),
     status: z.enum(EXPENSE_STATUSES),
     totalInstallments: z.coerce.number().int().min(0),
@@ -93,7 +91,6 @@ export const reminderSchema = z
     frequency: z.enum(REMINDER_FREQUENCIES),
     name: z.string().min(2, "Informe um nome com pelo menos 2 caracteres."),
     nextDueDate: dateKeySchema,
-    notes: z.string().max(300).optional().default(""),
     person: z.string().min(2, "Informe de quem você precisa cobrar."),
     remainingInstallments: z.coerce.number().int().min(0),
     status: z.enum(REMINDER_STATUSES),
@@ -133,7 +130,6 @@ export const reminderSchema = z
 export const investmentSchema = z.object({
   investedAmount: z.coerce.number().min(0),
   month: z.string().refine(isValidMonthKey, "Informe um mês válido."),
-  notes: z.string().max(300).optional().default(""),
   plannedAmount: z.coerce.number().min(0),
 })
 
@@ -142,7 +138,6 @@ export const goalSchema = z
     deadlineEnabled: z.boolean(),
     deadlineDate: optionalDateKeySchema,
     name: z.string().min(2, "Informe um nome com pelo menos 2 caracteres."),
-    notes: z.string().max(300).optional().default(""),
     status: z.enum(GOAL_STATUSES),
     targetAmount: z.coerce.number().positive("Informe um valor maior que zero."),
   })
@@ -164,7 +159,6 @@ export const goalContributionSchema = z.object({
   amount: z.coerce.number().positive("Informe um valor maior que zero."),
   date: dateKeySchema,
   goalId: z.string().min(1, "Selecione uma meta."),
-  notes: z.string().max(300).optional().default(""),
 })
 
 export type IncomeFormValues = z.infer<typeof incomeSchema>

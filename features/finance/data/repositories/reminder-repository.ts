@@ -37,7 +37,6 @@ export async function saveReminder(
     frequency: values.frequency,
     name: values.name,
     next_due_date: values.nextDueDate,
-    notes: values.notes,
     person: values.person,
     remaining_installments: values.remainingInstallments,
     status: values.status,

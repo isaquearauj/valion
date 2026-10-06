@@ -17,7 +17,6 @@ export async function saveIncome(
     amount: values.amount,
     frequency: values.frequency,
     name: values.name,
-    notes: values.notes,
     received_on: values.frequency === "Única" ? values.receivedOn : null,
     type: values.type,
     user_id: userId,

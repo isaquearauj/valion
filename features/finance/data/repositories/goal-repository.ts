@@ -18,7 +18,6 @@ export async function saveGoal(
 ) {
   const payload: TablesInsert<"financial_goals"> = {
     name: values.name,
-    notes: values.notes,
     status: values.status,
     target_amount: values.targetAmount,
     target_date: values.targetDate,
@@ -58,7 +57,6 @@ export async function saveGoalContribution(
     amount: values.amount,
     date: values.date,
     goal_id: values.goalId,
-    notes: values.notes,
     user_id: userId,
   }
   const query = id

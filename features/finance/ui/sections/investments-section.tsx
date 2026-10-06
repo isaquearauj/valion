@@ -86,12 +86,8 @@ export function InvestmentsSection({
 
     return investments.filter((investment) => {
       const monthText = formatMonth(investment.month).toLocaleLowerCase("pt-BR")
-      const notesText = (investment.notes || "").toLocaleLowerCase("pt-BR")
       const rawMonth = investment.month.toLocaleLowerCase("pt-BR")
-      const matchesQuery =
-        monthText.includes(normalizedQuery) ||
-        notesText.includes(normalizedQuery) ||
-        rawMonth.includes(normalizedQuery)
+      const matchesQuery = monthText.includes(normalizedQuery) || rawMonth.includes(normalizedQuery)
 
       const delta = investment.investedAmount - investment.plannedAmount
       const matchesPerformance =
@@ -218,11 +214,6 @@ export function InvestmentsSection({
                         <TableRow key={investment.id}>
                           <TableCell>
                             <div className="font-medium">{formatMonth(investment.month)}</div>
-                            {investment.notes ? (
-                              <div className="max-w-xs truncate text-xs text-muted-foreground">
-                                {investment.notes}
-                              </div>
-                            ) : null}
                           </TableCell>
                           <TableCell className="text-right font-mono tabular-nums">
                             {formatCurrency(investment.plannedAmount)}
@@ -272,11 +263,6 @@ export function InvestmentsSection({
                           {formatCurrency(investment.investedAmount)}
                         </p>
                       </div>
-                      {investment.notes ? (
-                        <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">
-                          {investment.notes}
-                        </p>
-                      ) : null}
                       <div className="mt-3 flex items-center justify-between border-t border-border/70 pt-2">
                         <span
                           className={cn(

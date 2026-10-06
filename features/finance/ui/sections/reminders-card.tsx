@@ -82,7 +82,7 @@ export function RemindersCard({
     return reminders
       .filter((reminder) => {
         const matchesQuery =
-          `${reminder.name} ${reminder.person} ${reminder.status} ${reminder.type} ${reminder.frequency} ${reminder.notes}`
+          `${reminder.name} ${reminder.person} ${reminder.status} ${reminder.type} ${reminder.frequency}`
             .toLocaleLowerCase("pt-BR")
             .includes(normalizedQuery)
         const matchesDueFilter =
@@ -196,9 +196,7 @@ export function RemindersCard({
                       <TableCell>
                         <div className="font-medium">{reminder.name}</div>
                         <div className="max-w-xs truncate text-xs text-muted-foreground">
-                          {reminder.notes
-                            ? `${reminder.person} · ${reminder.notes}`
-                            : reminder.person}
+                          {reminder.person}
                         </div>
                       </TableCell>
                       <TableCell>

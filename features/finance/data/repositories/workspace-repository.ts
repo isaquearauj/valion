@@ -11,17 +11,15 @@ import {
 import type { FinanceState, MonthlySnapshot } from "@/features/finance/domain/types"
 
 export const INCOME_COLUMNS =
-  "id,user_id,name,type,amount,frequency,notes,received_on,created_at,updated_at"
+  "id,user_id,name,type,amount,frequency,received_on,created_at,updated_at"
 export const EXPENSE_COLUMNS =
-  "id,user_id,name,category,monthly_amount,due_day,total_installments,remaining_installments,status,notes,created_at,updated_at"
+  "id,user_id,name,category,monthly_amount,due_day,total_installments,remaining_installments,status,created_at,updated_at"
 export const REMINDER_COLUMNS =
-  "id,user_id,name,person,type,amount,frequency,next_due_date,total_installments,remaining_installments,status,notes,created_at,updated_at"
+  "id,user_id,name,person,type,amount,frequency,next_due_date,total_installments,remaining_installments,status,created_at,updated_at"
 export const INVESTMENT_COLUMNS =
-  "id,user_id,month,planned_amount,invested_amount,notes,created_at,updated_at"
-export const GOAL_COLUMNS =
-  "id,user_id,name,target_amount,target_date,status,notes,created_at,updated_at"
-export const GOAL_CONTRIBUTION_COLUMNS =
-  "id,user_id,goal_id,amount,date,notes,created_at,updated_at"
+  "id,user_id,month,planned_amount,invested_amount,created_at,updated_at"
+export const GOAL_COLUMNS = "id,user_id,name,target_amount,target_date,status,created_at,updated_at"
+export const GOAL_CONTRIBUTION_COLUMNS = "id,user_id,goal_id,amount,date,created_at,updated_at"
 export const SNAPSHOT_COLUMNS =
   "id,user_id,month,income,expenses,planned_investment,invested_amount,created_at,updated_at"
 

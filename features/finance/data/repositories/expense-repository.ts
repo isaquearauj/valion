@@ -18,7 +18,6 @@ export async function saveExpense(
     due_day: values.dueDay,
     monthly_amount: values.monthlyAmount,
     name: values.name,
-    notes: values.notes,
     remaining_installments: values.remainingInstallments,
     status: values.status,
     total_installments: values.totalInstallments,

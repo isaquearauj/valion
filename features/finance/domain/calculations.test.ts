@@ -37,7 +37,6 @@ function income(overrides: Partial<Income> = {}): Income {
     frequency: "Mensal",
     id: "income-1",
     name: "Salário",
-    notes: "",
     receivedOn: null,
     type: "Salário",
     ...overrides,
@@ -52,7 +51,6 @@ function expense(overrides: Partial<FixedExpense> = {}): FixedExpense {
     id: "expense-1",
     monthlyAmount: 500,
     name: "Aluguel",
-    notes: "",
     remainingInstallments: 0,
     status: "Ativa",
     totalInstallments: 0,
@@ -66,7 +64,6 @@ function investment(overrides: Partial<InvestmentEntry> = {}): InvestmentEntry {
     id: "investment-1",
     investedAmount: 300,
     month: getCurrentMonthKey(),
-    notes: "",
     plannedAmount: 250,
     ...overrides,
   }

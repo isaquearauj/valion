@@ -78,7 +78,7 @@ export function IncomesSection({
     const normalizedQuery = query.trim().toLocaleLowerCase("pt-BR")
 
     return incomes.filter((income) => {
-      const matchesQuery = `${income.name} ${income.type} ${income.notes}`
+      const matchesQuery = `${income.name} ${income.type}`
         .toLocaleLowerCase("pt-BR")
         .includes(normalizedQuery)
 
@@ -185,11 +185,6 @@ export function IncomesSection({
                       <TableRow key={income.id}>
                         <TableCell>
                           <div className="font-medium">{income.name}</div>
-                          {income.notes ? (
-                            <div className="max-w-xs truncate text-xs text-muted-foreground">
-                              {income.notes}
-                            </div>
-                          ) : null}
                         </TableCell>
                         <TableCell>{income.type}</TableCell>
                         <TableCell>{income.frequency}</TableCell>
@@ -224,11 +219,6 @@ export function IncomesSection({
                         {formatCurrency(income.amount)}
                       </p>
                     </div>
-                    {income.notes ? (
-                      <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">
-                        {income.notes}
-                      </p>
-                    ) : null}
                     <div className="mt-3 flex justify-end border-t border-border/70 pt-2">
                       <TableActions
                         onDelete={() => onDelete(income)}
