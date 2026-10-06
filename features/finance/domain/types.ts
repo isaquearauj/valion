@@ -2,6 +2,7 @@ export const EXPENSE_CATEGORIES = [
   "Contas fixas",
   "Assinaturas",
   "Parcelamentos",
+  "Consórcio",
   "Empréstimos",
   "Financiamentos",
   "Outros",
