@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AuthScreen } from "@/features/auth/ui/auth-screen"
 import type { AuthMode } from "@/features/navigation/routes"
@@ -11,6 +11,19 @@ import { createSupabaseBrowser } from "@/lib/supabase/client"
 export function AuthRouteScreen({ mode }: { mode: AuthMode }) {
   const router = useRouter()
   const [isReady, setIsReady] = useState(false)
+
+  const redirectToDashboard = useCallback(() => {
+    if (
+      process.env.NODE_ENV !== "test" &&
+      typeof window !== "undefined" &&
+      typeof window.location.assign === "function"
+    ) {
+      window.location.assign("/dashboard")
+      return
+    }
+
+    router.replace("/dashboard")
+  }, [router])
 
   useEffect(() => {
     let isCancelled = false
@@ -26,7 +39,7 @@ export function AuthRouteScreen({ mode }: { mode: AuthMode }) {
       } = await supabase.auth.getUser()
 
       if (user) {
-        router.replace("/dashboard")
+        redirectToDashboard()
         return
       }
 
@@ -38,10 +51,10 @@ export function AuthRouteScreen({ mode }: { mode: AuthMode }) {
     return () => {
       isCancelled = true
     }
-  }, [router])
+  }, [redirectToDashboard])
 
   function handleAuthenticate() {
-    router.replace("/dashboard")
+    redirectToDashboard()
   }
 
   function handleModeChange(nextMode: AuthMode) {

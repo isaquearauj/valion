@@ -1,5 +1,12 @@
+import { redirect } from "next/navigation"
+import { getCurrentSupabaseUser } from "@/features/auth/server"
 import { AuthRouteScreen } from "@/features/auth/ui/auth-route-screen"
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const user = await getCurrentSupabaseUser()
+  if (user) {
+    redirect("/dashboard")
+  }
+
   return <AuthRouteScreen mode="login" />
 }

@@ -32,6 +32,14 @@ export function AuthSessionProvider({
   async function logout() {
     const { error } = await supabase.auth.signOut()
     if (error) throw new Error("Não foi possível encerrar a sessão.")
+    if (
+      process.env.NODE_ENV !== "test" &&
+      typeof window !== "undefined" &&
+      typeof window.location.assign === "function"
+    ) {
+      window.location.assign("/login")
+      return
+    }
     router.replace("/login")
     router.refresh()
     toast.success("Sessão encerrada")
@@ -73,6 +81,14 @@ export function AuthSessionProvider({
     const response = await fetch("/api/account", { method: "DELETE" })
     if (!response.ok) throw new Error("Não foi possível excluir a conta.")
     await supabase.auth.signOut()
+    if (
+      process.env.NODE_ENV !== "test" &&
+      typeof window !== "undefined" &&
+      typeof window.location.assign === "function"
+    ) {
+      window.location.assign("/login")
+      return
+    }
     router.replace("/login")
     router.refresh()
     toast.success("Conta excluída", {
