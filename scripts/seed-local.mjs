@@ -1,10 +1,20 @@
 import { randomBytes } from "node:crypto"
-import { appendFileSync, readFileSync } from "node:fs"
+import { appendFileSync, existsSync, readFileSync } from "node:fs"
 import { createClient } from "@supabase/supabase-js"
 import { seedDemoData } from "./seed-local-data.mjs"
 
+if (process.env.CI) {
+  console.info("Ambiente de CI detectado. Seed local ignorado.")
+  process.exit(0)
+}
+
 const email = "dev@valion.local"
 const envPath = new URL("../.env.local", import.meta.url)
+
+if (!existsSync(envPath)) {
+  console.info(".env.local não encontrado. Seed local ignorado.")
+  process.exit(0)
+}
 
 function readLocalEnv() {
   const contents = readFileSync(envPath, "utf8")
