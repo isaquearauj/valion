@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { PasswordInput } from "@/components/ui/password-input"
 import { createSupabaseBrowser } from "@/lib/supabase/client"
 
 type EmailChangeScreenProps = {
@@ -143,14 +144,13 @@ export function EmailChangeScreen({ currentEmail, onBack }: EmailChangeScreenPro
 
                   <Field className="gap-1.5">
                     <FieldLabel htmlFor="account-password">Senha atual</FieldLabel>
-                    <Input
+                    <PasswordInput
                       autoComplete="current-password"
                       className="h-9"
                       id="account-password"
                       name="password"
                       onChange={(event) => setPassword(event.target.value)}
                       placeholder="Digite sua senha de acesso"
-                      type="password"
                       value={password}
                     />
                   </Field>

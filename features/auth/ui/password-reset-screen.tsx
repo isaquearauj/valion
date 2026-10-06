@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { PasswordInput } from "@/components/ui/password-input"
 import { createSupabaseBrowser } from "@/lib/supabase/client"
 
 type PasswordResetScreenProps = {
@@ -165,14 +166,13 @@ export function PasswordResetScreen({
                           {isSendingRecoveryLink ? "Enviando..." : "Esqueceu a senha atual?"}
                         </button>
                       </div>
-                      <Input
+                      <PasswordInput
                         autoComplete="current-password"
                         className="h-9"
                         id="current-password"
                         name="currentPassword"
                         onChange={(event) => setCurrentPassword(event.target.value)}
                         placeholder="Digite sua senha atual"
-                        type="password"
                         value={currentPassword}
                       />
                     </Field>
@@ -180,28 +180,26 @@ export function PasswordResetScreen({
 
                   <Field className="gap-1.5">
                     <FieldLabel htmlFor="new-password">Nova senha</FieldLabel>
-                    <Input
+                    <PasswordInput
                       autoComplete="new-password"
                       className="h-9"
                       id="new-password"
                       name="newPassword"
                       onChange={(event) => setPassword(event.target.value)}
                       placeholder="Mínimo de 6 caracteres"
-                      type="password"
                       value={password}
                     />
                   </Field>
 
                   <Field className="gap-1.5">
                     <FieldLabel htmlFor="confirm-password">Confirmar nova senha</FieldLabel>
-                    <Input
+                    <PasswordInput
                       autoComplete="new-password"
                       className="h-9"
                       id="confirm-password"
                       name="confirmPassword"
                       onChange={(event) => setConfirmation(event.target.value)}
                       placeholder="Repita a nova senha"
-                      type="password"
                       value={confirmation}
                     />
                   </Field>

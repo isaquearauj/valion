@@ -8,6 +8,7 @@ import { Brand } from "@/components/brand"
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { PasswordInput } from "@/components/ui/password-input"
 import { getAppUserFromSupabaseUser } from "@/features/auth/supabase-user"
 import type { AppUser } from "@/features/auth/types"
 import type { AuthMode } from "@/features/navigation/routes"
@@ -238,13 +239,12 @@ export function AuthScreen({ mode, onAuthenticate, onModeChange }: AuthScreenPro
                       </button>
                     ) : null}
                   </div>
-                  <Input
+                  <PasswordInput
                     autoComplete={activeMode === "register" ? "new-password" : "current-password"}
                     className="h-10 text-sm"
                     id="password"
                     onChange={(event) => setPassword(event.target.value)}
                     placeholder="Mínimo de 6 caracteres"
-                    type="password"
                     value={password}
                   />
                 </Field>
