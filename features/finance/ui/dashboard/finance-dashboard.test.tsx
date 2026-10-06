@@ -418,6 +418,44 @@ describe("FinanceDashboard", () => {
     expect(screen.queryByText("Aluguel")).not.toBeInTheDocument()
   })
 
+  it("defaults expenses filter to active status and shows others when filter changes", async () => {
+    const userEventInstance = userEvent.setup()
+    const activeExpense = createState().expenses[0]
+    const pausedExpense = {
+      ...activeExpense,
+      id: "expense-paused",
+      name: "Assinatura pausada",
+      status: "Pausada" as const,
+    }
+    const completedExpense = {
+      ...activeExpense,
+      id: "expense-completed",
+      name: "Dívida quitada",
+      status: "Quitada" as const,
+    }
+    renderDashboard({
+      activeSection: "expenses",
+      finance: createFinance({
+        state: createState({
+          expenses: [activeExpense, pausedExpense, completedExpense],
+        }),
+      }),
+    })
+
+    expect(screen.getByRole("combobox", { name: "Status" })).toHaveTextContent("Ativa")
+    expect(screen.getAllByText("Aluguel").length).toBeGreaterThan(0)
+    expect(screen.queryByText("Assinatura pausada")).not.toBeInTheDocument()
+    expect(screen.queryByText("Dívida quitada")).not.toBeInTheDocument()
+
+    await userEventInstance.click(screen.getByRole("combobox", { name: "Status" }))
+    expect(await screen.findByRole("option", { name: "Todos" })).toBeInTheDocument()
+    await userEventInstance.click(await screen.findByRole("option", { name: "Todos" }))
+
+    expect(screen.getAllByText("Aluguel").length).toBeGreaterThan(0)
+    expect(screen.getAllByText("Assinatura pausada").length).toBeGreaterThan(0)
+    expect(screen.getAllByText("Dívida quitada").length).toBeGreaterThan(0)
+  })
+
   it("filters reminders by status", async () => {
     const userEventInstance = userEvent.setup()
     const activeReminder = createState().reminders[0]

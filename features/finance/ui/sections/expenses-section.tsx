@@ -77,7 +77,7 @@ export function ExpensesSection({
 }) {
   const [query, setQuery] = useState("")
   const [categoryFilter, setCategoryFilter] = useState<ExpenseCategoryFilter>("all")
-  const [statusFilter, setStatusFilter] = useState<ExpenseStatusFilter>("all")
+  const [statusFilter, setStatusFilter] = useState<ExpenseStatusFilter>("Ativa")
   const [installmentFilter, setInstallmentFilter] = useState<ExpenseInstallmentFilter>("all")
   const [dueDayFilter, setDueDayFilter] = useState<ExpenseDueDayFilter>("all")
   const filteredExpenses = useMemo(() => {
