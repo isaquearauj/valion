@@ -52,8 +52,8 @@ const expenseStatusFilterOptions: CollectionFilterOption[] = [
 ]
 const expenseInstallmentFilterOptions: CollectionFilterOption[] = [
   { label: "Todos", value: "all" },
-  { label: "Parcelados", value: "installment" },
   { label: "Recorrentes", value: "recurring" },
+  { label: "Parceladas", value: "installment" },
 ]
 const expenseDueDayFilterOptions: CollectionFilterOption[] = [
   { label: "Todos", value: "all" },
@@ -125,7 +125,7 @@ export function ExpensesSection({
   if (installmentFilter !== "all") {
     activeFilters.push({
       key: "installments",
-      label: installmentFilter === "installment" ? "Parcelados" : "Recorrentes",
+      label: installmentFilter === "installment" ? "Parceladas" : "Recorrentes",
       onRemove: () => setInstallmentFilter("all"),
     })
   }
@@ -145,8 +145,8 @@ export function ExpensesSection({
   return (
     <div className="flex flex-col gap-5">
       <SectionHeader
-        description="Controle contas fixas, consórcios, assinaturas, parcelamentos e financiamentos."
-        title="Controle de despesas fixas"
+        description="Acompanhe contas recorrentes, assinaturas e compras parceladas em um só lugar."
+        title="Controle de despesas"
       />
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -173,9 +173,9 @@ export function ExpensesSection({
       <Card>
         <CollectionCardHeader
           actionLabel="Nova despesa"
-          description="Despesas fixas cadastradas para acompanhar recorrência, vencimentos e status."
+          description="Despesas cadastradas para acompanhar recorrência, vencimentos e prazos."
           onAction={onAdd}
-          title="Compromissos recorrentes"
+          title="Despesas cadastradas"
           tone="expense"
         />
         <CardContent className="space-y-4">
@@ -208,7 +208,7 @@ export function ExpensesSection({
               value={statusFilter}
             />
             <CollectionFilterSelect
-              label="Compromisso"
+              label="Tipo"
               onChange={(value) => setInstallmentFilter(value as ExpenseInstallmentFilter)}
               options={expenseInstallmentFilterOptions}
               value={installmentFilter}

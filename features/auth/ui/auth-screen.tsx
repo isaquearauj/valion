@@ -6,7 +6,7 @@ import { toast } from "sonner"
 
 import { Brand } from "@/components/brand"
 import { Button } from "@/components/ui/button"
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { getAppUserFromSupabaseUser } from "@/features/auth/supabase-user"
 import type { AppUser } from "@/features/auth/types"

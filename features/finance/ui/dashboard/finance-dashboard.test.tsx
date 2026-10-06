@@ -175,7 +175,7 @@ describe("FinanceDashboard", () => {
   it.each([
     ["dashboard", "Resumo do mês atual"],
     ["incomes", "Controle de receitas"],
-    ["expenses", "Controle de despesas fixas"],
+    ["expenses", "Controle de despesas"],
     ["investments", "Controle de investimentos"],
     ["goals", "Metas financeiras"],
     ["history", "Histórico financeiro"],

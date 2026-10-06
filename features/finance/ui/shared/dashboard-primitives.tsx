@@ -433,12 +433,14 @@ export function TextInputField({
   description,
   error,
   label,
+  placeholder,
   registration,
   type = "text",
 }: {
   description?: string
   error?: FieldErrorLike
   label: string
+  placeholder?: string
   registration: UseFormRegisterReturn
   type?: string
 }) {
@@ -451,6 +453,7 @@ export function TextInputField({
         aria-invalid={Boolean(error)}
         id={id}
         inputMode={type === "number" ? "decimal" : undefined}
+        placeholder={placeholder}
         step={type === "number" ? "0.01" : undefined}
         type={type}
         {...registration}

@@ -1,7 +1,7 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 
 import { Button } from "@/components/ui/button"
@@ -45,12 +45,48 @@ export function ExpenseDialog({
     resolver: zodResolver(expenseSchema),
   })
 
+  const [expenseId, setExpenseId] = useState(expense?.id)
+  const [isInstallment, setIsInstallment] = useState(
+    Boolean(expense && expense.totalInstallments > 0),
+  )
+
+  if (expense?.id !== expenseId) {
+    setExpenseId(expense?.id)
+    setIsInstallment(Boolean(expense && expense.totalInstallments > 0))
+  }
+
   useEffect(() => {
     form.reset(getExpenseDefaults(expense))
   }, [expense, form])
 
+  function handleTypeChange(type: "recurring" | "installment") {
+    if (type === "installment") {
+      setIsInstallment(true)
+      if (!form.getValues("totalInstallments")) {
+        form.setValue("totalInstallments", 12)
+        form.setValue("remainingInstallments", 12)
+      }
+    } else {
+      setIsInstallment(false)
+      form.setValue("totalInstallments", 0)
+      form.setValue("remainingInstallments", 0)
+      form.clearErrors(["totalInstallments", "remainingInstallments"])
+    }
+  }
+
   async function submit(values: ExpenseFormValues) {
-    if (values.totalInstallments > 0 && values.remainingInstallments > values.totalInstallments) {
+    const finalValues: ExpenseFormValues = isInstallment
+      ? values
+      : {
+          ...values,
+          remainingInstallments: 0,
+          totalInstallments: 0,
+        }
+
+    if (
+      finalValues.totalInstallments > 0 &&
+      finalValues.remainingInstallments > finalValues.totalInstallments
+    ) {
       form.setError("remainingInstallments", {
         message: "Parcelas restantes não podem exceder o total.",
         type: "validate",
@@ -58,7 +94,7 @@ export function ExpenseDialog({
       return
     }
 
-    await onSubmit(values)
+    await onSubmit(finalValues)
     onOpenChange(false)
   }
 
@@ -66,16 +102,48 @@ export function ExpenseDialog({
     <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent className="max-h-[min(90dvh,760px)] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{expense ? "Editar despesa" : "Nova despesa fixa"}</DialogTitle>
+          <DialogTitle>{expense ? "Editar despesa" : "Nova despesa"}</DialogTitle>
           <DialogDescription>
-            Registre compromissos mensais, parcelados ou contínuos.
+            Cadastre contas mensais fixas ou compras parceladas com prazo definido.
           </DialogDescription>
         </DialogHeader>
         <form className="flex flex-col gap-5" onSubmit={form.handleSubmit(submit)}>
           <FieldGroup>
+            {/* Seletor visual de Tipo de Despesa */}
+            <div className="flex flex-col gap-1.5">
+              <span className="text-xs font-medium text-foreground">Tipo de despesa</span>
+              <div className="grid grid-cols-2 gap-2 rounded-lg bg-muted p-1">
+                <button
+                  className={`flex h-8 items-center justify-center rounded-md text-xs font-semibold transition-all ${
+                    !isInstallment
+                      ? "bg-background text-foreground shadow-2xs"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                  onClick={() => handleTypeChange("recurring")}
+                  type="button"
+                >
+                  Recorrente / Contínua
+                </button>
+                <button
+                  className={`flex h-8 items-center justify-center rounded-md text-xs font-semibold transition-all ${
+                    isInstallment
+                      ? "bg-background text-foreground shadow-2xs"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                  onClick={() => handleTypeChange("installment")}
+                  type="button"
+                >
+                  Compra parcelada
+                </button>
+              </div>
+            </div>
+
             <TextInputField
               error={form.formState.errors.name}
               label="Nome"
+              placeholder={
+                isInstallment ? "Ex: Notebook, Smartphone..." : "Ex: Aluguel, Internet, Luz..."
+              }
               registration={form.register("name")}
             />
             <div className="grid gap-4 sm:grid-cols-2">
@@ -109,7 +177,7 @@ export function ExpenseDialog({
             <div className="grid gap-4 sm:grid-cols-2">
               <TextInputField
                 error={form.formState.errors.monthlyAmount}
-                label="Valor mensal"
+                label={isInstallment ? "Valor da parcela" : "Valor mensal"}
                 registration={form.register("monthlyAmount")}
                 type="number"
               />
@@ -120,21 +188,25 @@ export function ExpenseDialog({
                 type="number"
               />
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <TextInputField
-                description="Use 0 para despesas contínuas sem parcelas."
-                error={form.formState.errors.totalInstallments}
-                label="Total de parcelas"
-                registration={form.register("totalInstallments")}
-                type="number"
-              />
-              <TextInputField
-                error={form.formState.errors.remainingInstallments}
-                label="Parcelas restantes"
-                registration={form.register("remainingInstallments")}
-                type="number"
-              />
-            </div>
+
+            {isInstallment ? (
+              <div className="grid gap-4 sm:grid-cols-2 rounded-xl border border-border/80 bg-muted/30 p-3.5">
+                <TextInputField
+                  error={form.formState.errors.totalInstallments}
+                  label="Total de parcelas"
+                  placeholder="Ex: 12"
+                  registration={form.register("totalInstallments")}
+                  type="number"
+                />
+                <TextInputField
+                  error={form.formState.errors.remainingInstallments}
+                  label="Parcelas restantes"
+                  placeholder="Ex: 8"
+                  registration={form.register("remainingInstallments")}
+                  type="number"
+                />
+              </div>
+            ) : null}
           </FieldGroup>
           <DialogFooter>
             <Button onClick={() => onOpenChange(false)} type="button" variant="outline">
