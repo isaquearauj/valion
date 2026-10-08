@@ -165,8 +165,8 @@ export function ExpensesSection({
         />
         <MetricCard
           icon={ListChecksIcon}
-          label="Parcelas restantes"
-          value={String(summary.debtInstallmentsRemaining)}
+          label="Maior prazo restante"
+          value={`${summary.maxRemainingInstallments} parcelas`}
         />
       </div>
 

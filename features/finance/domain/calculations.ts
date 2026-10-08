@@ -45,15 +45,16 @@ export function calculateFinanceSummary(
   const investmentDelta = investedAmount - plannedInvestment
   const investmentInsight =
     investmentDelta > 0 ? "above" : investmentDelta < 0 ? "below" : "on-track"
-  const debtInstallmentsRemaining = activeExpenses.reduce(
-    (total, expense) => total + expense.remainingInstallments,
+  const maxRemainingInstallments = activeExpenses.reduce(
+    (maximum, expense) =>
+      expense.totalInstallments > 0 ? Math.max(maximum, expense.remainingInstallments) : maximum,
     0,
   )
 
   return {
     activeExpensesCount: activeExpenses.length,
     committedPercent,
-    debtInstallmentsRemaining,
+    maxRemainingInstallments,
     budgetAvailable,
     fixedExpenses,
     investedAmount,

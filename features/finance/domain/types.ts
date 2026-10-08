@@ -130,5 +130,5 @@ export type FinanceSummary = {
   investmentDelta: number
   investmentInsight: "above" | "below" | "on-track"
   activeExpensesCount: number
-  debtInstallmentsRemaining: number
+  maxRemainingInstallments: number
 }
