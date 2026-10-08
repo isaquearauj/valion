@@ -50,6 +50,8 @@ export function GoalContributionDialog({
 }) {
   const form = useForm<GoalContributionFormInput, unknown, GoalContributionFormValues>({
     defaultValues: getGoalContributionDefaults(defaultGoalId, goals, contribution),
+    mode: "onBlur",
+    reValidateMode: "onBlur",
     resolver: zodResolver(goalContributionSchema),
   })
   const selectedGoalId = useWatch({ control: form.control, name: "goalId" })

@@ -8,13 +8,12 @@ import {
   TrendingUpIcon,
   XIcon,
 } from "lucide-react"
-import { type ComponentType, type ReactNode, useId } from "react"
+import { type ComponentType, type ReactNode, useId, useMemo } from "react"
 import type { UseFormRegisterReturn } from "react-hook-form"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -399,11 +398,18 @@ export function SelectField<T extends string>({
   options: readonly T[]
   value: T
 }) {
+  const items = useMemo(
+    () => options.map((option) => ({ label: option, value: option })),
+    [options],
+  )
+
   return (
-    <Field data-invalid={Boolean(error)}>
-      <FieldLabel>{label}</FieldLabel>
+    <div className="flex w-full flex-col gap-1.5" data-invalid={Boolean(error)}>
+      <span className="text-xs font-semibold leading-none text-foreground select-none">
+        {label}
+      </span>
       <Select
-        items={options.map((option) => ({ label: option, value: option }))}
+        items={items}
         onValueChange={(nextValue) => {
           if (nextValue !== null) {
             onValueChange(nextValue as T)
@@ -424,8 +430,12 @@ export function SelectField<T extends string>({
           </SelectGroup>
         </SelectContent>
       </Select>
-      <FieldError>{error?.message}</FieldError>
-    </Field>
+      {error?.message ? (
+        <p role="alert" className="text-xs font-medium text-destructive">
+          {error.message}
+        </p>
+      ) : null}
+    </div>
   )
 }
 
@@ -447,8 +457,13 @@ export function TextInputField({
   const id = registration.name
 
   return (
-    <Field data-invalid={Boolean(error)}>
-      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+    <div className="flex w-full flex-col gap-1.5" data-invalid={Boolean(error)}>
+      <label
+        htmlFor={id}
+        className="text-xs font-semibold leading-none text-foreground select-none"
+      >
+        {label}
+      </label>
       <Input
         aria-invalid={Boolean(error)}
         id={id}
@@ -458,9 +473,15 @@ export function TextInputField({
         type={type}
         {...registration}
       />
-      {description ? <FieldDescription>{description}</FieldDescription> : null}
-      <FieldError>{error?.message}</FieldError>
-    </Field>
+      {description ? (
+        <p className="text-left text-xs leading-normal text-muted-foreground">{description}</p>
+      ) : null}
+      {error?.message ? (
+        <p role="alert" className="text-xs font-medium text-destructive">
+          {error.message}
+        </p>
+      ) : null}
+    </div>
   )
 }
 

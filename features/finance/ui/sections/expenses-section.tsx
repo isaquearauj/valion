@@ -1,7 +1,7 @@
 "use client"
 
 import { CreditCardIcon, ListChecksIcon, PieChartIcon } from "lucide-react"
-import { useMemo, useState } from "react"
+import { memo, useMemo, useState } from "react"
 
 import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
@@ -62,7 +62,7 @@ const expenseDueDayFilterOptions: CollectionFilterOption[] = [
   { label: "Dias 21–31", value: "late" },
 ]
 
-export function ExpensesSection({
+export const ExpensesSection = memo(function ExpensesSection({
   expenses,
   onAdd,
   onDelete,
@@ -77,7 +77,7 @@ export function ExpensesSection({
 }) {
   const [query, setQuery] = useState("")
   const [categoryFilter, setCategoryFilter] = useState<ExpenseCategoryFilter>("all")
-  const [statusFilter, setStatusFilter] = useState<ExpenseStatusFilter>("all")
+  const [statusFilter, setStatusFilter] = useState<ExpenseStatusFilter>("Ativa")
   const [installmentFilter, setInstallmentFilter] = useState<ExpenseInstallmentFilter>("all")
   const [dueDayFilter, setDueDayFilter] = useState<ExpenseDueDayFilter>("all")
   const filteredExpenses = useMemo(() => {
@@ -322,4 +322,4 @@ export function ExpensesSection({
       </Card>
     </div>
   )
-}
+})

@@ -70,6 +70,9 @@ describe("finance schemas", () => {
     expect(expenseSchema.parse({ ...validExpense, category: "Seguros" })).toMatchObject({
       category: "Seguros",
     })
+    expect(expenseSchema.parse({ ...validExpense, category: "Previdência" })).toMatchObject({
+      category: "Previdência",
+    })
     expect(expenseSchema.safeParse({ ...validExpense, dueDay: 0 }).success).toBe(false)
     expect(expenseSchema.safeParse({ ...validExpense, dueDay: 32 }).success).toBe(false)
     expect(expenseSchema.safeParse({ ...validExpense, category: "Lazer" }).success).toBe(false)

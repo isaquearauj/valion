@@ -4,6 +4,7 @@ export const EXPENSE_CATEGORIES = [
   "Parcelamentos",
   "Consórcios",
   "Seguros",
+  "Previdência",
   "Empréstimos",
   "Financiamentos",
   "Outros",

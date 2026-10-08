@@ -1,7 +1,6 @@
 "use client"
 
-import dynamic from "next/dynamic"
-import { useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { toast } from "sonner"
 
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
@@ -9,18 +8,9 @@ import { calculateFinanceSummary } from "@/features/finance/domain/calculations"
 import type { ChargeReminder, Income } from "@/features/finance/domain/types"
 import { normalizeReminderFormValues } from "@/features/finance/presentation/dashboard-view-models"
 import { useFinance } from "@/features/finance/providers/finance-provider"
+import { IncomeDialog, ReminderDialog } from "@/features/finance/ui/dialogs"
 import { IncomesSection } from "@/features/finance/ui/sections"
 import { getActionErrorMessage } from "@/features/finance/ui/shared/dashboard-primitives"
-
-const IncomeDialog = dynamic(
-  () => import("@/features/finance/ui/dialogs/income-dialog").then((mod) => mod.IncomeDialog),
-  { ssr: false },
-)
-
-const ReminderDialog = dynamic(
-  () => import("@/features/finance/ui/dialogs/reminder-dialog").then((mod) => mod.ReminderDialog),
-  { ssr: false },
-)
 
 export function IncomesView() {
   const finance = useFinance()
@@ -35,7 +25,7 @@ export function IncomesView() {
   const [incomeToDelete, setIncomeToDelete] = useState<Income | null>(null)
   const [reminderToDelete, setReminderToDelete] = useState<ChargeReminder | null>(null)
 
-  async function runAction(action: () => Promise<unknown>, successMsg: string) {
+  const runAction = useCallback(async (action: () => Promise<unknown>, successMsg: string) => {
     try {
       await action()
       toast.success(successMsg)
@@ -43,35 +33,54 @@ export function IncomesView() {
       toast.error("Não foi possível salvar", { description: getActionErrorMessage(error) })
       throw error
     }
-  }
+  }, [])
 
-  function openIncomeDialog(income?: Income) {
+  const openIncomeDialog = useCallback((income?: Income) => {
     setEditingIncome(income ?? null)
     setIsIncomeDialogOpen(true)
-  }
+  }, [])
 
-  function openReminderDialog(reminder?: ChargeReminder) {
+  const handleAddIncome = useCallback(() => {
+    openIncomeDialog()
+  }, [openIncomeDialog])
+
+  const openReminderDialog = useCallback((reminder?: ChargeReminder) => {
     setEditingReminder(reminder ?? null)
     setIsReminderDialogOpen(true)
-  }
+  }, [])
 
-  async function handleMarkReminderReceived(reminder: ChargeReminder) {
-    await runAction(
-      () => finance.reminders.markReceived(reminder.id),
-      reminder.type === "Parcelado" && reminder.remainingInstallments <= 1
-        ? "Lembrete concluído"
-        : "Cobrança marcada como recebida",
-    )
-  }
+  const handleAddReminder = useCallback(() => {
+    openReminderDialog()
+  }, [openReminderDialog])
+
+  const handleDeleteIncome = useCallback((income: Income) => {
+    setIncomeToDelete(income)
+  }, [])
+
+  const handleDeleteReminder = useCallback((reminder: ChargeReminder) => {
+    setReminderToDelete(reminder)
+  }, [])
+
+  const handleMarkReminderReceived = useCallback(
+    async (reminder: ChargeReminder) => {
+      await runAction(
+        () => finance.reminders.markReceived(reminder.id),
+        reminder.type === "Parcelado" && reminder.remainingInstallments <= 1
+          ? "Lembrete concluído"
+          : "Cobrança marcada como recebida",
+      )
+    },
+    [finance.reminders, runAction],
+  )
 
   return (
     <>
       <IncomesSection
         incomes={state.incomes}
-        onAdd={() => openIncomeDialog()}
-        onAddReminder={() => openReminderDialog()}
-        onDelete={(income) => setIncomeToDelete(income)}
-        onDeleteReminder={(reminder) => setReminderToDelete(reminder)}
+        onAdd={handleAddIncome}
+        onAddReminder={handleAddReminder}
+        onDelete={handleDeleteIncome}
+        onDeleteReminder={handleDeleteReminder}
         onEdit={openIncomeDialog}
         onEditReminder={openReminderDialog}
         onMarkReminderReceived={handleMarkReminderReceived}

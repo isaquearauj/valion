@@ -1,22 +1,16 @@
 "use client"
 
-import dynamic from "next/dynamic"
-import { useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { toast } from "sonner"
 
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { calculateFinanceSummary } from "@/features/finance/domain/calculations"
 import type { InvestmentEntry } from "@/features/finance/domain/types"
 import { useFinance } from "@/features/finance/providers/finance-provider"
+import { InvestmentDialog } from "@/features/finance/ui/dialogs"
 import { InvestmentsSection } from "@/features/finance/ui/sections"
 import { getActionErrorMessage } from "@/features/finance/ui/shared/dashboard-primitives"
 import { formatMonth } from "@/lib/formatters"
-
-const InvestmentDialog = dynamic(
-  () =>
-    import("@/features/finance/ui/dialogs/investment-dialog").then((mod) => mod.InvestmentDialog),
-  { ssr: false },
-)
 
 export function InvestmentsView() {
   const finance = useFinance()
@@ -37,17 +31,30 @@ export function InvestmentsView() {
     }
   }
 
-  function openInvestmentDialog(investment?: InvestmentEntry) {
+  const openInvestmentDialog = useCallback((investment?: InvestmentEntry) => {
     setEditingInvestment(investment ?? null)
     setIsInvestmentDialogOpen(true)
-  }
+  }, [])
+
+  const handleAddInvestment = useCallback(() => {
+    openInvestmentDialog()
+  }, [openInvestmentDialog])
+
+  const handleDeleteInvestment = useCallback((investment: InvestmentEntry) => {
+    setInvestmentToDelete(investment)
+  }, [])
+
+  const sortedInvestments = useMemo(
+    () => state.investments.toSorted((a, b) => b.month.localeCompare(a.month)),
+    [state.investments],
+  )
 
   return (
     <>
       <InvestmentsSection
-        investments={state.investments.toSorted((a, b) => b.month.localeCompare(a.month))}
-        onAdd={() => openInvestmentDialog()}
-        onDelete={(investment) => setInvestmentToDelete(investment)}
+        investments={sortedInvestments}
+        onAdd={handleAddInvestment}
+        onDelete={handleDeleteInvestment}
         onEdit={openInvestmentDialog}
         summary={summary}
       />

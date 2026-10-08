@@ -1,7 +1,7 @@
 "use client"
 
 import { ChartNoAxesCombinedIcon, PercentIcon, PiggyBankIcon } from "lucide-react"
-import { useMemo, useState } from "react"
+import { memo, useMemo, useState } from "react"
 
 import { Card, CardContent } from "@/components/ui/card"
 import {
@@ -38,7 +38,7 @@ const performanceFilterOptions: CollectionFilterOption[] = [
   { label: "Abaixo da meta", value: "below" },
 ]
 
-export function InvestmentsSection({
+export const InvestmentsSection = memo(function InvestmentsSection({
   investments,
   onAdd,
   onDelete,
@@ -301,4 +301,4 @@ export function InvestmentsSection({
       </Card>
     </div>
   )
-}
+})
