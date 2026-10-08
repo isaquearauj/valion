@@ -166,8 +166,7 @@ export const ExpensesSection = memo(function ExpensesSection({
         <MetricCard
           icon={ListChecksIcon}
           label="Maior prazo restante"
-          tone="expense"
-          value={String(summary.maxRemainingInstallments)}
+          value={`${summary.maxRemainingInstallments} parcelas`}
         />
       </div>
 
