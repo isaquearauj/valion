@@ -87,12 +87,7 @@ describe("finance calculations", () => {
     const summary = calculateFinanceSummary(
       state({
         expenses: [
-          expense({
-            id: "rent",
-            monthlyAmount: 1200,
-            remainingInstallments: 3,
-            totalInstallments: 12,
-          }),
+          expense({ id: "rent", monthlyAmount: 1200, remainingInstallments: 3 }),
           expense({ id: "paused", monthlyAmount: 999, status: "Pausada" }),
         ],
         incomes: [income({ amount: 5000 }), income({ amount: 500, frequency: "Quinzenal" })],
@@ -105,7 +100,7 @@ describe("finance calculations", () => {
       budgetAvailable: 4800,
       budgetRemainingAfterInvestment: 4100,
       committedPercent: 20,
-      maxRemainingInstallments: 3,
+      debtInstallmentsRemaining: 3,
       fixedExpenses: 1200,
       investedAmount: 800,
       investmentDelta: 100,
@@ -113,20 +108,6 @@ describe("finance calculations", () => {
       monthlyIncome: 6000,
       plannedInvestment: 700,
     })
-  })
-
-  it("uses the longest remaining installment plan instead of summing separate debts", () => {
-    const summary = calculateFinanceSummary(
-      state({
-        expenses: [
-          expense({ id: "consorcio", remainingInstallments: 198, totalInstallments: 200 }),
-          expense({ id: "monitor", remainingInstallments: 10, totalInstallments: 12 }),
-          expense({ id: "consultoria", remainingInstallments: 6, totalInstallments: 12 }),
-        ],
-      }),
-    )
-
-    expect(summary.maxRemainingInstallments).toBe(198)
   })
 
   it("includes one-time income only in its received month", () => {
